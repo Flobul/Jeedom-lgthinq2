@@ -1,6 +1,6 @@
 {
   "id": "lgthinq2",
-  "name": "LG Thinq",
+  "name": "LG ThinQ",
   "description": {
       "fr_FR": "Plugin permettant de récupérer les informations et de piloter les appareils synchronisés sur l'API lgthinq2",
       "en_US": "Plugin to retrieve information and control synchronized devices on the lgthinq2 API",

@@ -18,11 +18,11 @@
 
 require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 
-function vesync_install() {
-	$cron = cron::byClassAndFunction('vesync', 'update');
+function lgthinq2_install() {
+	$cron = cron::byClassAndFunction('lgthinq2', 'update');
 	if (!is_object($cron)) {
 		$cron = new cron();
-		$cron->setClass('vesync');
+		$cron->setClass('lgthinq2');
 		$cron->setFunction('update');
 		$cron->setEnable(1);
 		$cron->setDeamon(0);
@@ -32,12 +32,12 @@ function vesync_install() {
 	}
 }
 
-function vesync_update() {
-	$cron = cron::byClassAndFunction('vesync', 'update');
+function lgthinq2_update() {
+	$cron = cron::byClassAndFunction('lgthinq2', 'update');
 	if (!is_object($cron)) {
 		$cron = new cron();
 	}
-	$cron->setClass('vesync');
+	$cron->setClass('lgthinq2');
 	$cron->setFunction('update');
 	$cron->setEnable(1);
 	$cron->setDeamon(0);
@@ -45,16 +45,16 @@ function vesync_update() {
 	$cron->setTimeout(30);
 	$cron->save();
 	$cron->stop();
-    foreach (eqLogic::byType('vesync') as $eqLogic) {
+    foreach (eqLogic::byType('lgthinq2') as $eqLogic) {
       if ($eqLogic->getConfiguration('macID') == $eqLogic->getLogicalId()) {
-          $eqLogic->setLogicalId($eqLogic->getConfiguration('uuid'), $eqLogic->getConfiguration('macID'))->save(); 
+          $eqLogic->setLogicalId($eqLogic->getConfiguration('uuid'), $eqLogic->getConfiguration('macID'))->save();
       }
     }
-  
+
 }
 
-function vesync_remove() {
-	$cron = cron::byClassAndFunction('vesync', 'update');
+function lgthinq2_remove() {
+	$cron = cron::byClassAndFunction('lgthinq2', 'update');
 	if (is_object($cron)) {
 		$cron->remove();
 	}

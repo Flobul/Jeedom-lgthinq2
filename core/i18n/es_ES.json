@@ -1,8 +1,8 @@
 {
-    "plugins\/vesync\/core\/ajax\/vesync.ajax.php": {
-        "vesync eqLogic non trouvé : ": "vesync eqLogic non trouvé : "
+    "plugins\/lgthinq2\/core\/ajax\/lgthinq2.ajax.php": {
+        "lgthinq2 eqLogic non trouvé : ": "lgthinq2 eqLogic non trouvé : "
     },
-    "plugins\/vesync\/core\/class\/vesync.class.php": {
+    "plugins\/lgthinq2\/core\/class\/lgthinq2.class.php": {
         " Argument invalide": " Argument invalide",
         " Commande connectionStatus inexistante : ": " Commande connectionStatus inexistante : ",
         " Equipement hors ligne": " Equipement hors ligne",
@@ -98,12 +98,12 @@
         "Éteint": "Éteint",
         "équipement non connecté ": "équipement non connecté "
     },
-    "plugins\/vesync\/core\/template\/dashboard\/cmd.action.slider.roundSliderPie.html": {
+    "plugins\/lgthinq2\/core\/template\/dashboard\/cmd.action.slider.roundSliderPie.html": {
         "Date de collecte": "Fecha de recogida",
         "Date de valeur": "Fecha valor",
         "Utilisé pour le changement de valeur": "Utilisé pour le changement de valeur"
     },
-    "plugins\/vesync\/core\/template\/dashboard\/vesync.template.html": {
+    "plugins\/lgthinq2\/core\/template\/dashboard\/lgthinq2.template.html": {
         "Connecté": "Connecté",
         "Connecté : ": "Connecté : ",
         "Consommation totale (L)": "Consommation totale (L)",
@@ -128,10 +128,10 @@
         "s": "s",
         "État du chauffage": "État du chauffage"
     },
-    "plugins\/vesync\/desktop\/js\/configuration.js": {
+    "plugins\/lgthinq2\/desktop\/js\/configuration.js": {
         "Sauvegarde de la configuration des logs dev effectuée": "Sauvegarde de la configuration des logs dev effectuée"
     },
-    "plugins\/vesync\/desktop\/js\/vesync.js": {
+    "plugins\/lgthinq2\/desktop\/js\/lgthinq2.js": {
         "Afficher": "Mostrar",
         "Arrêter l\\'inclusion": "Arrêter l\\'inclusion",
         "Aucune": "Alguna",
@@ -151,9 +151,9 @@
         "Mode inclusion": "Mode inclusion",
         "Module": "Module",
         "Nom de la commande": "Nom de la commande",
-        "Programmes VeSync": "Programmes VeSync",
+        "Programmes lgthinq2": "Programmes lgthinq2",
         "Région de l'appareil": "Région de l'appareil",
-        "Santé VeSync": "Santé VeSync",
+        "Santé lgthinq2": "Santé lgthinq2",
         "Suppression de la commande": "Suppression de la commande",
         "Suppression réussie": "Suppression réussie",
         "Synchronisation terminée": "Synchronisation terminée",
@@ -166,7 +166,7 @@
         "Valeur de l\\'information": "Valeur de l\\'information",
         "Vous êtes en mode inclusion. Cliquez à nouveau sur le bouton d\\'inclusion pour sortir de ce mode": "Vous êtes en mode inclusion. Cliquez à nouveau sur le bouton d\\'inclusion pour sortir de ce mode"
     },
-    "plugins\/vesync\/desktop\/modal\/health.php": {
+    "plugins\/lgthinq2\/desktop\/modal\/health.php": {
         "Appareil": "Appareil",
         "Connecté": "Connecté",
         "Date création": "Date création",
@@ -180,7 +180,7 @@
         "Statut": "Estado",
         "Type": "Tipo"
     },
-    "plugins\/vesync\/desktop\/modal\/schedule.php": {
+    "plugins\/lgthinq2\/desktop\/modal\/schedule.php": {
         "Actions": "Acciones",
         "Activé": "Activado",
         "Date de début": "Date de début",
@@ -188,11 +188,11 @@
         "ID": "ID",
         "Lever de soleil": "Lever de soleil",
         "Nombre de programmes": "Nombre de programmes",
-        "Programmes Vesync": "Programmes Vesync",
+        "Programmes lgthinq2": "Programmes lgthinq2",
         "Rafraîchir": "Refrescar",
         "Répétition": "Répétition"
     },
-    "plugins\/vesync\/desktop\/php\/vesync.php": {
+    "plugins\/lgthinq2\/desktop\/php\/lgthinq2.php": {
         "401 - Accès non autorisé": "401 - Acceso no autorizado",
         "Action": "Acción",
         "Activer": "Activar",
@@ -229,7 +229,7 @@
         "Widget équipement": "Widget équipement",
         "Équipement": "Équipement"
     },
-    "plugins\/vesync\/plugin_info\/configuration.php": {
+    "plugins\/lgthinq2\/plugin_info\/configuration.php": {
         "Authentification": "Authentification",
         "Branche": "Rama",
         "Documentation complète du plugin": "Documentation complète du plugin",

@@ -1,6 +1,6 @@
 {
     "plugins\/lgthinq2\/core\/ajax\/lgthinq2.ajax.php": {
-        "vesync eqLogic non trouvé : ": "lgthinq2 eqLogic non trouvé : "
+        "lgthinq2 eqLogic non trouvé : ": "lgthinq2 eqLogic non trouvé : "
     },
     "plugins\/lgthinq2\/core\/class\/lgthinq2.class.php": {
         " Argument invalide": " Argument invalide",
@@ -146,9 +146,9 @@
         "Mode inclusion": "Mode inclusion",
         "Module": "Module",
         "Nom de la commande": "Nom de la commande",
-        "Programmes VeSync": "Programmes VeSync",
+        "Programmes lgthinq2": "Programmes lgthinq2",
         "Région de l'appareil": "Région de l'appareil",
-        "Santé VeSync": "Santé VeSync",
+        "Santé lgthinq2": "Santé lgthinq2",
         "Suppression de la commande": "Suppression de la commande",
         "Suppression réussie": "Suppression réussie",
         "Synchronisation terminée": "Synchronisation terminée",
@@ -183,7 +183,7 @@
         "ID": "ID",
         "Lever de soleil": "Lever de soleil",
         "Nombre de programmes": "Nombre de programmes",
-        "Programmes Vesync": "Programmes Vesync",
+        "Programmes lgthinq2": "Programmes lgthinq2",
         "Rafraîchir": "Rafraîchir",
         "Répétition": "Répétition"
     },
