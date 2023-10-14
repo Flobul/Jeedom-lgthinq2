@@ -33,14 +33,14 @@ class lgthinq2 extends eqLogic
     const LG_EMPTERMS_URL      = 'https://fr.emp.lgsmartplatform.com/';
     const LGACC_SPX_URL        = 'https://fr.m.lgaccount.com/spx/';
     const LGTHINQ_SERV_DEVICES = 'https://eic-service.lgthinq.com:46030/v1/service/devices/';
-  
+
     const APPLICATION_KEY      = '6V1V8H2BN5P9ZQGOI5DAQ92YZBDO3EK9'; // for spx login
     const OAUTHSECRETKEY       = 'c053c2a6ddeb7ad97cb0eed0dcb31cf8';
     const APPKEY               = 'LGAO221A02';
     const SVCCODE              = 'SVC202';
     const XAPIKEY              = 'VGhpblEyLjAgU0VSVklDRQ==';
     const MAXRETRY             = 3;
-      
+
     public static function deviceTypeConstants($_id) {
         $_deviceTypes = array(
             101 => __('Réfrigérateur', __FILE__),
@@ -53,7 +53,7 @@ class lgthinq2 extends eqLogic
         );
         return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
     }
-  
+
     // Fonction pour effectuer une requête POST
     public static function postData($url, $data, $headers) {
         $curl = curl_init();
@@ -79,7 +79,7 @@ class lgthinq2 extends eqLogic
         for ($i = 1; $i <= lgthinq2::MAXRETRY; $i++) {
             $result = $stepFunction();
             if (!$result) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . 'Étape a échoué, tentative ' . $i . '/' . lgthinq2::MAXRETRY);
+                log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Étape a échoué, tentative ' . $i . '/' . lgthinq2::MAXRETRY);
             } else {
                 if ($rawContent) {
                     $res = json_decode($result, true);
@@ -96,7 +96,7 @@ class lgthinq2 extends eqLogic
         }
         return null;
     }
-  
+
     public static function getClientId() {
          if (config::byKey('cliend_id', __CLASS__, '') == '') {
              log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Création du client_id ', __FILE__));
@@ -104,7 +104,7 @@ class lgthinq2 extends eqLogic
          }
          return config::byKey('cliend_id', __CLASS__);
     }
-  
+
     public static function getLanguage($_type) {
         $lang = config::byKey('language', 'core', 'fr_FR');
         $arrLang = explode('_', $lang);
@@ -117,7 +117,7 @@ class lgthinq2 extends eqLogic
                 return str_replace('_', '-', $lang);
             case 'plain':
                 return $lang;
-            default:   
+            default:
                 return $lang;
         }
     }
@@ -151,7 +151,7 @@ class lgthinq2 extends eqLogic
             'Accept-Language: ' . lgthinq2::getLanguage('hyphen')  . ',' . lgthinq2::getLanguage('lowercase') . ';q=0.9',
         );
     }
-  
+
     public static function defaultDevicesHeaders() {
         return array(
             'Accept: application/json',
@@ -193,7 +193,7 @@ class lgthinq2 extends eqLogic
         $rep = lgthinq2::postData(lgthinq2::LGACC_SIGNIN_URL . 'signInPre', $data, $headers);
         return $rep;
     }
-  
+
   // Étape 1
     public static function step1() {
         $headers = lgthinq2::defaultHeaders();
@@ -398,7 +398,7 @@ class lgthinq2 extends eqLogic
         config::save('refresh_token', $token['refresh_token'], __CLASS__);
         config::save('oauth2_backend_url', $token['oauth2_backend_url'], __CLASS__);
     }
-  
+
     public static function getTokenIsExpired() {
         if (config::byKey('expires_in', __CLASS__, 0) < time()) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token en cours, expiré depuis ', __FILE__) . (time() - config::byKey('expires_in', __CLASS__, 0)) . __(' secondes', __FILE__));
@@ -445,7 +445,7 @@ class lgthinq2 extends eqLogic
     }
 
     public static function getDevices($_deviceId = '', $_tokenRefreshed = false) {
-      
+
         lgthinq2::getTokenIsExpired();
 
         $curl = curl_init();
@@ -489,7 +489,7 @@ class lgthinq2 extends eqLogic
                 $eqLogic = lgthinq2::createEquipement($items);
                 if (is_object($eqLogic) && isset($items['modelJsonUri'])) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : modelJsonUri ' . $items['modelJsonUri']);
-                    $modelJson = $eqLogic->getModelJson($items['modelJsonUri']);
+                    $modelJson = $eqLogic->getModelJson($items['modelJsonUri'], $items['snapshot']['refState']);
                 }
             }
         } else {
@@ -506,7 +506,7 @@ class lgthinq2 extends eqLogic
                         $timestamp = date('Y-m-d H:i:s', ($devices['result']['snapshot']['timestamp']/1000));
                     }
                     $eqLogic->checkAndUpdateCmd('online', $devices['result']['online'], $timestamp);
-                    
+
                     if (isset($devices['result']['snapshot']['refState'])) {
                         //$dlConfigFile = file_get_contents(__DIR__ . '/../../data/' . $eqLogic->getLogicalId() . '.json');
                         foreach ($devices['result']['snapshot']['refState'] as $refStateId => $refStateValue) {
@@ -522,7 +522,7 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $devices  ' . json_encode($devices));
         }
     }
-  
+
     /**
      * Méthode appellée par le core (moteur de tâche) cron configuré dans la fonction lgthinq2_install
      * Lance une fonction pour récupérer les appareils et une fonction pour rafraichir les commandes
@@ -605,8 +605,8 @@ class lgthinq2 extends eqLogic
         }
         return false;
     }
-  
-    public function getModelJson($_configFile) {
+
+    public function getModelJson($_configFile, $_refState) {
         if ($_configFile != '') {
             $config = file_get_contents($_configFile);
             if (!is_json($config)) {
@@ -624,13 +624,15 @@ class lgthinq2 extends eqLogic
                 $commands = array();
                 $commandsToRemove = array();
                 foreach ($data['MonitoringValue'] as $key => $value) {
+                    if (!isset($_refState[$key])) continue; // s'il n'y a pas de commande info dans refState
                     $minValue = null;
                     $maxValue = null;
                     $step = null;
-                    $unit = null;
+                    $unite = null;
                     $targetKey = null;
                     $targetKeyValues = null;
-                    
+                    $tempUnitValue = null;
+
                     if ($value['dataType'] == 'enum') {
                         if (isset($value['visibleItem']['monitoringIndex']) && count($value['visibleItem']['monitoringIndex']) == 2) {
                             $subType = 'binary';
@@ -642,6 +644,9 @@ class lgthinq2 extends eqLogic
                         $minValue = $value['valueMapping']['min'];
                         $maxValue = $value['valueMapping']['max'];
                         $step = $value['valueMapping']['step'];
+                        if (isset($_refState['tempUnit'])) {
+                            $unite = $_refState['tempUnit']=='CELSIUS'?'°C':'°F';
+                        }
                     } elseif($value['dataType'] == 'string') {
                         $subType = 'other';
                     } elseif($value['dataType'] == 'number') {
@@ -651,12 +656,40 @@ class lgthinq2 extends eqLogic
                     }
                     if (isset($value['targetKey'])) {
                         $targetKey = $value['targetKey'];
-                        if (isset($value['targetKey']['tempUnit']) && count($value['targetKey']['tempUnit']) > 1) {
-                            foreach ($value['targetKey']['tempUnit'] as $tempUnitId => $tempUnitValue) {
+                        if (isset($targetKey['tempUnit']) && count($targetKey['tempUnit']) > 1) {
+                            if (isset($targetKey['tempUnit'][$_refState['tempUnit']])) {
+                                $tempUnitValue = $targetKey['tempUnit'][$_refState['tempUnit']];
+
+                            //foreach ($targetKey['tempUnit'] as $tempUnitId => $tempUnitValue) {
                                 if (isset($data['MonitoringValue'][$tempUnitValue])) {
-                                    $commandsToRemove[] = $tempUnitValue;
+                                    //$commandsToRemove[] = $tempUnitValue;
                                     //supprimer cette commande contenue dans targetKey
                                     $targetKeyValues[$tempUnitValue] = $data['MonitoringValue'][$tempUnitValue]['valueMapping'];
+                                    $lastValue = null;
+                                    $minValue = null;
+                                    $maxValue = null;
+                                    foreach ($data['MonitoringValue'][$tempUnitValue]['valueMapping'] as $keyMap => $valMap) {
+                                            $label = $valMap['label'];
+                                            if (is_numeric($label)) {
+                                                $currentValue = intval($label);
+                                                if ($lastValue === null || $currentValue === $lastValue + 1) {
+                                                    $minValue = ($minValue === null) ? $currentValue : $minValue;
+                                                    $maxValue = $currentValue;
+                                                } elseif ($lastValue === null || $currentValue === $lastValue - 1) {
+                                                    $minValue = $currentValue;
+                                                    $maxValue = ($maxValue === null) ? $currentValue : $maxValue;
+                                                } else {
+                                                    $minValue = $maxValue = $currentValue;
+                                                }
+                                                $lastValue = $currentValue;
+                                        }
+
+                                        if ($minValue !== null && $maxValue !== null) {
+                                            //echo "Les nombres se suivent directement du $minValue au $maxValue.\n";
+                                        } else {
+                                            //echo "Les nombres ne se suivent pas directement ou n'existent pas.\n";
+                                        }
+                                    }
                                     log::add(__CLASS__, 'debug', __FUNCTION__ . ' TEST' . json_encode($data['MonitoringValue'][$tempUnitValue]));
                                 }
                             }
@@ -666,7 +699,7 @@ class lgthinq2 extends eqLogic
                         'name' => $key,
                         'logicalId' => $key,
                         'subType' => $subType,
-                        'unite' => $unit,
+                        'unite' => $unite,
                         'configuration' => array(
                             'minValue' => $minValue,
                             'maxValue' => $maxValue,
@@ -674,7 +707,8 @@ class lgthinq2 extends eqLogic
                             'visibleItem' => $value['visibleItem'],
                             'valueMapping' => $value['valueMapping'],
                             'targetKey' => $targetKey,
-                            'targetKeyValues' => $targetKeyValues
+                            'targetKeyValues' => $targetKeyValues,
+                            'tempUnitValue' => $tempUnitValue
                         ),
                         'display' => array(
                             'parameters' => array(
@@ -683,9 +717,9 @@ class lgthinq2 extends eqLogic
                         )
                     );
                 }
-                $commands = array_filter($commands, function($command) use ($commandsToRemove) {
+                /*$commands = array_filter($commands, function($command) use ($commandsToRemove) {
                     return !in_array($command['logicalId'], $commandsToRemove);
-                });    
+                });*/
                 foreach ($commands as $cmd) {
                     $this->createCommand($cmd);
                 }
@@ -699,13 +733,13 @@ class lgthinq2 extends eqLogic
         if (is_object($cmdInfo = $this->getCmd('info', $refStateId))) {
             if ($cmdInfo->getUnite() == '°C') {
                 $tkv = $cmdInfo->getConfiguration('targetKey')['tempUnit']['CELSIUS'];
-                if (isset($cmdInfo->getConfiguration('$targetKeyValues')[$tkv][$refStateValue])) {
-                    return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('$targetKeyValues')[$tkv][$refStateValue]['label'], $timestamp);
+                if (isset($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValue])) {
+                    return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValue]['label'], $timestamp);
                 }
             } elseif ($cmdInfo->getUnite() == '°F') {
                 $tkv = $cmdInfo->getConfiguration('targetKey')['tempUnit']['FAHRENHEIT'];
-                if (isset($cmdInfo->getConfiguration('$targetKeyValues')[$tkv][$refStateValue])) {
-                    return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('$targetKeyValues')[$tkv][$refStateValue]['label'], $timestamp);
+                if (isset($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValue])) {
+                    return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValue]['label'], $timestamp);
                 }
             }
         }
@@ -733,7 +767,7 @@ class lgthinq2 extends eqLogic
         return $data;
     }
 
-  
+
     public static function getMessagesTypeLabel($_messageType) {
         switch ($_messageType) {
             case 'communityNotificationArr':
