@@ -41,6 +41,19 @@ class lgthinq2 extends eqLogic
     const XAPIKEY              = 'VGhpblEyLjAgU0VSVklDRQ==';
     const MAXRETRY             = 3;
       
+    public static function deviceTypeConstants($_id) {
+        $_deviceTypes = array(
+            101 => __('Réfrigérateur', __FILE__),
+            201 => __('Lave-linge', __FILE__),
+            202 => __('Sèche-linge', __FILE__),
+            221 => __('Laveuse', __FILE__),
+            222 => __('Sécheuse', __FILE__),
+            204 => __('Lave-vaisselle', __FILE__),
+            301 => __('Four', __FILE__)
+        );
+        return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
+    }
+  
     // Fonction pour effectuer une requête POST
     public static function postData($url, $data, $headers) {
         $curl = curl_init();
@@ -432,6 +445,9 @@ class lgthinq2 extends eqLogic
     }
 
     public static function getDevices($_deviceId = '', $_tokenRefreshed = false) {
+      
+        lgthinq2::getTokenIsExpired();
+
         $curl = curl_init();
         $headers = lgthinq2::defaultDevicesHeaders();
         $headers[] = 'x-client-id: ' . lgthinq2::getClientId();
@@ -463,15 +479,17 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de la requête  ' . json_encode($devices));
             return;
         }
-        if ($devices['resultCode'] != '0000' && $_tokenRefreshed = false) {
-            lgthinq2::getTokenIsExpired();
+        if ($devices['resultCode'] != '0000' && $_tokenRefreshed == false) {
             lgthinq2::getDevices($_deviceId, true);
         }
+        $modelJson = false;
         if ($_deviceId == '') {
             foreach ($devices['result']['item'] as $items) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $items ' . json_encode($items));
                 $eqLogic = lgthinq2::createEquipement($items);
                 if (is_object($eqLogic) && isset($items['modelJsonUri'])) {
-                    $eqLogic->getModelJson($items['modelJsonUri']);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : modelJsonUri ' . $items['modelJsonUri']);
+                    $modelJson = $eqLogic->getModelJson($items['modelJsonUri']);
                 }
             }
         } else {
@@ -479,7 +497,7 @@ class lgthinq2 extends eqLogic
                 $eqLogic = lgthinq2::byLogicalId($devices['result']['deviceId'], __CLASS__);
                 if (is_object($eqLogic)) {
                     $deviceTypeConfigFile = lgthinq2::loadConfigFile($devices['result']['deviceType']);
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : DEBUGEDEBUGEDEUGBUEDUEF.' . json_encode($deviceTypeConfigFile));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $deviceTypeConfigFile ' . json_encode($deviceTypeConfigFile));
                     if (!is_object($eqLogic->getCmd('info', 'online'))) {
                         $eqLogic->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, 'online');
                     }
@@ -490,17 +508,18 @@ class lgthinq2 extends eqLogic
                     $eqLogic->checkAndUpdateCmd('online', $devices['result']['online'], $timestamp);
                     
                     if (isset($devices['result']['snapshot']['refState'])) {
+                        //$dlConfigFile = file_get_contents(__DIR__ . '/../../data/' . $eqLogic->getLogicalId() . '.json');
                         foreach ($devices['result']['snapshot']['refState'] as $refStateId => $refStateValue) {
                             if (!is_object($eqLogic->getCmd('info', $refStateId))) {
                                 $eqLogic->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $refStateId);
                             }
-                            $eqLogic->checkAndUpdateCmd($refStateId, $refStateValue, $timestamp);
+                            $eqLogic->checkValueAndUpdateCmd($refStateId, $refStateValue, $timestamp);
                         }
                     }
                     //$eqLogic->createCommand($deviceTypeConfigFile, $devices['result']['snapshot']);
                 }
             }
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : DEBUGEDEBUGEDEUGBUEDUEF.' . json_encode($devices));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $devices  ' . json_encode($devices));
         }
     }
   
@@ -591,16 +610,106 @@ class lgthinq2 extends eqLogic
         if ($_configFile != '') {
             $config = file_get_contents($_configFile);
             if (!is_json($config)) {
-                log::add(__CLASS__, 'debug', __('Le fichier de configuration ' . $filename . ' est corrompu', __FILE__));
+                log::add(__CLASS__, 'debug', __('Le fichier de configuration est corrompu', __FILE__));
             }
             $data = json_decode($config, true);
             if (!is_array($data)) {
-                log::add(__CLASS__, 'debug', __('Le fichier de configuration ' . $filename . ' est invalide', __FILE__));
+                log::add(__CLASS__, 'debug', __('Le fichier de configuration est invalide', __FILE__));
             }
             if (isset($data['MonitoringValue'])) {
+                mkdir(__DIR__ . '/../../data/');
+                file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
+
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ', __FILE__) . json_encode($data['MonitoringValue']));
+                $commands = array();
+                $commandsToRemove = array();
+                foreach ($data['MonitoringValue'] as $key => $value) {
+                    $minValue = null;
+                    $maxValue = null;
+                    $step = null;
+                    $unit = null;
+                    $targetKey = null;
+                    $targetKeyValues = null;
+                    
+                    if ($value['dataType'] == 'enum') {
+                        if (isset($value['visibleItem']['monitoringIndex']) && count($value['visibleItem']['monitoringIndex']) == 2) {
+                            $subType = 'binary';
+                        } else {
+                            $subType = 'string';
+                        }
+                    } elseif($value['dataType'] == 'range') {
+                        $subType = 'numeric';
+                        $minValue = $value['valueMapping']['min'];
+                        $maxValue = $value['valueMapping']['max'];
+                        $step = $value['valueMapping']['step'];
+                    } elseif($value['dataType'] == 'string') {
+                        $subType = 'other';
+                    } elseif($value['dataType'] == 'number') {
+                        $subType = 'numeric';
+                    } else {
+                        $subType = 'string';
+                    }
+                    if (isset($value['targetKey'])) {
+                        $targetKey = $value['targetKey'];
+                        if (isset($value['targetKey']['tempUnit']) && count($value['targetKey']['tempUnit']) > 1) {
+                            foreach ($value['targetKey']['tempUnit'] as $tempUnitId => $tempUnitValue) {
+                                if (isset($data['MonitoringValue'][$tempUnitValue])) {
+                                    $commandsToRemove[] = $tempUnitValue;
+                                    //supprimer cette commande contenue dans targetKey
+                                    $targetKeyValues[$tempUnitValue] = $data['MonitoringValue'][$tempUnitValue]['valueMapping'];
+                                    log::add(__CLASS__, 'debug', __FUNCTION__ . ' TEST' . json_encode($data['MonitoringValue'][$tempUnitValue]));
+                                }
+                            }
+                        }
+                    }
+                    $commands[] = array(
+                        'name' => $key,
+                        'logicalId' => $key,
+                        'subType' => $subType,
+                        'unite' => $unit,
+                        'configuration' => array(
+                            'minValue' => $minValue,
+                            'maxValue' => $maxValue,
+                            'default' => $value['default'],
+                            'visibleItem' => $value['visibleItem'],
+                            'valueMapping' => $value['valueMapping'],
+                            'targetKey' => $targetKey,
+                            'targetKeyValues' => $targetKeyValues
+                        ),
+                        'display' => array(
+                            'parameters' => array(
+                                'step' => $step
+                            )
+                        )
+                    );
+                }
+                $commands = array_filter($commands, function($command) use ($commandsToRemove) {
+                    return !in_array($command['logicalId'], $commandsToRemove);
+                });    
+                foreach ($commands as $cmd) {
+                    $this->createCommand($cmd);
+                }
+                return $data['MonitoringValue'];
             }
         }
+        return false;
+    }
+
+    public function checkValueAndUpdateCmd($refStateId, $refStateValue, $timestamp) {
+        if (is_object($cmdInfo = $this->getCmd('info', $refStateId))) {
+            if ($cmdInfo->getUnite() == '°C') {
+                $tkv = $cmdInfo->getConfiguration('targetKey')['tempUnit']['CELSIUS'];
+                if (isset($cmdInfo->getConfiguration('$targetKeyValues')[$tkv][$refStateValue])) {
+                    return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('$targetKeyValues')[$tkv][$refStateValue]['label'], $timestamp);
+                }
+            } elseif ($cmdInfo->getUnite() == '°F') {
+                $tkv = $cmdInfo->getConfiguration('targetKey')['tempUnit']['FAHRENHEIT'];
+                if (isset($cmdInfo->getConfiguration('$targetKeyValues')[$tkv][$refStateValue])) {
+                    return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('$targetKeyValues')[$tkv][$refStateValue]['label'], $timestamp);
+                }
+            }
+        }
+        return $this->checkAndUpdateCmd($refStateId, $refStateValue, $timestamp);
     }
 
     // @return		array		$data (commands.json)
@@ -609,14 +718,17 @@ class lgthinq2 extends eqLogic
         $filename = __DIR__ . '/../../core/config/devices/' . $_type . '.json';
         if (file_exists($filename) === false) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Impossible de trouver le fichier de configuration pour l\'équipement ', __FILE__));
+            return;
         }
         $content = file_get_contents($filename);
         if (!is_json($content)) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration ' . $filename . ' est corrompu', __FILE__));
+            return;
         }
         $data = json_decode($content, true);
         if (!is_array($data) || !isset($data['commands'])) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration ' . $filename . ' est invalide', __FILE__));
+            return;
         }
         return $data;
     }
@@ -768,55 +880,8 @@ class lgthinq2 extends eqLogic
         $cmd = $this->getCmd(null, $_properties['logicalId']);
         if (!is_object($cmd)) {
             $cmd = new lgthinq2Cmd();
+            $cmd->setType((!$_cmdInfo?'info':'action'));
             $cmd->setEqLogic_id($this->getId());
-            if ($_properties['logicalId'] == 'level') {
-                $maxValue = intval(lgthinq2::getTypeConfiguration($this->getConfiguration('deviceType'), 'level'));
-                if ($maxValue == 5) {
-                    $maxValue--;
-                    $minValue = '0';
-                } else {
-                    $minValue;
-                    $minValue = '1';
-                }
-                $cmd->setConfiguration('maxValue', $maxValue); //nombres de valeur totale
-                $cmd->setConfiguration('minValue', $minValue); //nombres de valeur totale - const
-            }
-
-            if (is_object($_cmdInfo)) {
-                $cmd->setValue($_cmdInfo->getId());
-                if ($_cmdInfo->getConfiguration('minValue', '') != '') {
-                    $cmd->setConfiguration('minValue', $_cmdInfo->getConfiguration('minValue'));
-                }
-                if ($_cmdInfo->getConfiguration('maxValue', '') != '') {
-                    $cmd->setConfiguration('maxValue', $_cmdInfo->getConfiguration('maxValue'));
-                }
-                if ($_cmdInfo->getUnite() != '') {
-                    $cmd->setUnite($_cmdInfo->getUnite());
-                }
-                $cmd->setConfiguration('updateCmdId', $_cmdInfo->getId());
-                $_cmdInfo->setIsVisible(0)->save();
-
-                $list = lgthinq2Cmd::getTranslation($_cmdInfo->getLogicalId(), '', true);
-                $optionValues = array();
-                foreach ($list as $optionKey => $optionValue) {
-                    $optionValues[] = $optionKey . '|' . $optionValue;
-                }
-                $listValue = implode(';', $optionValues);
-                if ($cmd->getConfiguration('listValue') != $listValue) {
-                    $cmd->setConfiguration('listValue', $listValue);
-                }
-            }
-            if ($_properties['subType'] == 'select') {
-                $list = lgthinq2Cmd::getTranslation(explode('::',$_properties['logicalId'])[0], '', true);
-                $optionValues = array();
-                foreach ($list as $optionKey => $optionValue) {
-                    $optionValues[] = $optionKey . '|' . $optionValue;
-                }
-                $listValue = implode(';', $optionValues);
-                if ($cmd->getConfiguration('listValue') != $listValue) {
-                    $cmd->setConfiguration('listValue', $listValue);
-                }
-            }
             utils::a2o($cmd, $_properties);
             $cmd->save();
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' => ' . __('Nouvelle commande ajoutée ', __FILE__) . '[' . $cmd->getType() .'='. $cmd->getSubType() . '] => ' . $cmd->getLogicalId());
