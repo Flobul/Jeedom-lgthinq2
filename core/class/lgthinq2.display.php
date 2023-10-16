@@ -44,13 +44,19 @@ class lgthinq2_display extends eqLogic
     }
 
     public static function displayEqLogicThumbnailContainer($eqLogics, $_type) {
+        $filteredEqLogics = array_filter($eqLogics, function ($eqLogic) use ($_type) {
+            return $eqLogic->getConfiguration('deviceType') == $_type;
+        });
+        if (empty($filteredEqLogics)) return;
+
         echo '<div class="panel panel-default">';
         echo '    <h3 class="panel-title">';
-        echo '        <a id="accordionlgthinq2" class="accordion-toggle" data-toggle="collapse" data-parent="" href="#lgthinq2_' . $_type . '"><i class="' . lgthinq2::getIconClass($_type) . '"></i> ' . lgthinq2::getDeviceLabel($_type) . '</a>';
+        echo '        <a id="accordionlgthinq2" class="accordion-toggle" data-toggle="collapse" data-parent="" href="#lgthinq2_' . $_type . '"><i class="' . lgthinq2::deviceTypeConstantsIcon($_type) . '"></i> ' . lgthinq2::deviceTypeConstants($_type) . '</a>';
         echo '    </h3>';
         echo '    <div id="lgthinq2_' . $_type . '" class="panel-collapse collapse in">';
         echo '        <div class="eqLogicThumbnailContainer">';
         foreach ($eqLogics as $eqLogic) {
+            if ($eqLogic->getConfiguration('deviceType') != $_type) continue;
             $additionalInfo = ($eqLogic->getIsVisible() == 1) ? '<i class="fas fa-eye" title="{{Équipement visible}}"></i>' : '<i class="fas fa-eye-slash" title="{{Équipement non visible}}"></i>';
 
             $opacity = ($eqLogic->getIsEnable()) ? '' : 'disableCard';
@@ -61,57 +67,6 @@ class lgthinq2_display extends eqLogic
             echo '                <span class="hidden hiddenAsCard displayTableRight">' . $additionalInfo . '</span>';
             echo '            </div>';
         }
-        echo '        </div>';
-        echo '    </div>';
-        echo '</div>';
-    }
-  
-    public static function displayPushMessages($_type, $_count) {
-        echo '<div class="panel panel-default">';
-        echo '    <h3 class="panel-title">';
-        echo '        <a id="accordionMessageslgthinq2" class="accordion-toggle" data-toggle="collapse" data-parent="" href="#lgthinq2_' . $_type . '">' . lgthinq2::getMessagesTypeLabel($_type) . ' ('.$_count.' messages)</a>';
-        echo '    </h3>';
-        echo '    <div id="lgthinq2_' . $_type . '" class="panel-collapse collapse in">';
-        echo '        <div class="pushMessageContent">';
-        echo '            <table class="table table-condensed table-bordered tablesorter" id="table_messageslgthinq2">';
-        echo '			      <thead>';
-        echo '				      <tr>';
-        echo '					      <th data-sort="int"><span class="scanHender"><b class="caret"></b> {{ID}} <b class="caret"></b></span></th>';
-        echo '					      <th data-sort="string"><span class="scanHender"><b class="caret"></b> {{Corps}} <b class="caret"></b></span></th>';
-        echo '					      <th data-sort="int"><span class="scanHender"><b class="caret"></b> {{Date d\'événement}} <b class="caret"></b></span></th>';
-        echo '					      <th data-sort="int"><span class="scanHender"><b class="caret"></b> {{Date d\'expiration}} <b class="caret"></b></span></th>';
-        echo '					      <th data-sort="string"><span class="scanHender"><b class="caret"></b> {{Message}} <b class="caret"></b></span></th>';
-        echo '					      <th data-sort="string"><span class="scanHender"><b class="caret"></b> {{Actions}} <b class="caret"></b></span></th>';
-        echo '				      </tr>';
-        echo '			      </thead>';
-        echo '			      <tbody>';
-        echo '			      </tbody>';
-        echo '            </table>';
-        echo '        </div>';
-        echo '    </div>';
-        echo '</div>';
-    }
-  
-    public static function displayFirmware($_type, $_count) {
-        echo '<div class="panel panel-default">';
-        echo '    <h3 class="panel-title">';
-        echo '        <a id="accordionFirmwarelgthinq2" class="accordion-toggle" data-toggle="collapse" data-parent="" href="#lgthinq2_Firmware">' . lgthinq2::getMessagesTypeLabel($_type) . ' ('.$_count.' appareils)</a>';
-        echo '    </h3>';
-        echo '    <div id="lgthinq2_Firmware" class="panel-collapse collapse in">';
-        echo '        <div class="firmwareContent">';
-        echo '            <table class="table table-condensed table-bordered tablesorter" id="table_firmwarelgthinq2">';
-        echo '			      <thead>';
-        echo '				      <tr>';
-        echo '					      <th data-sort="string"><span class="scanHender"><b class="caret"></b> {{Image}} <b class="caret"></b></span></th>';
-        echo '					      <th data-sort="int"><span class="scanHender"><b class="caret"></b> {{UUID}} <b class="caret"></b></span></th>';
-        echo '					      <th data-sort="string"><span class="scanHender"><b class="caret"></b> {{Code}} <b class="caret"></b></span></th>';
-        echo '					      <th data-sort="string" colspan="2"><span class="scanHender"><b class="caret"></b> {{Infos}} <b class="caret"></b></span></th>';
-        echo '					      <th data-sort="string"><span class="scanHender"><b class="caret"></b> {{Actions}} <b class="caret"></b></span></th>';
-        echo '				      </tr>';
-        echo '			      </thead>';
-        echo '			      <tbody>';
-        echo '			      </tbody>';
-        echo '            </table>';
         echo '        </div>';
         echo '    </div>';
         echo '</div>';

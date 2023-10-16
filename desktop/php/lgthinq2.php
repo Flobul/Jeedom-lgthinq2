@@ -34,7 +34,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
     <div class="eqLogicThumbnailContainer">
 
         <?php
-          lgthinq2_display::displayActionCard('{{Synchronisation}}', 'fa-sync', 'id="bt_synchronizelgthinq2"', 'eqLogicAction logoPrimaryCreality');
+          lgthinq2_display::displayActionCard('{{Synchronisation}}', 'fa-sync', 'id="bt_synchronizelgthinq2"', 'eqLogicAction logoPrimaryLGthinq2');
           lgthinq2_display::displayActionCard('{{Configuration}}', 'fa-wrench', 'data-action="gotoPluginConf"', 'logoSecondary');
           lgthinq2_display::displayActionCard('{{Santé}}', 'fa-medkit', 'id="bt_healthlgthinq2"', 'logoSecondary');
           lgthinq2_display::displayActionCard('{{Documentation}}', 'fa-book-reader', 'id="bt_documentationlgthinq2" data-location="' . $plugin->getDocumentation() . '"', 'logoSecondary');
@@ -53,12 +53,14 @@ $eqLogics = eqLogic::byType($plugin->getId());
                 echo '        <a class="btn roundedRight hidden" id="bt_pluginDisplayAsTable" data-coreSupport="1" data-state="0"><i class="fas fa-grip-lines"></i></a>';
                 echo '    </div>';
                 echo '</div>';
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, 'HUMIDIFIER');
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, 'PURIFIER');
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, 'OUTLET');
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, 'AIRFRYER');
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, 'SWITCH');
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, 'SCALE');
+                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '101');
+                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '201');
+                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '202');
+                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '221');
+                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '222');
+                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '204');
+                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '301');
+                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '401');
             }
         ?>
   </div>

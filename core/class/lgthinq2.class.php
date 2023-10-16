@@ -49,7 +49,22 @@ class lgthinq2 extends eqLogic
             221 => __('Laveuse', __FILE__),
             222 => __('Sécheuse', __FILE__),
             204 => __('Lave-vaisselle', __FILE__),
-            301 => __('Four', __FILE__)
+            301 => __('Four', __FILE__),
+            401 => __('Climatiseur', __FILE__)
+        );
+        return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
+    }
+  
+    public static function deviceTypeConstantsIcon($_id) {
+        $_deviceTypes = array(
+            101 => 'icon techno-refrigerator3',
+            201 => 'icon kiko-laundry',
+            202 => 'icon techno-laundry1',
+            221 => '',
+            222 => '',
+            204 => 'icon nourriture-plate7',
+            301 => 'icon techno-oven4',
+            401 => 'icon kiko-air-conditioner'
         );
         return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
     }
@@ -483,6 +498,7 @@ class lgthinq2 extends eqLogic
             lgthinq2::getDevices($_deviceId, true);
         }
         $modelJson = false;
+        // all devices
         if ($_deviceId == '') {
             foreach ($devices['result']['item'] as $items) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $items ' . json_encode($items));
@@ -492,6 +508,7 @@ class lgthinq2 extends eqLogic
                     $modelJson = $eqLogic->getModelJson($items['modelJsonUri'], $items['snapshot']['refState'], lgthinq2::getLangJson($items['langPackProductTypeUri']));
                 }
             }
+        // refresh one device
         } else {
             if (isset($devices['result']['snapshot'])) {
                 $eqLogic = lgthinq2::byLogicalId($devices['result']['deviceId'], __CLASS__);
@@ -612,16 +629,16 @@ class lgthinq2 extends eqLogic
         }
         $config = file_get_contents($_configFile);
         if (!is_json($config)) {
-            log::add(__CLASS__, 'debug', __('Le fichier de langue est corrompu', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de langue est corrompu', __FILE__));
             return false;
         }
         $data = json_decode($config, true);
         if (!is_array($data)) {
-            log::add(__CLASS__, 'debug', __('Le fichier de langue est invalide', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de langue est invalide', __FILE__));
             return false;
         }
         if (!isset($data['pack'])) {
-            log::add(__CLASS__, 'debug', __('"Pack" n\'existe pas dans fichier de langue', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' "Pack" n\'existe pas dans fichier de langue', __FILE__));
             return false;
         }
         return $data['pack'];
