@@ -38,7 +38,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
           lgthinq2_display::displayActionCard('{{Configuration}}', 'fa-wrench', 'data-action="gotoPluginConf"', 'logoSecondary');
           lgthinq2_display::displayActionCard('{{Santé}}', 'fa-medkit', 'id="bt_healthlgthinq2"', 'logoSecondary');
           lgthinq2_display::displayActionCard('{{Documentation}}', 'fa-book-reader', 'id="bt_documentationlgthinq2" data-location="' . $plugin->getDocumentation() . '"', 'logoSecondary');
-          lgthinq2_display::displayActionCard('{{Suppression de tous les appareils}}', 'fa-trash-alt', 'data-action="delete" data-action2="all"', 'logoTrashCreality');
+          lgthinq2_display::displayActionCard('{{Suppression de tous les appareils}}', 'fa-trash-alt', 'data-action="delete" data-action2="all"', 'logoTrashLG');
         ?>
     </div>
     <legend><i class="icon kiko-smart-house"></i> {{Mes appareils}}</legend>
