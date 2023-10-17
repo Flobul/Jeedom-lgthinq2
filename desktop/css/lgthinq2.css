@@ -28,13 +28,13 @@
     color: #A50034;
 }
 
-.logoPrimaryCreality .fas {
+.logoPrimaryLG .fas {
     background: -webkit-gradient(linear, left bottom, left top, from(rgb(0,139,158,1)), to(rgb(99,237,194,1)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-.logoTrashCreality[data-action2=all] {
+.logoTrashLG[data-action2=all] {
     color: var(--al-danger-color);
 }
 

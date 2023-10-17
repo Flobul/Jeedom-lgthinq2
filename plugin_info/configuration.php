@@ -79,7 +79,7 @@
 		</legend>
           <div class="form-group">
               <label class="col-lg-4 control-label">{{Intervalle de rafraîchissement des informations (cron)}}
-      <sup><i class="fas fa-question-circle" title="{{Sélectionnez l'intervalle auquel le plugin ira récupérer les informations sur les serveurs Creality.}}"></i></sup>
+      <sup><i class="fas fa-question-circle" title="{{Sélectionnez l'intervalle auquel le plugin ira récupérer les informations sur les serveurs LG.}}"></i></sup>
               </label>
               <div class="col-lg-4">
                   <select class="configKey form-control" data-l1key="autorefresh" >
