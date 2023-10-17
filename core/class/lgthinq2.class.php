@@ -43,14 +43,84 @@ class lgthinq2 extends eqLogic
       
     public static function deviceTypeConstants($_id) {
         $_deviceTypes = array(
+            000 => __('Inconnu', __FILE__),
             101 => __('Réfrigérateur', __FILE__),
+            102 => __('Réfrigérateur à kimchi', __FILE__),
+            103 => __('Purificateur d\'eau', __FILE__),
+            105 => __('Cave à vin', __FILE__),
             201 => __('Lave-linge', __FILE__),
             202 => __('Sèche-linge', __FILE__),
+            203 => __('Armoire sèche-linge', __FILE__),
+            204 => __('Lave-vaisselle', __FILE__),
             221 => __('Laveuse', __FILE__),
             222 => __('Sécheuse', __FILE__),
-            204 => __('Lave-vaisselle', __FILE__),
             301 => __('Four', __FILE__),
-            401 => __('Climatiseur', __FILE__)
+            302 => __('Micro-onde', __FILE__),
+            303 => __('Plaque de cuisson', __FILE__),
+            304 => __('Hote', __FILE__),
+            401 => __('Climatiseur', __FILE__),
+            402 => __('Purificateur d\'air', __FILE__),
+            403 => __('Déshumidificateur', __FILE__),
+            405 => __('Ventilateur de plafond', __FILE__),
+            501 => __('Aspirateur robot', __FILE__),
+            504 => __('Aspirateur balai', __FILE__),
+            604 => __('Chaise de massage', __FILE__),
+            605 => __('Thermostat de luxe', __FILE__),
+            1001 => __('Arch', __FILE__),
+            3001 => __('Missg', __FILE__),
+            3002 => __('Capteur ThinQ', __FILE__),
+            3003 => __('Ampoule LG', __FILE__),
+            3004 => __('Détecteur de mouvement', __FILE__),
+            3005 => __('Prise DW', __FILE__),
+            3006 => __('Capteur de poussière', __FILE__),
+            3010 => __('Détecteur de fumée', __FILE__),
+            3014 => __('Prise Easy', __FILE__),
+            3102 => __('Détecteur solaire', __FILE__),
+            3103 => __('Type de groupe d\'éclairage', __FILE__),
+            3007 => __('Capteur de gaz Orbivo', __FILE__),
+            3008 => __('Détecteur de fuite d\'eau Orbivo', __FILE__),
+            3009 => __('Détecteur de mouvement Ihorn', __FILE__),
+            3011 => __('Capteur de monoxyde de carbone Orbivo', __FILE__),
+            3012 => __('Sonde de température Orbivo', __FILE__),
+            3015 => __('Capteur d\'humidité Orbivo', __FILE__),
+            3013 => __('Détecteur d\'ouverture de porte Ihorn', __FILE__),
+            4001 => __('EMS_AIR_STATION', __FILE__),
+            4003 => __('Sonde air', __FILE__),
+            4004 => __('Capteur de poussière', __FILE__),
+            4006 => __('Lampe intelligente', __FILE__),
+            4201 => __('Détecteur de mouvement Aqara', __FILE__),
+            4202 => __('Capteur thermométrique/hygrométrique Aqara', __FILE__),
+            4203 => __('Capteur d\'ouverture Aqara', __FILE__),
+            4301 => __('Prise Aqara', __FILE__),
+            10000 => __('Télévision', __FILE__),
+            10101 => __('Hub HEJ', __FILE__),
+            20000 => __('Montre', __FILE__)
+          /*  put("101", "refState");
+            put("102", "kmcState");
+            put("103", "wpState");
+            put("104", "btState");
+            put("105", "wnState");
+            put("106", "hvState");
+            put("201", Constants.WASHER_DRYER);
+            put("202", Constants.WASHER_DRYER);
+            put("203", "styler");
+            put("204", "dishwasher");
+            put("205", "shoeStyler");
+            put(HttpServerHeader.RESPONSE_CODE_SUCCESS_PARTIAL, "shoeCase");
+            put("221", Constants.WASHER_DRYER);
+            put("222", Constants.WASHER_DRYER);
+            put(NNetworkUtil.DEVICE_TYPE_NC, Constants.WASHER_DRYER);
+            put(NNetworkUtil.DEVICE_TYPE_NC_SLAVE, Constants.WASHER_DRYER);
+            put(AHABottomSheet.OVEN_TYPE, "ovenState");
+            put("302", "ovenState,otrState");
+            put("303", "cooktopState");
+            put("304", "hoodState");
+            put("305", "smallthingState");
+            put("306", "smallthingState");
+            put("501", T20SnapshotParser.ROBOTKING_STATE_KEY);
+            put("504", "qmState");
+            put("604", "massageChair");
+            put("701", "ess");*/
         );
         return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
     }
@@ -68,6 +138,36 @@ class lgthinq2 extends eqLogic
         );
         return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
     }
+  
+    public static function deviceTypeConstantsState($_id) {
+        $_deviceTypes = array(
+            101 => 'refState',
+            102 => 'kmcState',
+            103 => 'wpState',
+            104 => 'btState',
+            105 => 'wnState',
+            106 => 'hvState',
+            201 => 'washerDryer',
+            202 => 'washerDryer',
+            203 => 'styler',
+            204 => 'dishwasher',
+            205 => 'shoeStyler',
+            221 => 'washerDryer',
+            222 => 'washerDryer',
+            'HAB' => 'mSheet.OVEN_TYPE, "ovenState',
+            302 => 'ovenState,otrState',
+            303 => 'cooktopState',
+            304 => 'hoodState',
+            305 => 'smallthingState',
+            306 => 'smallthingState',
+            501 => '20SnapshotParser.ROBOTKING_STATE_KE',
+            504 => 'qmState',
+            604 => 'massageChair',
+            701 => 'ess'
+        );
+        return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
+    }
+  
   
     // Fonction pour effectuer une requête POST
     public static function postData($url, $data, $headers) {
@@ -419,7 +519,7 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token en cours, expiré depuis ', __FILE__) . (time() - config::byKey('expires_in', __CLASS__, 0)) . __(' secondes', __FILE__));
             return lgthinq2::refreshToken();
         }
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token à jour, il expire dans ', __FILE__) . (time() - config::byKey('expires_in', __CLASS__, 0)) . __(' secondes', __FILE__));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token à jour, il expire dans ', __FILE__) . (config::byKey('expires_in', __CLASS__, 0) - time()) . __(' secondes', __FILE__));
         return false;
     }
 
@@ -443,13 +543,14 @@ class lgthinq2 extends eqLogic
             $urlToken = '/oauth/1.0/oauth2/token?' . http_build_query($data);
             $headers[] = 'x-lge-oauth-signature: ' . base64_encode(hash_hmac('sha1', $urlToken."\n".$time, lgthinq2::OAUTHSECRETKEY, true));
             $rep = lgthinq2::postData('https://gb.lgeapi.com' . $urlToken, array(), $headers);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token résultat : ', __FILE__) . $rep);
             $token = json_decode($rep, true);
             if (!$token || !isset($token['access_token'])) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Impossible de récupérer le token d\'accès.');
                 return;
             }
             config::save('access_token', $token['access_token'], __CLASS__);
-            config::save('expires_in', ((time()) + $rep5['expires_in']), __CLASS__);
+            config::save('expires_in', (time() + $token['expires_in']), __CLASS__);
 
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token effectué ', __FILE__));
             return $rep;
@@ -983,7 +1084,7 @@ class lgthinq2 extends eqLogic
      */
     public function getImage()
     {
-        return 'plugins/lgthinq2/core/config/img/' . $this->getConfiguration('thumbnail', 'none');
+        return 'plugins/lgthinq2/core/config/img/' . $this->getConfiguration('thumbnail', '../../../plugin_info/lgthinq2_icon.png');
     }
 
     /**

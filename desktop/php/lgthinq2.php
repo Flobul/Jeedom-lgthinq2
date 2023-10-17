@@ -86,7 +86,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
             <fieldset>
               <div class="form-group">
                 <legend><i class="fas fa-sitemap icon_green"></i> {{Général}}</legend>
-                <label class="col-sm-4 control-label">{{Nom du vidéoprojecteur}}</label>
+                <label class="col-sm-4 control-label">{{Nom de l'appareil}}</label>
                 <div class="col-sm-5">
                   <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
                   <input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="{{Nom de la box}}" />
@@ -238,11 +238,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
                   <center>
                     <img src="plugins/lgthinq2/plugin_info/lgthinq2_icon.png" data-original=".svg" id="img_device" class="img-responsive" style="max-height:450px;max-width:400px" onerror="this.src='core/img/no_image.gif'" />
                   </center>
-                </div>
-              </div>
-              <div class="form-group">
-                <div class="col-sm-10">
-                  <a class="btn btn-success btn-sm roundedLeft roundedRight" id="bt_showPrograms"><i class="fa fa-cogs"></i> {{Programmes}}</a>
                 </div>
               </div>
 

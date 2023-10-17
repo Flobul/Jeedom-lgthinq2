@@ -38,10 +38,9 @@
     color: var(--al-danger-color);
 }
 
-#accordionVesync {
-    color: white !important;
+#accordionlgthinq2 {
+    color: #FFFFFF !important;
 }
-#accordionVesync:hover {
+#accordionlgthinq2:hover {
     opacity: .65
-}
 }

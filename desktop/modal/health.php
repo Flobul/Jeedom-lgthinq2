@@ -38,7 +38,7 @@ $eqLogics = lgthinq2::byType('lgthinq2');
         foreach ($eqLogics as $eqLogic) {
           echo '<tr><td><a href="' . $eqLogic->getLinkToConfiguration() . '" style="text-decoration: none;">' . $eqLogic->getHumanName(true) . '</a></td>';
 
-          echo '<td>' . $eqLogic->getConfiguration('type') . '</td>';
+          echo '<td>' . lgthinq2::deviceTypeConstants($eqLogic->getConfiguration('deviceType')) . '</td>';
 
           $status = '<span class="label label-success" style="font-size : 1em; cursor : default;">{{OK}}</span>';
           if ($eqLogic->getStatus('state') == 'nok') {
@@ -46,14 +46,14 @@ $eqLogics = lgthinq2::byType('lgthinq2');
           }
           echo '<td>' . $status . '</td>';
 
-          $connected = $eqLogic->getCmd('info', 'connectionStatus');
+          $connected = $eqLogic->getCmd('info', 'online');
           $print = '<span class="label label-danger" style="font-size : 1em; cursor : default;">{{NON}}</span>';
           if (is_object($connected) && $connected->execCmd() > "0") {
               $print = '<span class="label label-success" style="font-size : 1em; cursor : default;">{{OUI}}</span>';
           }
           echo '<td>' . $print . '</td>';
 
-          $type = lgthinq2::getDeviceTypeConfiguration($eqLogic->getConfiguration('deviceType'));
+          $type = lgthinq2::deviceTypeConstants($eqLogic->getConfiguration('deviceType'));
           $couche = '<span class="label label-danger" style="font-size : 1em; cursor : default;">{{N/A}}</span>';
           if (isset($type)) {
               $couche = '<span class="label label-info" style="font-size : 1em; cursor : default;">' . $type . '</span>';
