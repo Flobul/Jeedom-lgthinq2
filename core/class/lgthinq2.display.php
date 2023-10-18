@@ -44,11 +44,6 @@ class lgthinq2_display extends eqLogic
     }
 
     public static function displayEqLogicThumbnailContainer($eqLogics, $_type) {
-        $filteredEqLogics = array_filter($eqLogics, function ($eqLogic) use ($_type) {
-            return $eqLogic->getConfiguration('deviceType') == $_type;
-        });
-        if (empty($filteredEqLogics)) return;
-
         echo '<div class="panel panel-default">';
         echo '    <h3 class="panel-title">';
         echo '        <a id="accordionlgthinq2" class="accordion-toggle" data-toggle="collapse" data-parent="" href="#lgthinq2_' . $_type . '"><i class="' . lgthinq2::deviceTypeConstantsIcon($_type) . '"></i> ' . lgthinq2::deviceTypeConstants($_type) . '</a>';

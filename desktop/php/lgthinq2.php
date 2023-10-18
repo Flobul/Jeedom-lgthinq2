@@ -53,14 +53,18 @@ $eqLogics = eqLogic::byType($plugin->getId());
                 echo '        <a class="btn roundedRight hidden" id="bt_pluginDisplayAsTable" data-coreSupport="1" data-state="0"><i class="fas fa-grip-lines"></i></a>';
                 echo '    </div>';
                 echo '</div>';
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '101');
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '201');
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '202');
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '221');
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '222');
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '204');
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '301');
-                lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, '401');
+                // Filtrer les types de périphériques distincts
+                $deviceTypes = array_values(array_unique(array_filter(array_map(function ($eqLogic) {
+                    return lgthinq2::deviceTypeConstants($eqLogic->getConfiguration('deviceType')) != $eqLogic->getConfiguration('deviceType')
+                        ? $eqLogic->getConfiguration('deviceType')
+                        : null;
+                }, $eqLogics))));
+
+                // Afficher les miniatures pour chaque type de périphérique
+                foreach ($deviceTypes as $eqType) {
+                    lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, $eqType);
+                }
+
             }
         ?>
   </div>
