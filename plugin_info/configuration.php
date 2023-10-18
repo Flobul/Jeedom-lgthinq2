@@ -113,13 +113,13 @@
               <sup><i class="fas fa-question-circle" title="{{Entrez le mot de passe.}}"></i></sup>
           </label>
           <div class="input-group col-sm-2">
-              <input type="password" class="inputPassword configKey form-control" data-l1key="password" placeholder="password">
+              <input type="text" class="inputPassword configKey form-control" data-l1key="password" placeholder="password">
               <span class="input-group-btn">
                   <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
               </span>
           </div>
         </div>
-          
+
         <div class="form-group">
           <label class="col-sm-2 control-label"><strong> {{Connexion}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Connexion}}"></i></sup>
