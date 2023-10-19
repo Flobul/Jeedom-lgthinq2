@@ -22,7 +22,7 @@ require_once __DIR__ . "/../../../../core/php/core.inc.php";
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.11';
+    public static $_pluginVersion = '0.12';
 
     const LGTHINQ_GATEWAY      = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -581,7 +581,7 @@ class lgthinq2 extends eqLogic
                 if (is_object($eqLogic) && isset($items['modelJsonUri'])) {
                     $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType'));
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : modelJsonUri ' . $items['modelJsonUri']);
-                    $modelJson = $eqLogic->getModelJson($items['modelJsonUri'], $items['snapshot'][$refState], lgthinq2::getLangJson($items['langPackProductTypeUri']));
+                    $modelJson = $eqLogic->getModelJson($items['modelJsonUri'], $items['snapshot'][$refState], lgthinq2::getLangJson($items['langPackProductTypeUri']), lgthinq2::getLangJson($items['langPackModelUri']));
                 }
             }
         // refresh one device
@@ -589,7 +589,7 @@ class lgthinq2 extends eqLogic
             if (isset($devices['result']['snapshot'])) {
                 $eqLogic = lgthinq2::byLogicalId($devices['result']['deviceId'], __CLASS__);
                 if (is_object($eqLogic)) {
-                    $deviceTypeConfigFile = lgthinq2::loadConfigFile($devices['result']['deviceType']);
+                    $deviceTypeConfigFile = lgthinq2::loadConfigFile($eqLogic->getLogicalId());
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $deviceTypeConfigFile ' . json_encode($deviceTypeConfigFile));
                     if (!is_object($eqLogic->getCmd('info', 'online'))) {
                         $eqLogic->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, 'online');
@@ -718,18 +718,19 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' "Pack" n\'existe pas dans fichier de langue', __FILE__));
             return false;
         }
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Fichier de langue', __FILE__) . json_encode($data['pack']));
         return $data['pack'];
     }
 
-    public function getModelJson($_configFile, $_refState, $_configLang) {
+    public function getModelJson($_configFile, $_refState, $_configLang, $_configModelLang) {
         if ($_configFile != '') {
             $config = file_get_contents($_configFile);
             if (!is_json($config)) {
-                log::add(__CLASS__, 'debug', __('Le fichier de configuration est corrompu', __FILE__));
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration est corrompu', __FILE__));
             }
             $data = json_decode($config, true);
             if (!is_array($data)) {
-                log::add(__CLASS__, 'debug', __('Le fichier de configuration est invalide', __FILE__));
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration est invalide', __FILE__));
             }
             if (isset($data['MonitoringValue'])) {
                 mkdir(__DIR__ . '/../../data/');
@@ -748,13 +749,18 @@ class lgthinq2 extends eqLogic
                     $targetKeyValues = null;
                     $tempUnitValue = null;
 
+                    // subtype
                     if ($value['dataType'] == 'enum') {
                         if (isset($value['visibleItem']['monitoringIndex']) && count($value['visibleItem']['monitoringIndex']) == 2) {
+                            $subType = 'binary';
+                        } elseif (isset($value['valueMapping']) && count($value['valueMapping']) == 2) {
                             $subType = 'binary';
                         } else {
                             $subType = 'string';
                         }
-                    } elseif($value['dataType'] == 'range') {
+                    } elseif ($value['dataType'] == 'Boolean') {
+                        $subType = 'binary';
+                    } elseif ($value['dataType'] == 'range') {
                         $subType = 'numeric';
                         $minValue = $value['valueMapping']['min'];
                         $maxValue = $value['valueMapping']['max'];
@@ -762,26 +768,32 @@ class lgthinq2 extends eqLogic
                         if (isset($_refState['tempUnit'])) {
                             $unite = $_refState['tempUnit']=='CELSIUS'?'°C':'°F';
                         }
-                    } elseif($value['dataType'] == 'string') {
+                    } elseif ($value['dataType'] == 'string') {
                         $subType = 'other';
-                    } elseif($value['dataType'] == 'number') {
+                    } elseif ($value['dataType'] == 'number') {
                         $subType = 'numeric';
                     } else {
                         $subType = 'string';
                     }
+
+                    //name
                     $name = lgthinq2::getTranslatedNameFromConfig($key, $data);
-                    if (isset($_configLang[$name])) {
+                    if (isset($_configLang[$name]) && $_configLang[$name] != '') {
                         $name = $_configLang[$name];
+                    } elseif (isset($_configModelLang[$name]) && $_configModelLang[$name] != '') {
+                        $name = $_configModelLang[$name];
+                    } else {
+                        $name = $key;
                     }
+
+                    //unit and minValue&maxValue
                     if (isset($value['targetKey'])) {
                         $targetKey = $value['targetKey'];
                         if (isset($targetKey['tempUnit']) && count($targetKey['tempUnit']) > 1) {
                             if (isset($targetKey['tempUnit'][$_refState['tempUnit']])) {
                                 $tempUnitValue = $targetKey['tempUnit'][$_refState['tempUnit']];
 
-                            //foreach ($targetKey['tempUnit'] as $tempUnitId => $tempUnitValue) {
                                 if (isset($data['MonitoringValue'][$tempUnitValue])) {
-                                    //$commandsToRemove[] = $tempUnitValue;
                                     //supprimer cette commande contenue dans targetKey
                                     $targetKeyValues[$tempUnitValue] = $data['MonitoringValue'][$tempUnitValue]['valueMapping'];
                                     $lastValue = null;
@@ -798,7 +810,7 @@ class lgthinq2 extends eqLogic
                                                 $minValue = $currentValue;
                                                 $maxValue = ($maxValue === null) ? $currentValue : $maxValue;
                                             } else {
-                                              $minValue = $maxValue = $currentValue;
+                                                $minValue = $maxValue = $currentValue;
                                             }
                                             $lastValue = $currentValue;
                                         }
@@ -808,6 +820,7 @@ class lgthinq2 extends eqLogic
                             }
                         }
                     }
+
                     $commands[] = array(
                         'name' => $name,
                         'logicalId' => $key,
@@ -843,7 +856,9 @@ class lgthinq2 extends eqLogic
     }
 
     public static function getTranslatedNameFromConfig($_name, $_config) {
-        if (isset($_config['Config'])) {
+        if (isset($_config['MonitoringValue'][$_name]) && isset($_config['MonitoringValue'][$_name]['label'])) {
+            return $_config['MonitoringValue'][$_name]['label'];
+        } elseif (isset($_config['Config'])) {
             if (isset($_config['Config']['visibleItems'])) {
                 foreach ($_config['Config']['visibleItems'] as $visibleItems) {
                      if ($visibleItems['feature'] == $_name) {
@@ -873,10 +888,9 @@ class lgthinq2 extends eqLogic
         return $this->checkAndUpdateCmd($refStateId, $refStateValue, $timestamp);
     }
 
-    // @return		array		$data (commands.json)
     private static function loadConfigFile($_type) {
         log::add(__CLASS__, 'debug', __FUNCTION__ .' début' . $_type);
-        $filename = __DIR__ . '/../../core/config/devices/' . $_type . '.json';
+        $filename = __DIR__ . '/../../data/' . $_type . '.json';
         if (file_exists($filename) === false) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Impossible de trouver le fichier de configuration pour l\'équipement ', __FILE__));
             return;
@@ -887,7 +901,7 @@ class lgthinq2 extends eqLogic
             return;
         }
         $data = json_decode($content, true);
-        if (!is_array($data) || !isset($data['commands'])) {
+        if (!is_array($data)/* || !isset($data['commands'])*/) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration ' . $filename . ' est invalide', __FILE__));
             return;
         }
@@ -1042,6 +1056,11 @@ class lgthinq2 extends eqLogic
     {
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('début ', __FILE__) . $this->getName() . ' ' . json_encode($_properties));
         $cmd = $this->getCmd(null, $_properties['logicalId']);
+        foreach ($this->getCmd() as $aCmd) {
+            if ($aCmd->getName() == $_properties['name'] && $aCmd->getLogicalId() != $_properties['logicalId']) {
+                $_properties['name'] .= config::genKey(2);
+            }
+        }
         if (!is_object($cmd)) {
             $cmd = new lgthinq2Cmd();
             $cmd->setType((!$_cmdInfo?'info':'action'));
