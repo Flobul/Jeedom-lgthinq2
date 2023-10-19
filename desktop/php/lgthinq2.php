@@ -159,67 +159,57 @@ $eqLogics = eqLogic::byType($plugin->getId());
                       </td>
                       <td>
                         <span class="label label-default" style="font-size:1em;white-space:unset !important">
-                          <span class="eqLogicAttr" data-l1key="configuration" data-l2key="type"></span>
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="col-sm-4">
-                        <span style="font-size : 1em;">{{Type de connexion}}</span>
-                      </td>
-                      <td>
-                        <span class="label label-default" style="font-size:1em;white-space:unset !important">
-                          <span class="eqLogicAttr" data-l1key="configuration" data-l2key="connectionType"></span>
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="col-sm-4">
-                        <span style="font-size : 1em;">{{Type d'appareil}}</span>
-                      </td>
-                      <td>
-                        <span class="label label-default" style="font-size:1em;white-space:unset !important">
                           <span class="eqLogicAttr" data-l1key="configuration" data-l2key="deviceType"></span>
                         </span>
                       </td>
                     </tr>
                     <tr>
                       <td class="col-sm-4">
-                        <span style="font-size : 1em;">{{Identifiant de connexion}}</span>
+                        <span style="font-size : 1em;">{{Identifiant de la maison}}</span>
                       </td>
                       <td>
                         <span class="label label-default" style="font-size:1em;white-space:unset !important">
-                          <span class="eqLogicAttr" data-l1key="configuration" data-l2key="cid"></span>
+                          <span class="eqLogicAttr" data-l1key="configuration" data-l2key="homeId"></span>
                         </span>
                       </td>
                     </tr>
                     <tr>
                       <td class="col-sm-4">
-                        <span style="font-size : 1em;">{{Identifiant unique}}</span>
+                        <span style="font-size : 1em;">{{Identifiant de l'appareil}}</span>
                       </td>
                       <td>
                         <span class="label label-default" style="font-size:1em;white-space:unset !important">
-                          <span class="eqLogicAttr" data-l1key="configuration" data-l2key="uuid"></span>
+                          <span class="eqLogicAttr" data-l1key="configuration" data-l2key="deviceId"></span>
                         </span>
                       </td>
                     </tr>
                     <tr>
                       <td class="col-sm-4">
-                        <span style="font-size : 1em;">{{Module}}</span>
+                        <span style="font-size : 1em;">{{Nom du modèle}}</span>
                       </td>
                       <td>
                         <span class="label label-default" style="font-size:1em;white-space:unset !important">
-                          <span class="eqLogicAttr" data-l1key="configuration" data-l2key="configModule"></span>
+                          <span class="eqLogicAttr" data-l1key="configuration" data-l2key="modelName"></span>
                         </span>
                       </td>
                     </tr>
                     <tr>
                       <td class="col-sm-4">
-                        <span style="font-size : 1em;">{{Région de l'appareil}}</span>
+                        <span style="font-size : 1em;">{{Type de plateforme}}</span>
                       </td>
                       <td>
                         <span class="label label-default" style="font-size:1em;white-space:unset !important">
-                          <span class="eqLogicAttr" data-l1key="configuration" data-l2key="deviceRegion"></span>
+                          <span class="eqLogicAttr" data-l1key="configuration" data-l2key="platformType"></span>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="col-sm-4">
+                        <span style="font-size : 1em;">{{Dernière communication}}</span>
+                      </td>
+                      <td>
+                        <span class="label label-default" style="font-size:1em;white-space:unset !important">
+                          <span class="eqLogicAttr" data-l1key="status" data-l2key="lastCommunication"></span>
                         </span>
                       </td>
                     </tr>
