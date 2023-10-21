@@ -100,6 +100,66 @@ class lgthinq2 extends eqLogic
         return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
     }
 
+    public static function deviceTypeCodeConstants($_id) {
+        $_deviceTypes = array(
+            'AI01'    => __('Climatisation/Air Care', __FILE__),
+            'AI04'    => __('Climatiseur commercial', __FILE__),
+            'AI05'    => __('Pompe à chaleur air-eau', __FILE__),
+            'AI07'    => __('Chauffe-eau', __FILE__),
+            'AI08'    => __('Ventilation', __FILE__),
+            'AI09'    => __('Cloud Gateway', __FILE__),
+            'DUCT'    => __('Gainable', __FILE__),
+            'ETC'     => __('Autre modèle', __FILE__),
+            'GRAM'    => __('gram', __FILE__),
+            'KI0101'  => __('Réfrigérateur side by side', __FILE__),
+            'KI0102'  => __('Réfrigérateur deux portes', __FILE__),
+            'KI0103'  => __('Réfrigérateur congélateur en haut', __FILE__),
+            'KI0104'  => __('Réfrigérateur congélateur en bas', __FILE__),
+            'KI03'    => __('Four', __FILE__),
+            'KI06'    => __('Lave-vaisselle', __FILE__),
+            'KI07'    => __('Four micro-ondes', __FILE__),
+            'KI08'    => __('Table de cuisson', __FILE__),
+            'KI09'    => __('Hotte', __FILE__),
+            'KI10'    => __('Cave à vin', __FILE__),
+            'LA01'    => __('Lave-linge top', __FILE__),
+            'LA02'    => __('Lave-linge hublot', __FILE__),
+            'LA03'    => __('Sèche-linge', __FILE__),
+            'LA04'    => __('Styler', __FILE__),
+            'LA05'    => __('Lave-linge sur piédestal', __FILE__),
+            'LA06'    => __('WashTower', __FILE__),
+            'LI01'    => __('Aspirateur robot', __FILE__),
+            'LI02'    => __('Purificateur d\'air', __FILE__),
+            'LI04'    => __('Aspirateur balai', __FILE__),
+            'MAT5000' => __('Éclairage', __FILE__),
+            'MAT5001' => __('Éclairage', __FILE__),
+            'MAT5002' => __('Éclairage', __FILE__),
+            'MAT5003' => __('Éclairage', __FILE__),
+            'MAT5100' => __('Raccordement', __FILE__),
+            'MAT5101' => __('Raccordement', __FILE__),
+            'MAT5102' => __('Pompe', __FILE__),
+            'MAT5205' => __('Interrupteur', __FILE__),
+            'MAT5300' => __('Capteur de contact', __FILE__),
+            'MAT5301' => __('Capteur de lumière', __FILE__),
+            'MAT5302' => __('Capteur d’occupation', __FILE__),
+            'MAT5303' => __('Capteur de température', __FILE__),
+            'MAT5304' => __('Capteur de pression', __FILE__),
+            'MAT5305' => __('Capteur de débit', __FILE__),
+            'MAT5307' => __('Capteur d’humidité', __FILE__),
+            'MAT5400' => __('Verrouillage de porte', __FILE__),
+            'MAT5402' => __('Couverture de fenêtre', __FILE__),
+            'MAT5500' => __('Unité de chauffage / refroidissement"', __FILE__),
+            'MAT5501' => __('Thermostat', __FILE__),
+            'MAT5502' => __('Capteur de lumière', __FILE__),
+            'POT'     => __('Climatiseur mobile', __FILE__),
+            'RAC'     => __('Climatiseur mural', __FILE__),
+            'SH'      => __('Hub IoT', __FILE__),
+            'SPAC'    => __('Appareil sur pieds', __FILE__),
+            'SRAC'    => __('Climatiseur mural', __FILE__),
+            'ULTRAPC' => __('UltraPC', __FILE__)
+        );
+        return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:false;
+    }
+
     public static function deviceTypeConstantsIcon($_id) {
         $_deviceTypes = array(
             101 => 'icon techno-refrigerator3',
@@ -155,8 +215,8 @@ class lgthinq2 extends eqLogic
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => http_build_query($data),
-            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_POSTFIELDS => $data,
+            CURLOPT_HTTPHEADER => $headers
         ));
         $response = curl_exec($curl);
         curl_close($curl);
@@ -284,6 +344,7 @@ class lgthinq2 extends eqLogic
       public static function defaultDevicesEmpHeaders() {
         return array(
             'Accept: application/json',
+            'Content-Type: application/json',
             'x-thinq-application-key: wideq',
             'x-thinq-security-key: nuts_securitykey'
         );
@@ -303,7 +364,7 @@ class lgthinq2 extends eqLogic
         $headers[] = 'origin: ' . lgthinq2::LGE_MEMBERS_URL;
         $data = ['userAuth2' => lgthinq2::getPassword(true)];
         $headers[] = 'content-length: ' . strlen(http_build_query($data));
-        $rep = lgthinq2::postData(lgthinq2::LGACC_SIGNIN_URL . 'signInPre', $data, $headers);
+        $rep = lgthinq2::postData(lgthinq2::LGACC_SIGNIN_URL . 'signInPre', http_build_query($data), $headers);
         return $rep;
     }
 
@@ -314,7 +375,7 @@ class lgthinq2 extends eqLogic
             'user_auth2' => lgthinq2::getPassword(true),
             'log_param' => 'login request / user_id : ' . lgthinq2::getUsername() . ' / third_party : null / svc_list : SVC202,SVC710 / 3rd_service : '
         );
-        $rep = lgthinq2::postData(lgthinq2::LGACC_SPX_URL . 'preLogin', $data, $headers);
+        $rep = lgthinq2::postData(lgthinq2::LGACC_SPX_URL . 'preLogin', http_build_query($data), $headers);
         return $rep;
     }
     // Étape 2
@@ -336,7 +397,7 @@ class lgthinq2 extends eqLogic
             'local_lang'      => lgthinq2::getLanguage('lowercase')
         );
         $headers[] = 'content-length: ' . strlen(http_build_query($data));
-        $rep = lgthinq2::postData(lgthinq2::LGACC_SIGNIN_URL . 'signInAct', $data, $headers);
+        $rep = lgthinq2::postData(lgthinq2::LGACC_SIGNIN_URL . 'signInAct', http_build_query($data), $headers);
         return $rep;
     }
     // Étape 2
@@ -349,7 +410,7 @@ class lgthinq2 extends eqLogic
             'password_hash_prameter_flag' => 'Y',
             'svc_list' => 'SVC202,SVC710', // SVC202=LG SmartHome, SVC710=EMP OAuth
         );
-        $rep = lgthinq2::postData(lgthinq2::LG_EMPTERMS_URL . 'emp/v2.0/account/session/' . lgthinq2::getUsername(true), $data, $headers);
+        $rep = lgthinq2::postData(lgthinq2::LG_EMPTERMS_URL . 'emp/v2.0/account/session/' . lgthinq2::getUsername(true), http_build_query($data), $headers);
         return $rep;
     }
     // Étape 3
@@ -370,7 +431,7 @@ class lgthinq2 extends eqLogic
             'local_country' => lgthinq2::getLanguage('uppercase'),
             'local_lang' => lgthinq2::getLanguage('lowercase'),
         );
-        $rep = lgthinq2::postData(lgthinq2::LGACC_SIGNIN_URL . 'oauth', $data, $headers);
+        $rep = lgthinq2::postData(lgthinq2::LGACC_SIGNIN_URL . 'oauth', http_build_query($data), $headers);
         return $rep;
     }
 
@@ -416,8 +477,30 @@ class lgthinq2 extends eqLogic
         );
         $urlToken = "/oauth/1.0/oauth2/token?" . http_build_query($data4);
         $headers[] = 'x-lge-oauth-signature: ' . base64_encode(hash_hmac('sha1', $urlToken."\n".$time['date'], lgthinq2::OAUTHSECRETKEY, true));
-        $rep = lgthinq2::postData('https://gb.lgeapi.com' . $urlToken, array(), $headers);
+        $rep = lgthinq2::postData('https://gb.lgeapi.com' . $urlToken, '', $headers);
         return $rep;
+    }
+
+    // Étape 6 : thinq1 old login method
+    public static function step6() {
+        $headers = lgthinq2::defaultDevicesEmpHeaders();
+        $headers[] = 'x-thinq-token: ' . config::byKey('access_token', __CLASS__);
+
+        $data = array(
+            'lgedmRoot' => array(
+                'countryCode' => lgthinq2::getLanguage('uppercase'),
+                'langCode' => lgthinq2::getLanguage('hyphen'),
+                'loginType' => 'EMP',
+                'token' => config::byKey('access_token', __CLASS__)
+            )
+        );
+
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' URL : ', __FILE__) . lgthinq2::LGTHINQ1_SERV_DEVICES . 'member/login' );
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' DATA : ', __FILE__) . json_encode($data));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' HEADERS : ', __FILE__) . json_encode($headers));
+
+        $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'member/login', json_encode($data, JSON_PRETTY_PRINT), $headers);
+        return $response;
     }
 
     public static function login() {
@@ -471,7 +554,7 @@ class lgthinq2 extends eqLogic
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' : URL CODE = ' .$code);
             }
             if (isset($queryParams['user_number'])) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . ' : URL CODE = ' .$code);
+                log::add(__CLASS__, 'debug', __FUNCTION__ . ' : URL USER NUMBER = ' . $queryParams['user_number']);
                 config::save('user_number', $queryParams['user_number'], __CLASS__);
             }
         } else {
@@ -506,10 +589,31 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Impossible de récupérer le token d\'accès.');
             return;
         }
+
         config::save('access_token', $token['access_token'], __CLASS__);
         config::save('expires_in', (($timeToExp/1000) + $rep5['expires_in']), __CLASS__);
         config::save('refresh_token', $token['refresh_token'], __CLASS__);
         config::save('oauth2_backend_url', $token['oauth2_backend_url'], __CLASS__);
+
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : STEP 6');
+        $rep6 = lgthinq2::step6();
+        if (!$rep6) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Étape 6 a échoué.');
+            return;
+        }
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : FINAL TOKENS = ' . $rep5);
+        $arr6 = json_decode($rep6, true);
+        if (!$arr6 || !isset($arr6['lgedmRoot'])) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de la requête  ' . json_encode($arr6));
+            return;
+        }
+        if (!isset($arr6['lgedmRoot']['returnCd'])) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de la réponse  ' . json_encode($arr6['lgedmRoot']));
+            return;
+        }
+        if ($arr6['lgedmRoot']['returnCd'] != '0000') {
+            config::save('jsessionId', $arr6['lgedmRoot']['jsessionId'], __CLASS__);
+        }
     }
 
     public static function getTokenIsExpired() {
@@ -540,7 +644,7 @@ class lgthinq2 extends eqLogic
             $headers[] = 'x-lge-oauth-date: ' . $time;
             $urlToken = '/oauth/1.0/oauth2/token?' . http_build_query($data);
             $headers[] = 'x-lge-oauth-signature: ' . base64_encode(hash_hmac('sha1', $urlToken."\n".$time, lgthinq2::OAUTHSECRETKEY, true));
-            $rep = lgthinq2::postData('https://gb.lgeapi.com' . $urlToken, array(), $headers);
+            $rep = lgthinq2::postData('https://gb.lgeapi.com' . $urlToken, '', $headers);
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token résultat : ', __FILE__) . $rep);
             $token = json_decode($rep, true);
             if (!$token || !isset($token['access_token'])) {
@@ -559,7 +663,7 @@ class lgthinq2 extends eqLogic
     }
 
     public static function getDevices($_deviceId = '', $_tokenRefreshed = false) {
-      
+
         lgthinq2::getTokenIsExpired();
 
         $curl = curl_init();
@@ -691,21 +795,24 @@ class lgthinq2 extends eqLogic
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $devices  ' . json_encode($devices));
     }
 
-
     public function getDeviceWorkId() {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
         $headers[] = 'x-thinq-token: ' . config::byKey('access_token', __CLASS__);
-//        $headers[] = 'x-thinq-jsessionId: emp;1697821791323;000031918';
+        $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__);
 
         $data = array(
-            'cmd' => 'Mon',
-			'cmdOpt' => 'Start',
-			'deviceId' => $this->getLogicalId(),
-			'workId' => lgthinq2::setUUID()
+            'lgedmRoot' => array(
+                'cmd' => 'Mon',
+                'cmdOpt' => 'Start',
+                'deviceId' => $this->getLogicalId(),
+                'workId' => lgthinq2::setUUID()
+            )
         );
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' URL : ', __FILE__) . lgthinq2::LGTHINQ1_SERV_DEVICES . 'member/login' );
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' DATA : ', __FILE__) . json_encode($data));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' HEADERS : ', __FILE__) . json_encode($headers));
 
-        $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiMon', $data, $headers);
+        $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiMon', json_encode($data, JSON_PRETTY_PRINT), $headers);
 
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' RESPONSE : ', __FILE__) . $response);
         if (!$response) {
@@ -728,6 +835,7 @@ class lgthinq2 extends eqLogic
         $headers[] = 'x-emp-token: ' . config::byKey('access_token', __CLASS__);
         $headers[] = 'x-user-no: ' . config::byKey('user_number', __CLASS__);
         $headers[] = 'x-message-id: ' . bin2hex(random_bytes(22));
+        $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__);
 
         $data = array(
             'workList' => array(
@@ -735,7 +843,7 @@ class lgthinq2 extends eqLogic
                 'workId' => $this->getConfiguration('workId')
             )
         );
-        $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiResult', $data, $headers);
+        $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiResult', json_encode($data, JSON_PRETTY_PRINT), $headers);
 
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' response : ', __FILE__) . $response);
         if (!$response) {
@@ -1164,6 +1272,7 @@ class lgthinq2 extends eqLogic
         }
         if (isset($_capa['deviceCode'])) {
             $eqLogic->setConfiguration('deviceCode', $_capa['deviceCode']);
+            $eqLogic->setConfiguration('deviceCodeName', lgthinq2::deviceTypeCodeConstants($_capa['deviceCode']));
         }
 
         if (isset($_capa['homeId'])) {
