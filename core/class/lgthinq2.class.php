@@ -612,8 +612,10 @@ class lgthinq2 extends eqLogic
             return;
         }
         if ($arr6['lgedmRoot']['returnCd'] != '0000') {
-            config::save('jsessionId', $arr6['lgedmRoot']['jsessionId'], __CLASS__);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Code retour erroné  ' . json_encode($arr6['lgedmRoot']));
+            return;
         }
+        config::save('jsessionId', $arr6['lgedmRoot']['jsessionId'], __CLASS__);
     }
 
     public static function getTokenIsExpired() {
