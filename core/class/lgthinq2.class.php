@@ -34,14 +34,14 @@ class lgthinq2 extends eqLogic
     const LGACC_SPX_URL         = 'https://fr.m.lgaccount.com/spx/';
     const LGTHINQ1_SERV_DEVICES = 'https://eic.lgthinq.com:46030/api/';
     const LGTHINQ2_SERV_DEVICES = 'https://eic-service.lgthinq.com:46030/v1/service/devices/';
-  
+
     const APPLICATION_KEY       = '6V1V8H2BN5P9ZQGOI5DAQ92YZBDO3EK9'; // for spx login
     const OAUTHSECRETKEY        = 'c053c2a6ddeb7ad97cb0eed0dcb31cf8';
     const APPKEY                = 'LGAO221A02';
     const SVCCODE               = 'SVC202';
     const XAPIKEY               = 'VGhpblEyLjAgU0VSVklDRQ==';
     const MAXRETRY              = 3;
-      
+
     public static function deviceTypeConstants($_id) {
         $_deviceTypes = array(
             000 => __('Inconnu', __FILE__),
@@ -99,7 +99,7 @@ class lgthinq2 extends eqLogic
         );
         return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
     }
-  
+
     public static function deviceTypeConstantsIcon($_id) {
         $_deviceTypes = array(
             101 => 'icon techno-refrigerator3',
@@ -113,7 +113,7 @@ class lgthinq2 extends eqLogic
         );
         return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
     }
-  
+
     public static function deviceTypeConstantsState($_id) {
         $_deviceTypes = array(
             101 => 'refState',
@@ -185,7 +185,7 @@ class lgthinq2 extends eqLogic
         }
         return null;
     }
-  
+
     public static function getClientId() {
          if (config::byKey('cliend_id', __CLASS__, '') == '') {
              log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Création du client_id ', __FILE__));
@@ -193,7 +193,7 @@ class lgthinq2 extends eqLogic
          }
          return config::byKey('cliend_id', __CLASS__);
     }
-  
+
     public static function getLanguage($_type) {
         $lang = config::byKey('language', 'core', 'fr_FR');
         $arrLang = explode('_', $lang);
@@ -206,7 +206,7 @@ class lgthinq2 extends eqLogic
                 return str_replace('_', '-', $lang);
             case 'plain':
                 return $lang;
-            default:   
+            default:
                 return $lang;
         }
     }
@@ -240,7 +240,7 @@ class lgthinq2 extends eqLogic
             'Accept-Language: ' . lgthinq2::getLanguage('hyphen')  . ',' . lgthinq2::getLanguage('lowercase') . ';q=0.9',
         );
     }
-  
+
     public static function defaultDevicesHeaders() {
         return array(
             'Accept: application/json',
@@ -265,7 +265,7 @@ class lgthinq2 extends eqLogic
         );
     }
 
-    public static function defaultDevicesEmpHeaders() {
+    /*public static function defaultDevicesEmpHeaders() {
         return array(
             'Accept: application/json',
             'x-country-code: ' . lgthinq2::getLanguage('uppercase'),
@@ -280,9 +280,15 @@ class lgthinq2 extends eqLogic
             'x-thinq-application-key: wideq',
             'x-thinq-security-key: nuts_securitykey'
         );
+    }*/
+      public static function defaultDevicesEmpHeaders() {
+        return array(
+            'Accept: application/json',
+            'x-thinq-application-key: wideq',
+            'x-thinq-security-key: nuts_securitykey'
+        );
     }
-  
-  
+
     public static function getPassword($_encrypted = false) {
         return $_encrypted ? hash('sha512', config::byKey('password', __CLASS__)) : config::byKey('password', __CLASS__);
     }
@@ -300,7 +306,7 @@ class lgthinq2 extends eqLogic
         $rep = lgthinq2::postData(lgthinq2::LGACC_SIGNIN_URL . 'signInPre', $data, $headers);
         return $rep;
     }
-  
+
   // Étape 1
     public static function step1() {
         $headers = lgthinq2::defaultHeaders();
@@ -505,7 +511,7 @@ class lgthinq2 extends eqLogic
         config::save('refresh_token', $token['refresh_token'], __CLASS__);
         config::save('oauth2_backend_url', $token['oauth2_backend_url'], __CLASS__);
     }
-  
+
     public static function getTokenIsExpired() {
         if (config::byKey('expires_in', __CLASS__, 0) < time()) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token en cours, expiré depuis ', __FILE__) . (time() - config::byKey('expires_in', __CLASS__, 0)) . __(' secondes', __FILE__));
@@ -605,10 +611,10 @@ class lgthinq2 extends eqLogic
             }
         }
     }
-  
+
 
     public function getDevicesStatus($_tokenRefreshed = false) {
-      
+
         lgthinq2::getTokenIsExpired();
         $platformType = $this->getConfiguration('platformType');
         if ($platformType == 'thinq1') {
@@ -684,16 +690,12 @@ class lgthinq2 extends eqLogic
             }
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $devices  ' . json_encode($devices));
     }
-  
-  
+
+
     public function getDeviceWorkId() {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
-        $headers[] = 'Host: eic-service.lgthinq.com:46030';
-        $headers[] = 'x-message-id: ' . bin2hex(random_bytes(22));
-        $headers[] = 'x-client-id: ' . lgthinq2::getClientId();
-        $headers[] = 'x-emp-token: ' . config::byKey('access_token', __CLASS__);
-        $headers[] = 'x-thinq-jsessionId: emp;1697821791323;000031918';
-        $headers[] = 'x-user-no: ' . config::byKey('user_number', __CLASS__);
+        $headers[] = 'x-thinq-token: ' . config::byKey('access_token', __CLASS__);
+//        $headers[] = 'x-thinq-jsessionId: emp;1697821791323;000031918';
 
         $data = array(
             'cmd' => 'Mon',
@@ -749,8 +751,8 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Requête réussie ' . json_encode($devices));
         }
     }
-  
-  
+
+
     private static function setUUID($data = null) {
         $data = $data ?? random_bytes(16);
         assert(strlen($data) == 16);
@@ -759,7 +761,7 @@ class lgthinq2 extends eqLogic
         $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
-  
+
     /**
      * Méthode appellée par le core (moteur de tâche) cron configuré dans la fonction lgthinq2_install
      * Lance une fonction pour récupérer les appareils et une fonction pour rafraichir les commandes
@@ -842,7 +844,7 @@ class lgthinq2 extends eqLogic
         }
         return false;
     }
-  
+
     public function getLangJson($_configFile) {
         if ($_configFile == '') {
             return false;
@@ -864,7 +866,7 @@ class lgthinq2 extends eqLogic
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Fichier de langue', __FILE__) . json_encode($data['pack']));
         return $data['pack'];
     }
-  
+
     public function createCmdFromModelAndLangFiles($_configFile, $_refState, $_configLang, $_configModelLang) {
         if ($_configFile != '') {
             $config = file_get_contents($_configFile);
@@ -892,7 +894,7 @@ class lgthinq2 extends eqLogic
                     $targetKeyValues = null;
                     $tempUnitValue = null;
                     $historized = false;
-                    
+
                     // subtype
                     if ($value['dataType'] == 'enum') {
                         if (isset($value['visibleItem']['monitoringIndex']) && count($value['visibleItem']['monitoringIndex']) == 2) {
@@ -1004,7 +1006,7 @@ class lgthinq2 extends eqLogic
         }
         return false;
     }
-  
+
     public static function getTranslatedNameFromConfig($_name, $_config) {
         if (isset($_config['MonitoringValue'][$_name]) && isset($_config['MonitoringValue'][$_name]['label'])) {
             return $_config['MonitoringValue'][$_name]['label'];
@@ -1058,7 +1060,7 @@ class lgthinq2 extends eqLogic
         return $data;
     }
 
-  
+
     public static function getMessagesTypeLabel($_messageType) {
         switch ($_messageType) {
             case 'communityNotificationArr':
@@ -1163,7 +1165,7 @@ class lgthinq2 extends eqLogic
         if (isset($_capa['deviceCode'])) {
             $eqLogic->setConfiguration('deviceCode', $_capa['deviceCode']);
         }
-      
+
         if (isset($_capa['homeId'])) {
             $eqLogic->setConfiguration('homeId', $_capa['homeId']);
         }
