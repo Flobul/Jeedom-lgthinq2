@@ -725,7 +725,7 @@ class lgthinq2 extends eqLogic
         $platformType = $this->getConfiguration('platformType');
         if ($platformType == 'thinq1') {
             if ($this->getConfiguration('workId', '') == '') {
-                $this->getDeviceWorkId();
+                $this->getDeviceWorkId('Start');
             }
             return $this->getDeviceRtiResult();
         }
@@ -797,7 +797,7 @@ class lgthinq2 extends eqLogic
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $devices  ' . json_encode($devices));
     }
 
-    public function getDeviceWorkId() {
+    public function getDeviceWorkId($_action) {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
         $headers[] = 'x-thinq-token: ' . config::byKey('access_token', __CLASS__);
         $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__);
@@ -805,12 +805,12 @@ class lgthinq2 extends eqLogic
         $data = array(
             'lgedmRoot' => array(
                 'cmd' => 'Mon',
-                'cmdOpt' => 'Start',
+                'cmdOpt' => $_action,
                 'deviceId' => $this->getLogicalId(),
                 'workId' => lgthinq2::setUUID()
             )
         );
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' URL : ', __FILE__) . lgthinq2::LGTHINQ1_SERV_DEVICES . 'member/login' );
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' URL : ', __FILE__) . lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiMon' );
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' DATA : ', __FILE__) . json_encode($data));
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' HEADERS : ', __FILE__) . json_encode($headers));
 
@@ -827,16 +827,16 @@ class lgthinq2 extends eqLogic
             return;
         }
         if ($work['returnCd'] != '0000') {
-            $this->setConfiguration('workId', $work['workId'])->save();
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de code ' . json_encode($work));
+            return;
         }
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Requête réussie ' . json_encode($work));
+        $this->setConfiguration('workId', $work['workId'])->save();
     }
 
     public function getDeviceRtiResult() {
         $headers = lgthinq2::defaultDevicesHeaders();
-        $headers[] = 'x-client-id: ' . lgthinq2::getClientId();
-        $headers[] = 'x-emp-token: ' . config::byKey('access_token', __CLASS__);
-        $headers[] = 'x-user-no: ' . config::byKey('user_number', __CLASS__);
-        $headers[] = 'x-message-id: ' . bin2hex(random_bytes(22));
+        $headers[] = 'x-thinq-token: ' . config::byKey('access_token', __CLASS__);
         $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__);
 
         $data = array(
@@ -858,8 +858,10 @@ class lgthinq2 extends eqLogic
             return;
         }
         if ($rti['returnCd'] != '0000') {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Requête réussie ' . json_encode($devices));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de code ' . json_encode($rti));
+            return;
         }
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Requête réussie ' . json_encode($rti));
     }
 
 
