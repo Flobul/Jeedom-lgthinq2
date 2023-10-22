@@ -137,8 +137,11 @@
           <label class="col-sm-2 control-label"><strong> {{Jeton d'accès}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
           </label>
-          <div class="col-sm-8">
-              <input type="text" disabled class="configKey form-control" data-l1key="access_token"></input>
+          <div class="input-group col-sm-8">
+              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="access_token">
+              <span class="input-group-btn">
+                  <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
+              </span>
           </div>
         </div>
 
@@ -146,8 +149,11 @@
           <label class="col-sm-2 control-label"><strong> {{Expiration du jeton (en secondes)}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
           </label>
-          <div class="col-sm-2">
-              <input type="text" disabled class="configKey form-control" data-l1key="expires_in"></input>
+          <div class="input-group col-sm-2">
+              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="expires_in"></input>
+              <span class="input-group-btn">
+                  <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
+              </span>
           </div>
         </div>
 
@@ -155,8 +161,11 @@
           <label class="col-sm-2 control-label"><strong> {{Jeton de rafraîchissement}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
           </label>
-          <div class="col-sm-8">
-              <input type="text" disabled class="configKey form-control" data-l1key="refresh_token"></input>
+          <div class="input-group col-sm-8">
+              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="refresh_token"></input>
+              <span class="input-group-btn">
+                  <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
+              </span>
           </div>
         </div>
 
@@ -164,8 +173,11 @@
           <label class="col-sm-2 control-label"><strong> {{Identifiant de Jsession}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
           </label>
-          <div class="col-sm-6">
-              <input type="text" disabled class="configKey form-control" data-l1key="jsessionId"></input>
+          <div class="input-group col-sm-6">
+              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="jsessionId"></input>
+              <span class="input-group-btn">
+                  <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
+              </span>
           </div>
         </div>
 
