@@ -45,12 +45,6 @@ function lgthinq2_update() {
 	$cron->setTimeout(30);
 	$cron->save();
 	$cron->stop();
-    foreach (eqLogic::byType('lgthinq2') as $eqLogic) {
-      if ($eqLogic->getConfiguration('macID') == $eqLogic->getLogicalId()) {
-          $eqLogic->setLogicalId($eqLogic->getConfiguration('uuid'), $eqLogic->getConfiguration('macID'))->save();
-      }
-    }
-
 }
 
 function lgthinq2_remove() {
@@ -58,6 +52,11 @@ function lgthinq2_remove() {
 	if (is_object($cron)) {
 		$cron->remove();
 	}
+    foreach (eqLogic::byType('lgthinq2') as $eqLogic) {
+        if ($eqLogic->getConfiguration('platformType') == 'thinq1') {
+            $eqLogic->getDeviceWorkId('Stop');
+        }
+    }
 }
 
 ?>

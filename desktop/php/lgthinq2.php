@@ -34,6 +34,11 @@ $eqLogics = eqLogic::byType($plugin->getId());
     <div class="eqLogicThumbnailContainer">
 
         <?php
+          if ((config::byKey('access_token', 'lgthinq2', '') == '' || config::byKey('expires_in', 'lgthinq2', '') == '' ||
+              config::byKey('refresh_token', 'lgthinq2', '') == '' || config::byKey('jsessionId', 'lgthinq2', '') == '') && 
+              (config::byKey('id', 'lgthinq2', '') != '' || config::byKey('password', 'lgthinq2', '') != '')) {
+              lgthinq2_display::displayActionCard('{{Connexion}}', 'fa-fingerprint', 'id="bt_getCredentials"', 'eqLogicAction logoPrimaryGreenLGthinq2');
+          }
           lgthinq2_display::displayActionCard('{{Synchronisation}}', 'fa-sync', 'id="bt_synchronizelgthinq2"', 'eqLogicAction logoPrimaryLGthinq2');
           lgthinq2_display::displayActionCard('{{Configuration}}', 'fa-wrench', 'data-action="gotoPluginConf"', 'logoSecondary');
           lgthinq2_display::displayActionCard('{{Santé}}', 'fa-medkit', 'id="bt_healthlgthinq2"', 'logoSecondary');
@@ -165,6 +170,26 @@ $eqLogics = eqLogic::byType($plugin->getId());
                     </tr>
                     <tr>
                       <td class="col-sm-4">
+                        <span style="font-size : 1em;">{{Code de l'appareil}}</span>
+                      </td>
+                      <td>
+                        <span class="label label-default" style="font-size:1em;white-space:unset !important">
+                          <span class="eqLogicAttr" data-l1key="configuration" data-l2key="deviceCode"></span>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="col-sm-4">
+                        <span style="font-size : 1em;">{{Nom du code de l'appareil}}</span>
+                      </td>
+                      <td>
+                        <span class="label label-default" style="font-size:1em;white-space:unset !important">
+                          <span class="eqLogicAttr" data-l1key="configuration" data-l2key="deviceCodeName"></span>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="col-sm-4">
                         <span style="font-size : 1em;">{{Identifiant de la maison}}</span>
                       </td>
                       <td>
@@ -230,7 +255,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
               <div class="form-group">
                 <div class="col-sm-10">
                   <center>
-                    <img src="plugins/lgthinq2/plugin_info/lgthinq2_icon.png" data-original=".svg" id="img_device" class="img-responsive" style="max-height:450px;max-width:400px" onerror="this.src='core/img/no_image.gif'" />
+                    <img src="<?= $plugin->getPathImgIcon(); ?>" data-original=".svg" id="img_device" class="img-responsive" style="max-height:450px;max-width:400px" onerror="this.src='core/img/no_image.gif'" />
                   </center>
                 </div>
               </div>

@@ -24,6 +24,7 @@ $("#table_cmd").sortable({
 });
 
 function addCmdToTable(_cmd) {
+  console.log(_cmd)
   if (!isset(_cmd)) {
     var _cmd = {
       configuration: {}
@@ -162,6 +163,29 @@ $('body').on('lgthinq2::includeDevice', function(_event, _options) {
       window.location.href = 'index.php?v=d&p=lgthinq2&m=lgthinq2&id=' + _options;
     }
   }
+});
+
+$('#bt_getCredentials').on('click', function() {
+    $.ajax({
+        type: "POST",
+        url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
+        data: {
+            action: "getCredentials"
+        },
+        dataType: 'json',
+        error: function(request, status, error) {
+            handleAjaxError(request, status, error);
+        },
+        success: function(data) {
+            if (data.state != 'ok') {
+                $.fn.showAlert({
+                    message: data.result,
+                    level: 'danger'
+                });
+                return;
+            }
+        }
+    });
 });
 
 $('#bt_healthlgthinq2').on('click', function() {

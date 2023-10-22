@@ -26,7 +26,11 @@
    sendVarToJS('version', lgthinq2::$_pluginVersion);
 
    ?>
-
+<style>
+   input:not(.numInput):not(.btn):not(.dial):not([type=radio]):not([type=image]):not(.expressionAttr):not(.knob):not([type=checkbox]).dangerBgColor {
+        color: var(--al-danger-color) !important;
+    }
+</style>
 <form class="form-horizontal">
    <fieldset>
       <legend>
@@ -125,9 +129,46 @@
               <sup><i class="fas fa-question-circle" title="{{Connexion}}"></i></sup>
           </label>
           <div class="col-sm-2">
-             <a id="bt_getCredentials" class="btn btn-success" style="width:30px"><i class="fas fa-check"></i>{{}}</a>
+             <a id="bt_getCredentials" class="btn btn-success"><i class="fas fa-fingerprint"></i> {{Se connecter}}</a>
           </div>
         </div>
+
+        <div class="form-group">
+          <label class="col-sm-2 control-label"><strong> {{Jeton d'accès}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+          </label>
+          <div class="col-sm-8">
+              <input type="text" disabled class="configKey form-control" data-l1key="access_token"></input>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="col-sm-2 control-label"><strong> {{Expiration du jeton (en secondes)}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+          </label>
+          <div class="col-sm-2">
+              <input type="text" disabled class="configKey form-control" data-l1key="expires_in"></input>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="col-sm-2 control-label"><strong> {{Jeton de rafraîchissement}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+          </label>
+          <div class="col-sm-8">
+              <input type="text" disabled class="configKey form-control" data-l1key="refresh_token"></input>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="col-sm-2 control-label"><strong> {{Identifiant de Jsession}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+          </label>
+          <div class="col-sm-6">
+              <input type="text" disabled class="configKey form-control" data-l1key="jsessionId"></input>
+          </div>
+        </div>
+
       </div>
       </div>
    </fieldset>
@@ -152,7 +193,6 @@
                   handleAjaxError(request, status, error);
                 },
                 success: function(data) {
-                  console.log(data)
                   if (data.state != 'ok') {
                     $.fn.showAlert({
                       message: data.result,
@@ -161,8 +201,20 @@
                     return;
                   }
                 }
-              });
-        });
+          });
+      });
+
+      $(document).ready(function() {
+          var diff = $('.configKey[data-l1key=expires_in]').value() - Math.floor(Date.now() / 1000);
+          if (diff < 0) {
+              diff = '{{Expiré}}';
+              $('.configKey[data-l1key=expires_in]').addClass('dangerBgColor');
+          } else {
+              $('.configKey[data-l1key=expires_in]').removeClass('dangerBgColor');
+          }
+          $('.configKey[data-l1key=expires_in]').value(diff);
+          $('.configKey[data-l1key=expires_in]').removeClass('configKey').addClass('configKeyUnsaved')
+      });
 
 </script>
 
