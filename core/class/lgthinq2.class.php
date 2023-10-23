@@ -22,7 +22,7 @@ require_once __DIR__ . "/../../../../core/php/core.inc.php";
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.14';
+    public static $_pluginVersion = '0.15';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -34,14 +34,14 @@ class lgthinq2 extends eqLogic
     const LGACC_SPX_URL         = 'https://fr.m.lgaccount.com/spx/';
     const LGTHINQ1_SERV_DEVICES = 'https://eic.lgthinq.com:46030/api/';
     const LGTHINQ2_SERV_DEVICES = 'https://eic-service.lgthinq.com:46030/v1/service/devices/';
-  
+
     const APPLICATION_KEY       = '6V1V8H2BN5P9ZQGOI5DAQ92YZBDO3EK9'; // for spx login
     const OAUTHSECRETKEY        = 'c053c2a6ddeb7ad97cb0eed0dcb31cf8';
     const APPKEY                = 'LGAO221A02';
     const SVCCODE               = 'SVC202';
     const XAPIKEY               = 'VGhpblEyLjAgU0VSVklDRQ==';
     const MAXRETRY              = 3;
-      
+
     public static function deviceTypeConstants($_id) {
         $_deviceTypes = array(
             000 => __('Inconnu', __FILE__),
@@ -159,7 +159,7 @@ class lgthinq2 extends eqLogic
         );
         return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:false;
     }
-  
+
     public static function deviceTypeConstantsIcon($_id) {
         $_deviceTypes = array(
             101 => 'icon techno-refrigerator3',
@@ -173,7 +173,7 @@ class lgthinq2 extends eqLogic
         );
         return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
     }
-  
+
     public static function deviceTypeConstantsState($_id) {
         $_deviceTypes = array(
             101 => 'refState',
@@ -200,7 +200,7 @@ class lgthinq2 extends eqLogic
             604 => 'massageChair',
             701 => 'ess'
         );
-        return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
+        return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:false;
     }
 
     // Fonction pour effectuer une requête POST
@@ -245,7 +245,7 @@ class lgthinq2 extends eqLogic
         }
         return null;
     }
-  
+
     public static function getClientId() {
          if (config::byKey('cliend_id', __CLASS__, '') == '') {
              log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Création du client_id ', __FILE__));
@@ -253,7 +253,7 @@ class lgthinq2 extends eqLogic
          }
          return config::byKey('cliend_id', __CLASS__);
     }
-  
+
     public static function getLanguage($_type) {
         $lang = config::byKey('language', 'core', 'fr_FR');
         $arrLang = explode('_', $lang);
@@ -266,7 +266,7 @@ class lgthinq2 extends eqLogic
                 return str_replace('_', '-', $lang);
             case 'plain':
                 return $lang;
-            default:   
+            default:
                 return $lang;
         }
     }
@@ -300,7 +300,7 @@ class lgthinq2 extends eqLogic
             'Accept-Language: ' . lgthinq2::getLanguage('hyphen')  . ',' . lgthinq2::getLanguage('lowercase') . ';q=0.9',
         );
     }
-  
+
     public static function defaultDevicesHeaders() {
         return array(
             'Accept: application/json',
@@ -333,7 +333,7 @@ class lgthinq2 extends eqLogic
             'x-thinq-security-key: nuts_securitykey'
         );
     }
-  
+
     public static function getPassword($_encrypted = false) {
         return $_encrypted ? hash('sha512', config::byKey('password', __CLASS__)) : config::byKey('password', __CLASS__);
     }
@@ -351,7 +351,7 @@ class lgthinq2 extends eqLogic
         $rep = lgthinq2::postData(lgthinq2::LGACC_SIGNIN_URL . 'signInPre', http_build_query($data), $headers);
         return $rep;
     }
-  
+
   // Étape 1
     public static function step1() {
         $headers = lgthinq2::defaultHeaders();
@@ -464,7 +464,7 @@ class lgthinq2 extends eqLogic
         $rep = lgthinq2::postData('https://gb.lgeapi.com' . $urlToken, '', $headers);
         return $rep;
     }
-  
+
     // Étape 6 : thinq1 old login method
     public static function step6() {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
@@ -599,7 +599,7 @@ class lgthinq2 extends eqLogic
 
         config::save('jsessionId', $jsession, __CLASS__);
     }
-  
+
     public static function getTokenIsExpired() {
         if (config::byKey('expires_in', __CLASS__, 0) < time()) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token en cours, expiré depuis ', __FILE__) . (time() - config::byKey('expires_in', __CLASS__, 0)) . __(' secondes', __FILE__));
@@ -647,7 +647,7 @@ class lgthinq2 extends eqLogic
     }
 
     public static function getDevices($_deviceId = '', $_tokenRefreshed = false) {
-      
+
         lgthinq2::getTokenIsExpired();
 
         $curl = curl_init();
@@ -693,16 +693,22 @@ class lgthinq2 extends eqLogic
                 $eqLogic = lgthinq2::createEquipement($items, $items['platformType']);
                 if (is_object($eqLogic) && isset($items['modelJsonUri'])) {
                     $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType'));
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : modelJsonUri ' . $items['modelJsonUri']);
-                    $modelJson = $eqLogic->createCmdFromModelAndLangFiles($items['modelJsonUri'], $items['snapshot'][$refState], lgthinq2::getLangJson($items['langPackProductTypeUri']), lgthinq2::getLangJson($items['langPackModelUri']));
+                    log::add(__CLASS__, 'debug', __FUNCTION__ . ' : modelJsonUri ' . $refState . ' => ' . $items['modelJsonUri']);
+                    if ($refState) {
+                        // prévoir de télécharger les fichiers de langues et juste controler le numéro de version, pour éviter de perdre du temps.
+                        $modelJson = $eqLogic->createCmdFromModelAndLangFiles($items['modelJsonUri'], $items['snapshot'][$refState], lgthinq2::getLangJson($items['langPackProductTypeUri']), lgthinq2::getLangJson($items['langPackModelUri']));
+                    } else {
+                        // cas où les infos sans directement sans dossier
+                        $modelJson = $eqLogic->createCmdFromModelAndLangFiles($items['modelJsonUri'], $items['snapshot'], lgthinq2::getLangJson($items['langPackProductTypeUri']), lgthinq2::getLangJson($items['langPackModelUri']));
+                    }
                 }
             }
         }
     }
-  
+
 
     public function getDevicesStatus($_tokenRefreshed = false) {
-      
+
         lgthinq2::getTokenIsExpired();
         $platformType = $this->getConfiguration('platformType');
         if ($platformType == 'thinq1') {
@@ -764,10 +770,18 @@ class lgthinq2 extends eqLogic
                 }
                 $eqLogic->checkAndUpdateCmd('online', $devices['result']['online'], $timestamp);
                 $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType'));
-
-                if (isset($devices['result']['snapshot'][$refState])) {
-                    //$dlConfigFile = file_get_contents(__DIR__ . '/../../data/' . $eqLogic->getLogicalId() . '.json');
-                    foreach ($devices['result']['snapshot'][$refState] as $refStateId => $refStateValue) {
+                if ($refState) {
+                    if (isset($devices['result']['snapshot'][$refState])) {
+                        //$dlConfigFile = file_get_contents(__DIR__ . '/../../data/' . $eqLogic->getLogicalId() . '.json');
+                        foreach ($devices['result']['snapshot'][$refState] as $refStateId => $refStateValue) {
+                            if (!is_object($eqLogic->getCmd('info', $refStateId))) {
+                                $eqLogic->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $refStateId);
+                            }
+                            $eqLogic->checkValueAndUpdateCmd($refStateId, $refStateValue, $timestamp);
+                        }
+                    }
+                } else {
+                    foreach ($devices['result']['snapshot'] as $refStateId => $refStateValue) {
                         if (!is_object($eqLogic->getCmd('info', $refStateId))) {
                             $eqLogic->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $refStateId);
                         }
@@ -852,8 +866,8 @@ class lgthinq2 extends eqLogic
         }
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Requête réussie ' . json_encode($rti));
     }
-  
-  
+
+
     private static function setUUID($data = null) {
         $data = $data ?? random_bytes(16);
         assert(strlen($data) == 16);
@@ -862,7 +876,7 @@ class lgthinq2 extends eqLogic
         $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
-  
+
     /**
      * Méthode appellée par le core (moteur de tâche) cron configuré dans la fonction lgthinq2_install
      * Lance une fonction pour récupérer les appareils et une fonction pour rafraichir les commandes
@@ -945,7 +959,7 @@ class lgthinq2 extends eqLogic
         }
         return false;
     }
-  
+
     public function getLangJson($_configFile) {
         if ($_configFile == '') {
             return false;
@@ -967,7 +981,7 @@ class lgthinq2 extends eqLogic
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Fichier de langue', __FILE__) . json_encode($data['pack']));
         return $data['pack'];
     }
-  
+
     public function createCmdFromModelAndLangFiles($_configFile, $_refState, $_configLang, $_configModelLang) {
         if ($_configFile != '') {
             $config = file_get_contents($_configFile);
@@ -978,9 +992,94 @@ class lgthinq2 extends eqLogic
             if (!is_array($data)) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration est invalide', __FILE__));
             }
+
+            mkdir(__DIR__ . '/../../data/');
+            file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
+
+            if (isset($data['Value'])) {
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ', __FILE__) . json_encode($data['Value']));
+                foreach ($data['Value'] as $key => $value) {
+                    if (!isset($_refState[$key])) continue; // s'il n'y a pas de commande info dans refState
+                    $minValue = null;
+                    $maxValue = null;
+                    $step = null;
+                    $unite = null;
+                    $targetKey = null;
+                    $targetKeyValues = null;
+                    $tempUnitValue = null;
+                    $historized = false;
+
+                    // subtype
+                    if ($value['data_type'] == 'enum') {
+                        if (isset($value['value_mapping']) && count($value['value_mapping']) == 2) {
+                            $subType = 'binary';
+                            $historized = true;
+                        } else {
+                            $subType = 'string';
+                        }
+                    } elseif ($value['data_type'] == 'Boolean') {
+                        $subType = 'binary';
+                        $historized = true;
+                    } elseif ($value['data_type'] == 'range') {
+                        $historized = true;
+                        $subType = 'numeric';
+                        $minValue = $value['value_validation']['min'];
+                        $maxValue = $value['value_validation']['max'];
+                        $step = $value['value_validation']['step'];
+                        if (isset($_refState['tempUnit'])) {// airState.tempState.unit ??!!
+                            $unite = $_refState['tempUnit']=='CELSIUS'?'°C':'°F';
+                        }
+                    } elseif ($value['data_type'] == 'number') {
+                        $subType = 'numeric';
+                        $historized = true;
+                    } elseif ($value['data_type'] == 'string') {
+                        $subType = 'other';
+                    } else {
+                        $subType = 'string';
+                    }
+
+                    //name
+                    $name = lgthinq2::getTranslatedNameFromConfig($key, $data);
+                    if (isset($_configLang[$name]) && $_configLang[$name] != '') {
+                        $name = $_configLang[$name];
+                    } elseif (isset($_configModelLang[$name]) && $_configModelLang[$name] != '') {
+                        $name = $_configModelLang[$name];
+                    } else {
+                        $name = $key;
+                    }
+
+                    $commands[] = array(
+                        'name' => $name,
+                        'logicalId' => $key,
+                        'subType' => $subType,
+                        'unite' => $unite,
+                        'isHistorized' => $historized,
+                        'configuration' => array(
+                            'minValue' => $minValue,
+                            'maxValue' => $maxValue,
+                            'default' => $value['default'],
+                            'visibleItem' => $value['value_validation'],
+                            'valueMapping' => $value['value_mapping'],
+                            'targetKey' => $targetKey,
+                            'targetKeyValues' => $targetKeyValues,
+                            'tempUnitValue' => $tempUnitValue
+                        ),
+                        'display' => array(
+                            'parameters' => array(
+                                'step' => $step
+                            )
+                        )
+                    );
+                }
+                /*$commands = array_filter($commands, function($command) use ($commandsToRemove) {
+                    return !in_array($command['logicalId'], $commandsToRemove);
+                });*/
+                foreach ($commands as $cmd) {
+                    $this->createCommand($cmd);
+                }
+                return true;
+            }
             if (isset($data['MonitoringValue'])) {
-                mkdir(__DIR__ . '/../../data/');
-                file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
 
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ', __FILE__) . json_encode($data['MonitoringValue']));
                 $commands = array();
@@ -995,7 +1094,7 @@ class lgthinq2 extends eqLogic
                     $targetKeyValues = null;
                     $tempUnitValue = null;
                     $historized = false;
-                    
+
                     // subtype
                     if ($value['dataType'] == 'enum') {
                         if (isset($value['visibleItem']['monitoringIndex']) && count($value['visibleItem']['monitoringIndex']) == 2) {
@@ -1102,12 +1201,13 @@ class lgthinq2 extends eqLogic
                 foreach ($commands as $cmd) {
                     $this->createCommand($cmd);
                 }
-                return $data['MonitoringValue'];
+                return true;
+                //return $data['MonitoringValue'];
             }
         }
         return false;
     }
-  
+
     public static function getTranslatedNameFromConfig($_name, $_config) {
         if (isset($_config['MonitoringValue'][$_name]) && isset($_config['MonitoringValue'][$_name]['label'])) {
             return $_config['MonitoringValue'][$_name]['label'];
@@ -1161,7 +1261,7 @@ class lgthinq2 extends eqLogic
         return $data;
     }
 
-  
+
     public static function getMessagesTypeLabel($_messageType) {
         switch ($_messageType) {
             case 'communityNotificationArr':
@@ -1267,7 +1367,7 @@ class lgthinq2 extends eqLogic
             $eqLogic->setConfiguration('deviceCode', $_capa['deviceCode']);
             $eqLogic->setConfiguration('deviceCodeName', lgthinq2::deviceTypeCodeConstants($_capa['deviceCode']));
         }
-      
+
         if (isset($_capa['homeId'])) {
             $eqLogic->setConfiguration('homeId', $_capa['homeId']);
         }
