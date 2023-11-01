@@ -754,7 +754,7 @@ class lgthinq2 extends eqLogic
         "value": "Filter",
         "workId": "ef30fa5d-58bd-359c-243d-416a64eb1abe"
     }
-}*/
+*/}
             return;
         }
         //else
