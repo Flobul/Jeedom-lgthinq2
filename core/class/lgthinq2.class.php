@@ -22,7 +22,7 @@ require_once __DIR__ . "/../../../../core/php/core.inc.php";
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.20';
+    public static $_pluginVersion = '0.21';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -732,16 +732,29 @@ class lgthinq2 extends eqLogic
                 foreach ($data as $dkey => $dvalue) {
                     if ($monitoring != '') {
                         $logicalid = array_search($dkey, $monitoring);
-                        if ($logicalid !== false) {
-                            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : FOUND ' . $dkey . ' => ' . $logicalid  . ' => ' . $dvalue);
-                            if (!is_object($this->getCmd('info', $logicalid))) {
-                                $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $logicalid);
-                            }
-                            $this->checkValueAndUpdateCmd($logicalid, $dvalue, $timestamp);
+                    } else {
+                        $logicalid = $dkey;
+                    }
+                    if ($logicalid !== false) {
+                        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : FOUND ' . $dkey . ' => ' . $logicalid  . ' => ' . $dvalue);
+                        if (!is_object($this->getCmd('info', $logicalid))) {
+                            $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $logicalid);
                         }
+                        $this->checkValueAndUpdateCmd($logicalid, $dvalue, $timestamp);
                     }
                 }
             }
+          {
+    /*Filter =
+    rtiControl "lgedmRoot": {
+        "cmd": "Config",
+        "cmdOpt": "Get",
+        "deviceId": "d27c5030-7149-11d3-80b3-044eaf4314fb",
+        "format": "B64",
+        "value": "Filter",
+        "workId": "ef30fa5d-58bd-359c-243d-416a64eb1abe"
+    }
+}*/
             return;
         }
         //else
@@ -784,38 +797,27 @@ class lgthinq2 extends eqLogic
         $modelJson = false;
 
         if (isset($devices['result']['snapshot'])) {
-            //$eqLogic = lgthinq2::byLogicalId($devices['result']['deviceId'], __CLASS__);
-            //if (is_object($eqLogic)) {
-                $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getLogicalId());
+            $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getLogicalId());
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $deviceTypeConfigFile ' . json_encode($deviceTypeConfigFile));
-                if (!is_object($this->getCmd('info', 'online'))) {
-                    $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, 'online');
+            if (!is_object($this->getCmd('info', 'online'))) {
+                $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, 'online');
+            }
+            if (isset($devices['result']['snapshot']['timestamp'])) {
+                $timestamp = date('Y-m-d H:i:s', ($devices['result']['snapshot']['timestamp']/1000));
+            }
+            $this->checkAndUpdateCmd('online', $devices['result']['online'], $timestamp);
+            $refState = lgthinq2::deviceTypeConstantsState($this->getConfiguration('deviceType'));
+            if ($refState) {
+                $data = $devices['result']['snapshot'][$refState];
+            } else {
+                $data = $devices['result']['snapshot'];
+            }
+            foreach ($data as $refStateId => $refStateValue) {
+                if (!is_object($this->getCmd('info', $refStateId))) {
+                    $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $refStateId);
                 }
-                if (isset($devices['result']['snapshot']['timestamp'])) {
-                    $timestamp = date('Y-m-d H:i:s', ($devices['result']['snapshot']['timestamp']/1000));
-                }
-                $this->checkAndUpdateCmd('online', $devices['result']['online'], $timestamp);
-                $refState = lgthinq2::deviceTypeConstantsState($this->getConfiguration('deviceType'));
-                if ($refState) {
-                    if (isset($devices['result']['snapshot'][$refState])) {
-                        //$dlConfigFile = file_get_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json');
-                        foreach ($devices['result']['snapshot'][$refState] as $refStateId => $refStateValue) {
-                            if (!is_object($this->getCmd('info', $refStateId))) {
-                                $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $refStateId);
-                            }
-                            $this->checkValueAndUpdateCmd($refStateId, $refStateValue, $timestamp);
-                        }
-                    }
-                } else {
-                    foreach ($devices['result']['snapshot'] as $refStateId => $refStateValue) {
-                        if (!is_object($this->getCmd('info', $refStateId))) {
-                            $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $refStateId);
-                        }
-                        $this->checkValueAndUpdateCmd($refStateId, $refStateValue, $timestamp);
-                    }
-                }
-                    //$this->createCommand($deviceTypeConfigFile, $devices['result']['snapshot']);
-            //}
+                $this->checkValueAndUpdateCmd($refStateId, $refStateValue, $timestamp);
+            }
         }
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $devices  ' . json_encode($devices));
     }
@@ -851,14 +853,10 @@ class lgthinq2 extends eqLogic
         }
         $work = json_decode($response, true);
         if (!$work || !isset($work[lgthinq2::DATA_ROOT])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de la requête  ' . json_encode($devices));
-            return;
-        }
-        if (!$work || !isset($work[lgthinq2::DATA_ROOT]['returnCd'])) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de la requête  ' . json_encode($work));
             return;
         }
-        if ($work[lgthinq2::DATA_ROOT]['returnCd'] != '0000') {
+        if (isset($work[lgthinq2::DATA_ROOT]['returnCd']) && $work[lgthinq2::DATA_ROOT]['returnCd'] != '0000') {
             $this->setConfiguration('workId', '')->save();
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de code ' . $work[lgthinq2::DATA_ROOT]['returnCd'] . ' ' . $work[lgthinq2::DATA_ROOT]['returnMsg']);
             if ($work[lgthinq2::DATA_ROOT]['returnCd'] == '0102') {
