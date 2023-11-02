@@ -22,7 +22,7 @@ require_once __DIR__ . "/../../../../core/php/core.inc.php";
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.21';
+    public static $_pluginVersion = '0.22';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -744,8 +744,8 @@ class lgthinq2 extends eqLogic
                     }
                 }
             }
-          {
-    /*Filter =
+    /*      {
+    Filter =
     rtiControl "lgedmRoot": {
         "cmd": "Config",
         "cmdOpt": "Get",
@@ -754,7 +754,7 @@ class lgthinq2 extends eqLogic
         "value": "Filter",
         "workId": "ef30fa5d-58bd-359c-243d-416a64eb1abe"
     }
-*/}
+}*/
             return;
         }
         //else
@@ -824,12 +824,8 @@ class lgthinq2 extends eqLogic
 
     public function getDeviceWorkId($_action) {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
-        $jsession = config::byKey('jsessionId', __CLASS__, '');
-        if ($jsession == '') {
-            $jsession = lgthinq2::step6();
-        }
         $headers[] = 'x-thinq-token: ' . config::byKey('access_token', __CLASS__);
-        $headers[] = 'x-thinq-jsessionId: ' . $jsession;
+        $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__, lgthinq2::step6());
 
         $data = array(
             lgthinq2::DATA_ROOT => array(
@@ -876,10 +872,7 @@ class lgthinq2 extends eqLogic
     public function getDeviceRtiResult($_repeat = false) {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
         $headers[] = 'x-thinq-token: ' . config::byKey('access_token', __CLASS__);
-        //$headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__);
-        $jsession = config::byKey('jsessionId', __CLASS__, lgthinq2::step6());
-
-        $headers[] = 'x-thinq-jsessionId: ' . $jsession;
+        $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__, lgthinq2::step6());
 
         $data = array(
             lgthinq2::DATA_ROOT => array(
@@ -931,8 +924,9 @@ class lgthinq2 extends eqLogic
     }
 
     public function getDeviceRtiControl($_cmd, $_cmdOpt, $_value) {
-        $headers = lgthinq2::defaultDevicesHeaders();
+        $headers = lgthinq2::defaultDevicesEmpHeaders();
         $headers[] = 'x-thinq-token: ' . config::byKey('access_token', __CLASS__);
+        $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__, lgthinq2::step6());
 
         $data = array(
             lgthinq2::DATA_ROOT => array(
@@ -1097,7 +1091,7 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' "Pack" n\'existe pas dans fichier de langue', __FILE__));
             return false;
         }
-        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Fichier de langue', __FILE__) . json_encode($data['pack']));
+        //log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Fichier de langue', __FILE__) . json_encode($data['pack']));
         return $data['pack'];
     }
 
