@@ -13,40 +13,51 @@
  * You should have received a copy of the GNU General Public License
  * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
  */
+ $('#bt_getCredentialsPlugin').on('click', function() {
+     if ($('.configKey[data-l1key="id"]').value() == '' || $('.configKey[data-l1key="password"]').value() == '') {
+         $.fn.showAlert({
+             message: '{{Veuillez entrer un identifiant et un mot de passe de connexion.}}',
+             level: 'danger'
+         });
+         return;
+     }
+     $.ajax({
+         type: "POST",
+         url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
+         data: {
+             action: "getCredentials"
+         },
+         dataType: 'json',
+         error: function(request, status, error) {
+             handleAjaxError(request, status, error);
+         },
+         success: function(data) {
+             if (data.state != 'ok') {
+                 $.fn.showAlert({
+                     message: data.result,
+                     level: 'danger'
+                 });
+                 return;
+             }
+         }
+     });
+ }
 
-   // attribuer le même niveau de log à tous les logs du plugin
-/*   $('#bt_savePluginLogConfig').off('click').on('click', function () {
-       // id du plugin
-       var plugin = $('#span_plugin_id').text();
-       // object du level des log du nom de l'id
-       var logPluginLevel = $('#div_plugin_log').getValues('.configKey')[0];
-       // string du level des log du nom de l'id
-       var logPluginLeveltoStr = JSON.stringify(logPluginLevel);
-
-       // liste de tous les log de l'id du plugin
-       $('.bt_plugin_conf_view_log').each(function () {
-           // remplacer log::level::lgthinq2 par log::level::Optooma_Daemon
-           logPluginLeveltoStr = logPluginLeveltoStr.replace("log::level::" + plugin, "log::level::" + $(this).attr('data-log'));
-           // converti en objet
-           newLogPluginLevel = JSON.parse(logPluginLeveltoStr);
-           // save dans la config jeedom
-           jeedom.config.save({
-               configuration: newLogPluginLevel,
-               error: function(error) {
-                   alert_div_plugin_configuration.showAlert({message: error.message, level: 'danger'})
-               },
-               success: function() {
-                   alert_div_plugin_configuration.showAlert({message: '{{Sauvegarde de la configuration des logs dev effectuée}}', level: 'success'})
-                   modifyWithoutSave = false
-               }
-           });
-       });
+   $(document).ready(function() {
+       var diff = $('.configKey[data-l1key=expires_in]').value() - Math.floor(Date.now() / 1000);
+       if (diff < 0) {
+           diff = '{{Expiré}}';
+           $('.configKey[data-l1key=expires_in]').addClass('dangerBgColor');
+       } else {
+           $('.configKey[data-l1key=expires_in]').removeClass('dangerBgColor');
+       }
+       $('.configKey[data-l1key=expires_in]').value(diff);
+       $('.configKey[data-l1key=expires_in]').removeClass('configKey').addClass('configKeyUnsaved')
    });
-*/
+
    // afficher juste avant la version, la véritable version contenue dans le plugin
    var dateVersion = $("#span_plugin_install_date").html();
    $("#span_plugin_install_date").empty().append("v" + version + " (" + dateVersion + ")");
-
 
    $('.bt_refreshPluginInfo').after('<a class="btn btn-success btn-sm" target="_blank" href="https://market.jeedom.com/index.php?v=d&p=market_display&id=4099"><i class="fas fa-comment-dots "></i> Donner mon avis</a>');
 

@@ -195,20 +195,6 @@ $('#bt_healthlgthinq2').on('click', function() {
   $('#md_modal').load('index.php?v=d&plugin=lgthinq2&modal=health').dialog('open');
 });
 
-$('#bt_pushmessageslgthinq2').on('click', function() {
-  $('#md_modal').dialog({
-    title: "{{Messages Push lgthinq2}}"
-  });
-  $('#md_modal').load('index.php?v=d&plugin=lgthinq2&modal=pushmessages').dialog('open');
-});
-
-$('#bt_firmwarelgthinq2').on('click', function() {
-  $('#md_modal').dialog({
-    title: "{{Firmware lgthinq2}}"
-  });
-  $('#md_modal').load('index.php?v=d&plugin=lgthinq2&modal=firmware').dialog('open');
-});
-
 $('#bt_documentationlgthinq2').off('click').on('click', function() {
   window.open($(this).attr("data-location"), "_blank", null);
 });

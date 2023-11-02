@@ -129,7 +129,7 @@
               <sup><i class="fas fa-question-circle" title="{{Connexion}}"></i></sup>
           </label>
           <div class="col-sm-2">
-             <a id="bt_getCredentials" class="btn btn-success"><i class="fas fa-fingerprint"></i> {{Se connecter}}</a>
+             <a id="bt_getCredentialsPlugin" class="btn btn-success"><i class="fas fa-fingerprint"></i> {{Se connecter}}</a>
           </div>
         </div>
 
@@ -149,11 +149,8 @@
           <label class="col-sm-2 control-label"><strong> {{Expiration du jeton (en secondes)}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
           </label>
-          <div class="input-group col-sm-2">
-              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="expires_in"></input>
-              <span class="input-group-btn">
-                  <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
-              </span>
+          <div class="col-sm-2">
+              <input type="text" disabled class="configKey form-control" data-l1key="expires_in"></input>
           </div>
         </div>
 
@@ -185,49 +182,5 @@
       </div>
    </fieldset>
 </form>
-<script>
-       $('#bt_getCredentials').on('click', function() {
-          if ($('.configKey[data-l1key="id"]').value() == '' || $('.configKey[data-l1key="password"]').value() == '') {
-              $.fn.showAlert({
-                  message: '{{Veuillez entrer un identifiant et un mot de passe de connexion.}}',
-                  level: 'danger'
-              });
-              return;
-          }
-          $.ajax({
-                type: "POST",
-                url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
-                data: {
-                  action: "getCredentials"
-                },
-                dataType: 'json',
-                error: function(request, status, error) {
-                  handleAjaxError(request, status, error);
-                },
-                success: function(data) {
-                  if (data.state != 'ok') {
-                    $.fn.showAlert({
-                      message: data.result,
-                      level: 'danger'
-                    });
-                    return;
-                  }
-                }
-          });
-      });
-
-      $(document).ready(function() {
-          var diff = $('.configKey[data-l1key=expires_in]').value() - Math.floor(Date.now() / 1000);
-          if (diff < 0) {
-              diff = '{{Expiré}}';
-              $('.configKey[data-l1key=expires_in]').addClass('dangerBgColor');
-          } else {
-              $('.configKey[data-l1key=expires_in]').removeClass('dangerBgColor');
-          }
-          $('.configKey[data-l1key=expires_in]').value(diff);
-          $('.configKey[data-l1key=expires_in]').removeClass('configKey').addClass('configKeyUnsaved')
-      });
-
-</script>
 
 <?php include_file('desktop', 'configuration', 'js', 'lgthinq2'); ?>
