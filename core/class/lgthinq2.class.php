@@ -1123,13 +1123,13 @@ class lgthinq2 extends eqLogic
                     $targetKey = null;
                     $targetKeyValues = null;
                     $tempUnitValue = null;
-                    $historized = false;
+                    $historized = 0;
 
                     // subtype
                     if ($value['data_type'] == 'enum') {
                         if (isset($value['value_mapping']) && count($value['value_mapping']) == 2) {
                             $subType = 'binary';
-                            $historized = true;
+                            $historized = 1;
                         } else {
                             $subType = 'string';
                         }
@@ -1137,17 +1137,17 @@ class lgthinq2 extends eqLogic
                     } elseif ($value['type'] == 'Enum') {
                         if (isset($value['option']) && count($value['option']) == 2) {
                             $subType = 'binary';
-                            $historized = true;
+                            $historized = 1;
                         } else {
                             $subType = 'string';
                         }
                         $OGtype = $value['type'];
                     } elseif ($value['data_type'] == 'Boolean' || $value['type'] == 'Boolean') {
                         $subType = 'binary';
-                        $historized = true;
+                        $historized = 1;
                         $OGtype = 'Boolean';
                     } elseif ($value['data_type'] == 'range') {
-                        $historized = true;
+                        $historized = 1;
                         $subType = 'numeric';
                         $minValue = $value['value_validation']['min'];
                         $maxValue = $value['value_validation']['max'];
@@ -1157,7 +1157,7 @@ class lgthinq2 extends eqLogic
                         }
                         $OGtype = $value['data_type'];
                     } elseif ($value['data_type'] == 'Range') {
-                        $historized = true;
+                        $historized = 1;
                         $subType = 'numeric';
                         $minValue = $value['option']['min'];
                         $maxValue = $value['option']['max'];
@@ -1168,7 +1168,7 @@ class lgthinq2 extends eqLogic
                         $OGtype = $value['data_type'];
                     } elseif ($value['data_type'] == 'number' || $value['type'] == 'Number') {
                         $subType = 'numeric';
-                        $historized = true;
+                        $historized = 1;
                         $OGtype = 'Number';
                     } elseif ($value['data_type'] == 'string' || $value['type'] == 'String') {
                         $subType = 'string';
@@ -1239,24 +1239,24 @@ class lgthinq2 extends eqLogic
                     $targetKey = null;
                     $targetKeyValues = null;
                     $tempUnitValue = null;
-                    $historized = false;
+                    $historized = 0;
 
                     // subtype
                     if ($value['dataType'] == 'enum') {
                         if (isset($value['visibleItem']['monitoringIndex']) && count($value['visibleItem']['monitoringIndex']) == 2) {
                             $subType = 'binary';
-                            $historized = true;
+                            $historized = 1;
                         } elseif (isset($value['valueMapping']) && count($value['valueMapping']) == 2) {
                             $subType = 'binary';
-                            $historized = true;
+                            $historized = 1;
                         } else {
                             $subType = 'string';
                         }
                     } elseif ($value['dataType'] == 'Boolean') {
                         $subType = 'binary';
-                        $historized = true;
+                        $historized = 1;
                     } elseif ($value['dataType'] == 'range') {
-                        $historized = true;
+                        $historized = 1;
                         $subType = 'numeric';
                         $minValue = $value['valueMapping']['min'];
                         $maxValue = $value['valueMapping']['max'];
@@ -1265,7 +1265,7 @@ class lgthinq2 extends eqLogic
                             $unite = $_refState['tempUnit']=='CELSIUS'?'°C':'°F';
                         }
                     } elseif ($value['dataType'] == 'number') {
-                        $historized = true;
+                        $historized = 1;
                         $subType = 'numeric';
                     } elseif ($value['dataType'] == 'string') {
                         $subType = 'other';
@@ -1342,14 +1342,9 @@ class lgthinq2 extends eqLogic
                     );
                 }
 
-                /*$commands = array_filter($commands, function($command) use ($commandsToRemove) {
-                    return !in_array($command['logicalId'], $commandsToRemove);
-                });*/
                 foreach ($commands as $cmd) {
                     $this->createCommand($cmd);
                 }
-                //return true;
-                //return $data['MonitoringValue'];
             }
 
             if (isset($data['Monitoring'])) {
@@ -1524,7 +1519,6 @@ class lgthinq2 extends eqLogic
                     $this->createCommand($cmd);
                 }
             }
-
             if (isset($data['ControlDevice'])) {
             }
 
