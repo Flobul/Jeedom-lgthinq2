@@ -24,7 +24,6 @@ $("#table_cmd").sortable({
 });
 
 function addCmdToTable(_cmd) {
-  console.log(_cmd)
   if (!isset(_cmd)) {
     var _cmd = {
       configuration: {}
@@ -72,11 +71,11 @@ function addCmdToTable(_cmd) {
   if (init(_cmd.subType) == 'select') {
     tr += '    <input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="listValue" placeholder="{{Liste de valeur|texte séparé par ;}}" title="{{Liste}}">';
   }
-  if (['select', 'slider', 'color'].includes(init(_cmd.subType)) || init(_cmd.configuration.updateCmdId) != '') {
-    tr += '    <select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="updateCmdId" title="{{Commande d\'information à mettre à jour}}">';
+  if (['select', 'slider', 'color'].includes(init(_cmd.subType)) || init(_cmd.configuration.updateLGCmdId) != '') {
+    tr += '    <select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="updateLGCmdId" title="{{Commande d\'information à mettre à jour}}">';
     tr += '        <option value="">{{Aucune}}</option>';
     tr += '    </select>';
-    tr += '    <input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="updateCmdToValue" placeholder="{{Valeur de l\'information}}">';
+    tr += '    <input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="updateLGCmdToValue" placeholder="{{Valeur de l\'information}}">';
   }
   tr += '</td>';
 
@@ -104,7 +103,7 @@ function addCmdToTable(_cmd) {
     },
     success: function(result) {
       tr.find('.cmdAttr[data-l1key=value]').append(result);
-      tr.find('.cmdAttr[data-l1key=configuration][data-l2key=updateCmdId]').append(result);
+      tr.find('.cmdAttr[data-l1key=configuration][data-l2key=updateLGCmdId]').append(result);
       tr.setValues(_cmd, '.cmdAttr');
       jeedom.cmd.changeType(tr, init(_cmd.subType));
     }
@@ -245,6 +244,7 @@ function synchronize() {
     data: {
       action: "synchronize"
     },
+    async: true,
     dataType: 'json',
     error: function(request, status, error) {
       handleAjaxError(request, status, error);
@@ -309,11 +309,4 @@ $('.eqLogicAction[data-action=delete]').on('click', function(e) {
       });
     }
   });
-});
-
-$('#bt_showPrograms').on('click', function(e) {
-  $('#md_modal').dialog({
-    title: "{{Programmes lgthinq2}}"
-  });
-  $('#md_modal').load('index.php?v=d&plugin=lgthinq2&modal=schedule&id=' + $('.eqLogicAttr[data-l1key=id]').value()).dialog('open');
 });

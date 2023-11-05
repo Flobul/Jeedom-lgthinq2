@@ -582,7 +582,7 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 5 a échoué.', __FILE__));
             return;
         }
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : FINAL TOKENS = ' . $rep5);
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ACCESS/REFRESH TOKENS = ' . $rep5);
         $token = json_decode($rep5, true);
         if (!$token || !isset($token['access_token'])) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Impossible de récupérer le token d\'accès.', __FILE__));
@@ -596,7 +596,7 @@ class lgthinq2 extends eqLogic
 
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : ÉTAPE 6', __FILE__));
         $jsession = lgthinq2::step6();
-        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' jeton  de session ', __FILE__) . $jsession);
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Jeton de session ', __FILE__) . $jsession);
 
         config::save('jsessionId', $jsession, __CLASS__);
     }
@@ -709,7 +709,7 @@ class lgthinq2 extends eqLogic
     }
 
 
-    public function getDevicesStatus($_tokenRefreshed = false) {
+    public function getDevicesStatus($_repeat = false) {
 
         lgthinq2::getTokenIsExpired();
         $timestamp = null;
@@ -724,7 +724,7 @@ class lgthinq2 extends eqLogic
             if ($this->getConfiguration('needRtiControl', false)) {
                 $data = $this->getDeviceRtiControl('Config', 'Get', 'FuncSync');
             } else {
-                $data = $this->pollMonitorStatus();
+                $data = $this->pollMonitorStatus($_repeat);
             }
 
             $monitoring = $this->getConfiguration('Monitoring', '');
@@ -905,6 +905,13 @@ class lgthinq2 extends eqLogic
         if (!isset($rti[lgthinq2::DATA_ROOT]['workList'])) {
             $this->setConfiguration('workId', '')->save();
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : WorkList non existant ' . json_encode($rti));
+            return;
+        }
+        if ($rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] != '0000') {
+            if ($rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0100' && $_repeat == false) {
+                $this->setConfiguration('workId', '')->save();
+                $this->getDevicesStatus();
+            }
             return;
         }
         if (isset($rti[lgthinq2::DATA_ROOT]['workList']['returnData']) && $rti[lgthinq2::DATA_ROOT]['workList']['format'] == 'B64') {
