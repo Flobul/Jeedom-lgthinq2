@@ -22,7 +22,7 @@ require_once __DIR__ . "/../../../../core/php/core.inc.php";
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.33';
+    public static $_pluginVersion = '0.34';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -948,10 +948,10 @@ class lgthinq2 extends eqLogic
             return;
         }
         if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) && isset($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'])) {
-            if (in_array($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'], array('P','W','F') )) { // E? N?
+            if (in_array($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'], array('P','W','F')) && $_repeat == false) { // E? N?
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode non existant ' . json_encode($rti));
                 $this->setConfiguration('workId', '')->save();
-                $this->getDevicesStatus();
+                $this->getDevicesStatus(true);
                 return;
             }
         }
@@ -959,7 +959,7 @@ class lgthinq2 extends eqLogic
             if ($rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0100' && $_repeat == false) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode non existant ' . json_encode($rti));
                 $this->setConfiguration('workId', '')->save();
-                $this->getDevicesStatus();
+                $this->getDevicesStatus(true);
             }
             return;
         }
