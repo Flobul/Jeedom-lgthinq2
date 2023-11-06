@@ -63,24 +63,6 @@ try {
         ajax::success($result);
     }
 
-    if (init('action') == 'upSchedule') {
-        $eqLogic = lgthinq2::byId(init('id'));
-        if (!is_object($eqLogic)) {
-            throw new Exception(__('lgthinq2 eqLogic non trouvé : ', __FILE__) . init('id'));
-        }
-        $result = $eqLogic->upSchedule(init('data'), init('ap131'));
-        ajax::success($result);
-    }
-  
-    if (init('action') == 'delSchedule') {
-        $eqLogic = lgthinq2::byId(init('id'));
-        if (!is_object($eqLogic)) {
-            throw new Exception(__('lgthinq2 eqLogic non trouvé : ', __FILE__) . init('id'));
-        }
-        $result = $eqLogic->delSchedule(init('progId'), init('ap131'));
-        ajax::success($result);
-    }
-
 	throw new Exception('Aucune methode correspondante');
 	/*     * *********Catch exeption*************** */
 } catch (Exception $e) {

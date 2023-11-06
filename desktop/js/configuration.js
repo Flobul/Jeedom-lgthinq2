@@ -25,6 +25,33 @@ document.getElementById('bt_getCredentialsPlugin').addEventListener('click', fun
         });
         return;
     }
+
+    $.ajax({
+        type: "POST",
+        url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
+        data: {
+            action: "getCredentials"
+        },
+        dataType: 'json',
+        async: true,
+        error: function(request, status, error) {
+            handleAjaxError(request, status, error);
+        },
+        success: function(data) {
+            if (data.state != 'ok') {
+                $.fn.showAlert({
+                    message: data.result,
+                    level: 'danger'
+                });
+                return;
+            }
+            $.fn.showAlert({
+                message: '{{Connexion réalisée avec succès.}}',
+                level: 'success'
+            });
+            document.querySelector('.bt_refreshPluginInfo').click();
+        }
+    });
 });
 
 document.getElementById('div_plugin_configuration').addEventListener('change', function () {

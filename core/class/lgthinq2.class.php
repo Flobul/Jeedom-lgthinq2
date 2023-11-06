@@ -22,7 +22,7 @@ require_once __DIR__ . "/../../../../core/php/core.inc.php";
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.32';
+    public static $_pluginVersion = '0.33';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -163,16 +163,61 @@ class lgthinq2 extends eqLogic
 
     public static function deviceTypeConstantsIcon($_id) {
         $_deviceTypes = array(
-            101 => 'icon techno-refrigerator3',
-            201 => 'icon kiko-laundry',
-            202 => 'icon techno-laundry1',
-            221 => '',
-            222 => '',
-            204 => 'icon nourriture-plate7',
-            301 => 'icon techno-oven4',
-            401 => 'icon kiko-air-conditioner'
+            000 => '', // Inconnu
+            101 => 'fa fa-snowflake', // Réfrigérateur
+            102 => 'fa fa-ice-cream', // Réfrigérateur à kimchi
+            103 => 'fa fa-tint', // Purificateur d'eau
+            105 => 'fa fa-wine-glass', // Cave à vin
+            201 => 'fa fa-tshirt', // Lave-linge
+            202 => 'fa fa-tshirt', // Sèche-linge
+            203 => 'fa fa-tshirt', // Styler
+            204 => 'fa fa-utensils', // Lave-vaisselle
+            221 => 'fa fa-tshirt', // WashTower laveuse
+            222 => 'fa fa-tshirt', // WashTower sécheuse
+            301 => 'fa fa-utensils', // Four
+            302 => 'fa fa-microwave', // Four micro-ondes
+            303 => 'fa fa-burner', // Table de cuisson
+            304 => 'fa fa-exhaust-hood', // Hotte
+            401 => 'fa fa-snowflake', // Climatisation/Air Care/Pompe à chaleur
+            402 => 'fa fa-wind', // Purificateur d'air
+            403 => 'fa fa-tint', // Déshumidificateur
+            405 => 'fa fa-fan', // Ventilateur de plafond
+            501 => 'fa fa-robot', // Aspirateur robot
+            504 => 'fa fa-broom', // Aspirateur balai
+            604 => 'fa fa-chair', // Chaise de massage
+            605 => 'fa fa-thermometer', // Thermostat de luxe
+            1001 => 'fa fa-couch', // Arch
+            3001 => 'fa fa-box', // Missg
+            3002 => 'fa fa-microchip', // Capteur ThinQ
+            3003 => 'fa fa-lightbulb', // Ampoule LG
+            3004 => 'fa fa-walking', // Détecteur de mouvement
+            3005 => 'fa fa-plug', // Prise DW
+            3006 => 'fa fa-dust', // Capteur de poussière
+            3010 => 'fa fa-fire', // Détecteur de fumée
+            3014 => 'fa fa-plug', // Prise Easy
+            3102 => 'fa fa-sun', // Détecteur solaire
+            3103 => 'fa fa-lightbulb', // Type de groupe d'éclairage
+            3007 => 'fa fa-gas-pump', // Capteur de gaz Orbivo
+            3008 => 'fa fa-water', // Détecteur de fuite d'eau Orbivo
+            3009 => 'fa fa-walking', // Détecteur de mouvement Ihorn
+            3011 => 'fa fa-skull-crossbones', // Capteur de monoxyde de carbone Orbivo
+            3012 => 'fa fa-thermometer', // Sonde de température Orbivo
+            3015 => 'fa fa-tint', // Capteur d'humidité Orbivo
+            3013 => 'fa fa-door-open', // Détecteur d'ouverture de porte Ihorn
+            4001 => 'fa fa-wind', // EMS_AIR_STATION
+            4003 => 'fa fa-wind', // Sonde air
+            4004 => 'fa fa-dust', // Capteur de poussière
+            4006 => 'fa fa-lightbulb', // Lampe intelligente
+            4201 => 'fa fa-walking', // Détecteur de mouvement Aqara
+            4202 => 'fa fa-thermometer', // Capteur thermométrique/hygrométrique Aqara
+            4203 => 'fa fa-door-open', // Capteur d'ouverture Aqara
+            4301 => 'fa fa-plug', // Prise Aqara
+            10000 => 'fa fa-tv', // Télévision
+            10101 => 'fa fa-hdd', // Hub HEJ
+            20000 => 'fa fa-clock' // Montre
         );
-        return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
+
+        return isset($_deviceTypes[$_id]) ? $_deviceTypes[$_id] : '';
     }
 
     public static function deviceTypeConstantsState($_id) {
@@ -278,6 +323,9 @@ class lgthinq2 extends eqLogic
             'Accept-Language: ' . lgthinq2::getLanguage('hyphen') . ',' . lgthinq2::getLanguage('lowercase') . ';q=0.9',
             'Accept-Encoding: gzip, deflate, br',
             'Content-Type: application/x-www-form-urlencoded; charset=UTF-8',
+            'origin: ' . lgthinq2::LGE_MEMBERS_URL,
+            'sec-fetch-mode: cors',
+            'sec-fetch-site: same-origin',
             'User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 16_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
             'X-Requested-With: XMLHttpRequest'
         );
@@ -311,8 +359,11 @@ class lgthinq2 extends eqLogic
             'User-Agent: LG ThinQ/4.1.49230 (iPhone; iOS 16.7; Scale/2.00)',
             'x-api-key: ' . lgthinq2::XAPIKEY,
             'x-app-version: 4.1.49230',
+            'x-client-id: ' . lgthinq2::getClientId(),
             'x-country-code: ' . lgthinq2::getLanguage('uppercase'),
+            'x-emp-token: ' . config::byKey('access_token', __CLASS__),
             'x-language-code: ' . lgthinq2::getLanguage('hyphen'),
+            'x-message-id: ' . bin2hex(random_bytes(22)),
             'x-model-name: iPhone SE(2nd Gen)',
             'x-origin: app-native',
             'x-os-version: 16.7',
@@ -322,7 +373,8 @@ class lgthinq2 extends eqLogic
             'x-thinq-app-level: PRD',
             'x-thinq-app-os: IOS',
             'x-thinq-app-type: NUTS',
-            'x-thinq-app-ver: 4.1.4800'
+            'x-thinq-app-ver: 4.1.4800',
+            'x-user-no: ' . config::byKey('user_number', __CLASS__)
         );
     }
 
@@ -331,7 +383,9 @@ class lgthinq2 extends eqLogic
             'Accept: application/json',
             'Content-Type: application/json',
             'x-thinq-application-key: wideq',
-            'x-thinq-security-key: nuts_securitykey'
+            'x-thinq-security-key: nuts_securitykey',
+            'x-thinq-token: ' . config::byKey('access_token', __CLASS__)
+
         );
     }
 
@@ -401,9 +455,6 @@ class lgthinq2 extends eqLogic
     // Étape 3
     public static function step3($accountData) {
         $headers = lgthinq2::oldDefaultHeaders();
-        $headers[] = 'sec-fetch-mode: cors';
-        $headers[] = 'sec-fetch-site: same-origin';
-        $headers[] = 'origin: ' . lgthinq2::LGE_MEMBERS_URL;
         $headers[] = 'referer: ' . lgthinq2::LGACC_SERVSIGNIN_URL . '?callback_url=lgaccount.lgsmartthinq:/&redirect_url=lgaccount.lgsmartthinq:/&client_id=LGAO221A02&country=FR&language=fr&state=12345&svc_code=SVC202&close_type=0&svc_integrated=Y&webview_yn=Y&pre_login=Y';
         $data = array(
             'loginSessionID' => $accountData['account']['loginSessionID'],
@@ -469,7 +520,6 @@ class lgthinq2 extends eqLogic
     // Étape 6 : thinq1 old login method
     public static function step6() {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
-        $headers[] = 'x-thinq-token: ' . config::byKey('access_token', __CLASS__);
 
         $data = array(
             lgthinq2::DATA_ROOT => array(
@@ -651,13 +701,9 @@ class lgthinq2 extends eqLogic
     public static function getDevices($_deviceId = '', $_tokenRefreshed = false) {
 
         lgthinq2::getTokenIsExpired();
-
         $curl = curl_init();
         $headers = lgthinq2::defaultDevicesHeaders();
-        $headers[] = 'x-client-id: ' . lgthinq2::getClientId();
-        $headers[] = 'x-emp-token: ' . config::byKey('access_token', __CLASS__);
-        $headers[] = 'x-user-no: ' . config::byKey('user_number', __CLASS__);
-        $headers[] = 'x-message-id: ' . bin2hex(random_bytes(22));
+
         curl_setopt_array($curl, array(
             CURLOPT_URL => lgthinq2::LGTHINQ2_SERV_DEVICES . $_deviceId,
             CURLOPT_RETURNTRANSFER => true,
@@ -747,13 +793,9 @@ class lgthinq2 extends eqLogic
             return;
         }
         //else
-
         $curl = curl_init();
         $headers = lgthinq2::defaultDevicesHeaders();
-        $headers[] = 'x-client-id: ' . lgthinq2::getClientId();
-        $headers[] = 'x-emp-token: ' . config::byKey('access_token', __CLASS__);
-        $headers[] = 'x-user-no: ' . config::byKey('user_number', __CLASS__);
-        $headers[] = 'x-message-id: ' . bin2hex(random_bytes(22));
+
         curl_setopt_array($curl, array(
             CURLOPT_URL => lgthinq2::LGTHINQ2_SERV_DEVICES . $this->getLogicalId(),
             CURLOPT_RETURNTRANSFER => true,
@@ -813,7 +855,6 @@ class lgthinq2 extends eqLogic
 
     public function changeMonitorStatus($_action) {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
-        $headers[] = 'x-thinq-token: ' . config::byKey('access_token', __CLASS__);
         $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__, lgthinq2::step6());
 
         $data = array(
@@ -861,7 +902,6 @@ class lgthinq2 extends eqLogic
 
     public function pollMonitorStatus($_repeat = false) {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
-        $headers[] = 'x-thinq-token: ' . config::byKey('access_token', __CLASS__);
         $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__, lgthinq2::step6());
 
         $data = array(
@@ -907,8 +947,17 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : WorkList non existant ' . json_encode($rti));
             return;
         }
-        if ($rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] != '0000') {
+        if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) && isset($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'])) {
+            if (in_array($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'], array('P','W','F') )) { // E? N?
+                log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode non existant ' . json_encode($rti));
+                $this->setConfiguration('workId', '')->save();
+                $this->getDevicesStatus();
+                return;
+            }
+        }
+        if (isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) && $rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] != '0000') {
             if ($rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0100' && $_repeat == false) {
+                log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode non existant ' . json_encode($rti));
                 $this->setConfiguration('workId', '')->save();
                 $this->getDevicesStatus();
             }
@@ -922,7 +971,6 @@ class lgthinq2 extends eqLogic
 
     public function getDeviceRtiControl($_cmd, $_cmdOpt, $_value) {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
-        $headers[] = 'x-thinq-token: ' . config::byKey('access_token', __CLASS__);
         $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__, lgthinq2::step6());
 
         $data = array(
@@ -1061,9 +1109,9 @@ class lgthinq2 extends eqLogic
 
     public function getLangJson($_type, $_langFileUri = '', $_langFileVer) {
 
-        $curVersion = $this->getConfiguration($_type . 'Ver', '0.0');
+        $curVersion = $this->getConfiguration($_type . 'Ver', '');
         $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '_' . $_type . '.json';
-        if (version_compare($curVersion, $_langFileVer, '>=')) {
+        if ($curVersion != '' && version_compare($curVersion, $_langFileVer, '>=')) {
             $config = file_get_contents($file);
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier existe à la version ', __FILE__) . $curVersion);
         } else {
@@ -1121,6 +1169,7 @@ class lgthinq2 extends eqLogic
 
             if (isset($data['Value'])) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ', __FILE__) . json_encode($data['Value']));
+                $commands = array();
                 foreach ($data['Value'] as $key => $value) {
                     if ($this->getConfiguration('platformType') == 'thinq2' && !isset($_refState[$key])) continue; // s'il n'y a pas de commande info dans refState
                     $minValue = null;
@@ -1438,10 +1487,10 @@ class lgthinq2 extends eqLogic
                         );
                     }
                 } else {
-                    log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value0 ');;
+                    log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value0 ');
                     foreach ($data['ControlWifi'] as $controlKey => $controlValue) {
                         if ($controlKey == 'basicCtrl') {
-                    log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value1 '. $controlKey);;
+                    log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value1 '. $controlKey);
                             if (isset($controlValue['data']) && isset($controlValue['data'][$refState])) {
                                 foreach ($controlValue['data'][$refState] as $cmdKey => $cmdVal) {
                                     $listValue = null;
@@ -1527,6 +1576,41 @@ class lgthinq2 extends eqLogic
                 }
             }
             if (isset($data['ControlDevice'])) {
+                $commands = array();
+                foreach ($data['ControlDevice'] as $controlDeviceValue) {
+                    log::add(__CLASS__, 'debug', 'ControlDeviceControlDeviceControlDevice  $commands ' . json_encode($controlDeviceValue));
+                    $cmdtypes = explode('|', $controlDeviceValue['command']);
+                    $datakeytypes = explode('|', $controlDeviceValue['dataKey']);
+                    $valuetypes = explode('|', $controlDeviceValue['dataValue']);
+                    $nbdatakeys = count($datakeytypes);
+
+                    foreach ($cmdtypes as $cmdtype) { //each Get/Set/Stop/Start/Operation...
+                        $listValue = '';
+                        foreach ($datakeytypes as $key) {
+                            $listValue .= $key . '|' . $key . ';';
+                        }
+                        $listValue = substr($listValue, 0, -1);
+
+                        $commands[] = array(
+                            'name' => $cmdtype . ' ' . $controlDeviceValue['ctrlKey'],
+                            'type' => 'action',
+                            'logicalId' => $cmdtype . $controlDeviceValue['ctrlKey'],
+                            'subType' => ($nbdatakeys==1?'other':'select'),
+                            'configuration' => array(
+                                'ctrlKey' => $controlDeviceValue['ctrlKey'],
+                                'cmd' => $cmdtype,
+                                'dataKey' => $datakeytype,
+                                'listValue' => ($nbdatakeys==1?null:$listValue),
+                                'updateLGCmdToValue' => ($nbdatakeys==1?null:'#select#')
+                            )
+                        );
+
+                    }
+                }
+                foreach ($commands as $cmd) {
+                    $this->createCommand($cmd);
+                }
+                    log::add(__CLASS__, 'debug', 'ControlDeviceControlDeviceControlDevice  $commands ' . json_encode($commands));
             }
 
         }
@@ -1624,81 +1708,8 @@ class lgthinq2 extends eqLogic
         return $data;
     }
 
-
-    public static function getMessagesTypeLabel($_messageType) {
-        switch ($_messageType) {
-            case 'communityNotificationArr':
-                return 'Communauté';
-                break;
-            case 'deviceNotificationArr':
-                return 'Appareil';
-                break;
-            case 'mallNotificationArr':
-                return 'Centre commercial';
-                break;
-            case 'shareNotificationArr':
-                return 'Partages';
-                break;
-            case 'userNotificationArr':
-                return 'Utilisateur';
-                break;
-        }
-    }
-
-    public static function getDeviceLabel($deviceType) {
-        switch ($deviceType) {
-            case 'AIRFRYER':
-                return 'Friteuse';
-                break;
-            case 'HUMIDIFIER':
-                return 'Humidificateur';
-                break;
-            case 'LIGHT':
-                return 'Lumière';
-                break;
-            case 'OUTLET':
-                return 'Prise';
-                break;
-            case 'PURIFIER':
-                return 'Purificateur';
-                break;
-            case 'SCALE':
-                return 'Balance';
-                break;
-            case 'SWITCH':
-                return 'Interrupteur';
-                break;
-        }
-    }
-
-    public static function getIconClass($deviceType) {
-        switch ($deviceType) {
-            case 'AIRFRYER':
-                return 'icon nourriture-cooking14 ';
-                break;
-            case 'HUMIDIFIER':
-                return 'icon kiko-drop';
-                break;
-            case 'LIGHT':
-                return 'icon kiko-light-turn-on';
-                break;
-            case 'OUTLET':
-                return 'fas fa-plug';
-                break;
-            case 'PURIFIER':
-                return 'fas fa-wind';
-                break;
-            case 'SCALE':
-                return 'fas fa-weight';
-                break;
-            case 'SWITCH':
-                return 'icon kiko-off';
-                break;
-        }
-    }
-
     /**
-     * Créé l'équipement avec les valeurs de paramètres
+     * Crée l'équipement avec les valeurs de paramètres
      * @param		array		$_data		Tableau des paramètres
      * @return		object		$eqLogic	Retourne l'équipement créé
      */
@@ -1718,9 +1729,9 @@ class lgthinq2 extends eqLogic
             $eqLogic->setIsEnable(1);
             $eqLogic->setIsVisible(1);
             event::add('jeedom::alert', array(
-                          'level' => 'success',
-                          'page' => __CLASS__,
-                          'message' => __("L'équipement ", __FILE__) . $eqLogic->getHumanName() . __(" vient d'être créé", __FILE__),
+                'level' => 'success',
+                'page' => __CLASS__,
+                'message' => __("L'équipement ", __FILE__) . $eqLogic->getHumanName() . __(" vient d'être créé", __FILE__),
             ));
         }
         if (isset($_capa['deviceType'])) {
@@ -1906,7 +1917,6 @@ class lgthinq2Cmd extends cmd
             log::add('lgthinq2', 'debug', __("Données à envoyer en thinq1 ", __FILE__));
 
             $headers = lgthinq2::defaultDevicesEmpHeaders();
-            $headers[] = 'x-thinq-token: ' . config::byKey('access_token', 'lgthinq2');
             $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', 'lgthinq2', lgthinq2::step6());
             log::add('lgthinq2', 'debug', __("Données à envoyer en thinq1 headers ", __FILE__) . json_encode($headers));
 
@@ -1961,18 +1971,14 @@ class lgthinq2Cmd extends cmd
             log::add('lgthinq2', 'debug', __("Données à envoyer en thinq2 ", __FILE__));
 
             $headers = lgthinq2::defaultDevicesHeaders();
-            $headers[] = 'x-client-id: ' . lgthinq2::getClientId();
-            $headers[] = 'x-emp-token: ' . config::byKey('access_token', 'lgthinq2');
-            $headers[] = 'x-user-no: ' . config::byKey('user_number', 'lgthinq2');
-            $headers[] = 'x-message-id: ' . bin2hex(random_bytes(22));
             log::add('lgthinq2','debug','TEST cmd headers : ' . json_encode($headers));
 
             $data = array(
                 'command' => $this->getConfiguration('cmd'),
                 'ctrlKey' => $this->getConfiguration('ctrlKey'),
                 //'dataSetList' => array(),
-                'dataKey' => null,
-                'dataValue' => null
+                'dataKey' => $this->getConfiguration('dataKey', null),
+                'dataValue' => $this->getConfiguration('dataValue', null),
             );
             $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType')); // to get "resState" keytree
             if ($refState && $value != '') {
