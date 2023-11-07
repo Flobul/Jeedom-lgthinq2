@@ -948,7 +948,7 @@ class lgthinq2 extends eqLogic
             return;
         }
         if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) && isset($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'])) {
-            if (in_array($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'], array('P','W','F')) && $_repeat == false) { // E? N?
+            if (in_array($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'], array('P','W','F','N')) && $_repeat == false) { // E? N?
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode non existant ' . json_encode($rti));
                 $this->setConfiguration('workId', '')->save();
                 $this->getDevicesStatus(true);
