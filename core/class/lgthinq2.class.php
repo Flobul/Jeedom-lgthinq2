@@ -701,6 +701,7 @@ class lgthinq2 extends eqLogic
     public static function getDevices($_deviceId = '', $_tokenRefreshed = false) {
 
         lgthinq2::getTokenIsExpired();
+
         $curl = curl_init();
         $headers = lgthinq2::defaultDevicesHeaders();
 
@@ -793,6 +794,7 @@ class lgthinq2 extends eqLogic
             return;
         }
         //else
+
         $curl = curl_init();
         $headers = lgthinq2::defaultDevicesHeaders();
 
@@ -947,14 +949,32 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : WorkList non existant ' . json_encode($rti));
             return;
         }
-        if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) && isset($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'])) {
+
+        if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode'])) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : pas de returnCode, phase de connexion en cours ' . json_encode($rti));
+            return;
+        }
+
+        if ($rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0106') {
+            $nbDisconnects = (int)$this->getConfiguration('nbDisconnections', 0);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode 0106, $nbDisconnects ' . $nbDisconnects);
+            if ($nbDisconnects >= 3) {
+                $this->setConfiguration('workId', '');
+                $this->setConfiguration('nbDisconnections', 0)->save();
+                $this->getDevicesStatus(true);
+            } else {
+                $this->setConfiguration('nbDisconnections', $nbDisconnects + 1)->save();
+            }
+        }
+
+        /*if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) && isset($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'])) {
             if (in_array($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'], array('P','W','F','N')) && $_repeat == false) { // E? N?
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode non existant ' . json_encode($rti));
                 $this->setConfiguration('workId', '')->save();
                 $this->getDevicesStatus(true);
                 return;
             }
-        }
+        }*/
         if (isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) && $rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] != '0000') {
             if ($rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0100' && $_repeat == false) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode non existant ' . json_encode($rti));
@@ -964,6 +984,7 @@ class lgthinq2 extends eqLogic
             return;
         }
         if (isset($rti[lgthinq2::DATA_ROOT]['workList']['returnData']) && $rti[lgthinq2::DATA_ROOT]['workList']['format'] == 'B64') {
+            $this->setConfiguration('nbDisconnections', 0); // reset nb disconnections
             return json_decode(base64_decode($rti[lgthinq2::DATA_ROOT]['workList']['returnData']), true);
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Requête réussie ' . json_encode($reData));
         }
@@ -1785,24 +1806,26 @@ class lgthinq2 extends eqLogic
 
     public function createCommand($_properties, $_cmdInfo = null)
     {
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('début ', __FILE__) . $this->getName() . ' ' . json_encode($_properties));
-        $type = (!isset($_properties['type'])?(!$_cmdInfo?'info':'action'):$_properties['type']);
-        $cmd = $this->getCmd($type, $_properties['logicalId']);
-        foreach ($this->getCmd() as $aCmd) {
-            if ($aCmd->getName() == $_properties['name'] && $aCmd->getLogicalId() != $_properties['logicalId']) {
-                $_properties['name'] .= config::genKey(2);
+        if ($this->getIsEnable()) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('début ', __FILE__) . $this->getName() . ' ' . json_encode($_properties));
+            $type = (!isset($_properties['type'])?(!$_cmdInfo?'info':'action'):$_properties['type']);
+            $cmd = $this->getCmd($type, $_properties['logicalId']);
+            foreach ($this->getCmd() as $aCmd) {
+                if ($aCmd->getName() == $_properties['name'] && $aCmd->getLogicalId() != $_properties['logicalId']) {
+                    $_properties['name'] .= config::genKey(2);
+                }
             }
+            if (!is_object($cmd)) {
+                $cmd = new lgthinq2Cmd();
+                $cmd->setType($type);
+                $cmd->setEqLogic_id($this->getId());
+                utils::a2o($cmd, $_properties);
+                $cmd->save();
+                log::add(__CLASS__, 'debug', __FUNCTION__ . ' => ' . __('Nouvelle commande ajoutée ', __FILE__) . '[' . $cmd->getType() .'='. $cmd->getSubType() . '] => ' . $cmd->getLogicalId());
+            }
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('fin', __FILE__));
+            return $cmd;
         }
-        if (!is_object($cmd)) {
-            $cmd = new lgthinq2Cmd();
-            $cmd->setType($type);
-            $cmd->setEqLogic_id($this->getId());
-            utils::a2o($cmd, $_properties);
-            $cmd->save();
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' => ' . __('Nouvelle commande ajoutée ', __FILE__) . '[' . $cmd->getType() .'='. $cmd->getSubType() . '] => ' . $cmd->getLogicalId());
-        }
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('fin', __FILE__));
-        return $cmd;
     }
 
     /**
