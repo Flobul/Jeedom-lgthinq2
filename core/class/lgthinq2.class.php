@@ -22,7 +22,7 @@ require_once __DIR__ . "/../../../../core/php/core.inc.php";
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.34';
+    public static $_pluginVersion = '0.35';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -950,14 +950,9 @@ class lgthinq2 extends eqLogic
             return;
         }
 
-        if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode'])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : pas de returnCode, phase de connexion en cours ' . json_encode($rti));
-            return;
-        }
-
-        if ($rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0106') {
+        if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) || $rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0106') {
             $nbDisconnects = (int)$this->getConfiguration('nbDisconnections', 0);
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode 0106, $nbDisconnects ' . $nbDisconnects);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode null ou 0106, $nbDisconnects ' . $nbDisconnects);
             if ($nbDisconnects >= 3) {
                 $this->setConfiguration('workId', '');
                 $this->setConfiguration('nbDisconnections', 0)->save();
@@ -1189,7 +1184,7 @@ class lgthinq2 extends eqLogic
             //$langPack = $this->getLangJson('langPackProductType', '', '0.0');
 
             if (isset($data['Value'])) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ', __FILE__) . json_encode($data['Value']));
+                //log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ', __FILE__) . json_encode($data['Value']));
                 $commands = array();
                 foreach ($data['Value'] as $key => $value) {
                     if ($this->getConfiguration('platformType') == 'thinq2' && !isset($_refState[$key])) continue; // s'il n'y a pas de commande info dans refState
@@ -1304,7 +1299,7 @@ class lgthinq2 extends eqLogic
             }
             if (isset($data['MonitoringValue'])) {
 
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ', __FILE__) . json_encode($data['MonitoringValue']));
+                //log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ', __FILE__) . json_encode($data['MonitoringValue']));
                 $commands = array();
                 $commandsToRemove = array();
                 foreach ($data['MonitoringValue'] as $key => $value) {
@@ -1444,9 +1439,9 @@ class lgthinq2 extends eqLogic
                         $subType = 'other';
                         $updateCmdToValue = null;
                         if (preg_match('/{{(.*?)}}/', $actionConfig['value'], $matches)) {
-                            log::add(__CLASS__, 'debug', 'CONTROLWIFI match value0 ' . $matches[1]);
+                            //log::add(__CLASS__, 'debug', 'CONTROLWIFI match value0 ' . $matches[1]);
                             if (isset($data['Value'][$matches[1]])) {
-                                log::add(__CLASS__, 'debug', 'CONTROLWIFI match value1 ' . $matches[1]);
+                                //log::add(__CLASS__, 'debug', 'CONTROLWIFI match value1 ' . $matches[1]);
                                 if ($data['Value'][$matches[1]]['type'] == 'String') {
                                     $subType = 'message';
                                     $updateCmdToValue = '#message#';
@@ -1472,7 +1467,7 @@ class lgthinq2 extends eqLogic
                                     $updateCmdToValue = '#slider#';
                                     $actionConfig['value'] = str_replace('{{'.$matches[1].'}}', '#slider#',$actionConfig['value']);
                                 }
-                                log::add(__CLASS__, 'debug', 'CONTROLWIFI match value3 ' . $matches[1]);
+                                //log::add(__CLASS__, 'debug', 'CONTROLWIFI match value3 ' . $matches[1]);
                             }
                         }
 
@@ -1508,19 +1503,19 @@ class lgthinq2 extends eqLogic
                         );
                     }
                 } else {
-                    log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value0 ');
+                    //log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value0 ');
                     foreach ($data['ControlWifi'] as $controlKey => $controlValue) {
                         if ($controlKey == 'basicCtrl') {
-                    log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value1 '. $controlKey);
+                    //log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value1 '. $controlKey);
                             if (isset($controlValue['data']) && isset($controlValue['data'][$refState])) {
                                 foreach ($controlValue['data'][$refState] as $cmdKey => $cmdVal) {
                                     $listValue = null;
                                     $subType = 'other';
                                     $updateCmdToValue = null;
                                     if (preg_match('/{{(.*?)}}/', $cmdVal, $matches)) {
-                                        log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value2 ' . $matches[1]);
+                                        //log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value2 ' . $matches[1]);
                                         if (isset($data['MonitoringValue'][$matches[1]])) {
-                                            log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value3 ' . $matches[1]);
+                                            //log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value3 ' . $matches[1]);
                                             if ($data['MonitoringValue'][$matches[1]]['dataType'] == 'string') {
                                                 $subType = 'message';
                                                 $updateCmdToValue = '#message#';
@@ -1544,7 +1539,7 @@ class lgthinq2 extends eqLogic
                                                 $subType = 'slider';
                                                 $updateCmdToValue = '#slider#';
                                             }
-                                            log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value ' . $data['ControlWifi'][$matches[1]]);
+                                            //log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value ' . $data['ControlWifi'][$matches[1]]);
                                         }
                                     }
                                     $commands[] = array(
@@ -1599,7 +1594,7 @@ class lgthinq2 extends eqLogic
             if (isset($data['ControlDevice'])) {
                 $commands = array();
                 foreach ($data['ControlDevice'] as $controlDeviceValue) {
-                    log::add(__CLASS__, 'debug', 'ControlDeviceControlDeviceControlDevice  $commands ' . json_encode($controlDeviceValue));
+                    //log::add(__CLASS__, 'debug', 'ControlDeviceControlDeviceControlDevice  $commands ' . json_encode($controlDeviceValue));
                     $cmdtypes = explode('|', $controlDeviceValue['command']);
                     $datakeytypes = explode('|', $controlDeviceValue['dataKey']);
                     $valuetypes = explode('|', $controlDeviceValue['dataValue']);
@@ -1631,7 +1626,7 @@ class lgthinq2 extends eqLogic
                 foreach ($commands as $cmd) {
                     $this->createCommand($cmd);
                 }
-                    log::add(__CLASS__, 'debug', 'ControlDeviceControlDeviceControlDevice  $commands ' . json_encode($commands));
+                    //log::add(__CLASS__, 'debug', 'ControlDeviceControlDeviceControlDevice  $commands ' . json_encode($commands));
             }
 
         }
@@ -1651,7 +1646,7 @@ class lgthinq2 extends eqLogic
             if (isset($_config['Config']['visibleItems'])) {
                 foreach ($_config['Config']['visibleItems'] as $visibleItems) {
                      if ($visibleItems['feature'] == $_name) {
-                         log::add(__CLASS__, 'debug', 'TERMMMMMMM => ' . $visibleItems['monTitle']);
+                         //log::add(__CLASS__, 'debug', 'TERMMMMMMM => ' . $visibleItems['monTitle']);
                          return $visibleItems['monTitle'];
                      }
                 }
@@ -1692,7 +1687,7 @@ class lgthinq2 extends eqLogic
                             if ($logicalid !== false) {
                                 $cmd[$arrKey] = $this->getCmd('info', $logicalid);
                                 if (is_object($cmd[$arrKey])) {
-                             log::add(__CLASS__, 'debug', 'TERMMMMMMM & => ' .$logicalid . ' => ' . $arrKey . ' ==== '  . json_encode($langPack[$arrVal]));
+                             //log::add(__CLASS__, 'debug', 'TERMMMMMMM & => ' .$logicalid . ' => ' . $arrKey . ' ==== '  . json_encode($langPack[$arrVal]));
                                     $unTranslatedVal = $cmd[$arrKey]->getConfiguration('valueMapping')[$arrVal];
                                     if (is_array($langPack) && isset($unTranslatedVal) && (strpos($unTranslatedVal, '@') === 0)) {
                                         $arrVal = $langPack[$unTranslatedVal];
@@ -1821,7 +1816,7 @@ class lgthinq2 extends eqLogic
                 $cmd->setEqLogic_id($this->getId());
                 utils::a2o($cmd, $_properties);
                 $cmd->save();
-                log::add(__CLASS__, 'debug', __FUNCTION__ . ' => ' . __('Nouvelle commande ajoutée ', __FILE__) . '[' . $cmd->getType() .'='. $cmd->getSubType() . '] => ' . $cmd->getLogicalId());
+                //log::add(__CLASS__, 'debug', __FUNCTION__ . ' => ' . __('Nouvelle commande ajoutée ', __FILE__) . '[' . $cmd->getType() .'='. $cmd->getSubType() . '] => ' . $cmd->getLogicalId());
             }
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('fin', __FILE__));
             return $cmd;
