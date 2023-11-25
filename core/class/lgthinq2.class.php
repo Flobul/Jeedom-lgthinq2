@@ -22,7 +22,7 @@ require_once __DIR__ . "/../../../../core/php/core.inc.php";
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.35';
+    public static $_pluginVersion = '0.36';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -1180,7 +1180,11 @@ class lgthinq2 extends eqLogic
             mkdir(__DIR__ . '/../../data/');
             file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
 
-            $langPack = array_replace_recursive($_configProductLang, $_configModelLang);
+            if ($_configModelLang && is_array($_configModelLang)) {
+                $langPack = array_replace_recursive($_configProductLang, $_configModelLang);
+            } else {
+                $langPack = $_configProductLang;
+            }
             //$langPack = $this->getLangJson('langPackProductType', '', '0.0');
 
             if (isset($data['Value'])) {
@@ -1445,7 +1449,7 @@ class lgthinq2 extends eqLogic
                                 if ($data['Value'][$matches[1]]['type'] == 'String') {
                                     $subType = 'message';
                                     $updateCmdToValue = '#message#';
-                                    $actionConfig['value'] = str_replace('{{'.$matches[1].'}}', '#message#',$actionConfig['value']);
+                                    $actionConfig['value'] = str_replace('{{'.$matches[1].'}}', '#message#', $actionConfig['value']);
                                 } elseif ($data['Value'][$matches[1]]['type'] == 'Enum') {
                                     $subType = 'select';
                                     $updateCmdToValue = '#select#';
@@ -1456,16 +1460,46 @@ class lgthinq2 extends eqLogic
                                                     $optionValue = $langPack[$optionValue];
                                                 }
                                             }
-                                            $listValue .= $optionValue . '|' . $optionKey . ';';
+                                            $listValue .= $optionKey . '|' . $optionValue . ';';
                                         }
                                         $listValue = substr($listValue, 0, -1);
                                     }
-                                    $actionConfig['value'] = str_replace('{{'.$matches[1].'}}', '#select#',$actionConfig['value']);
+                                    $actionConfig['value'] = str_replace('{{'.$matches[1].'}}', '#select#', $actionConfig['value']);
 
                                 } elseif ($data['Value'][$matches[1]]['type'] == 'Range') {
                                     $subType = 'slider';
                                     $updateCmdToValue = '#slider#';
-                                    $actionConfig['value'] = str_replace('{{'.$matches[1].'}}', '#slider#',$actionConfig['value']);
+                                    $actionConfig['value'] = str_replace('{{'.$matches[1].'}}', '#slider#', $actionConfig['value']);
+                                }
+                                //log::add(__CLASS__, 'debug', 'CONTROLWIFI match value3 ' . $matches[1]);
+                            }
+                        } elseif (preg_match('/{(.*?)}/', $actionConfig['value'], $matches)) {
+                            if (isset($data['Value'][$matches[1]])) {
+                                //log::add(__CLASS__, 'debug', 'CONTROLWIFI match value1 ' . $matches[1]);
+                                if ($data['Value'][$matches[1]]['type'] == 'String') {
+                                    $subType = 'message';
+                                    $updateCmdToValue = '#message#';
+                                    $actionConfig['value'] = str_replace('{'.$matches[1].'}', '#message#', $actionConfig['value']);
+                                } elseif ($data['Value'][$matches[1]]['type'] == 'Enum') {
+                                    $subType = 'select';
+                                    $updateCmdToValue = '#select#';
+                                    if (isset($data['Value'][$matches[1]]['option'])) {
+                                        foreach ($data['Value'][$matches[1]]['option'] as $optionKey => $optionValue) {
+                                            if (is_array($langPack) && isset($optionValue) && (strpos($optionValue, '@') === 0)) {
+                                                if (isset($langPack[$optionValue])) {
+                                                    $optionValue = $langPack[$optionValue];
+                                                }
+                                            }
+                                            $listValue .= $optionKey . '|' . $optionValue . ';';
+                                        }
+                                        $listValue = substr($listValue, 0, -1);
+                                    }
+                                    $actionConfig['value'] = str_replace('{'.$matches[1].'}', '#select#', $actionConfig['value']);
+
+                                } elseif ($data['Value'][$matches[1]]['type'] == 'Range') {
+                                    $subType = 'slider';
+                                    $updateCmdToValue = '#slider#';
+                                    $actionConfig['value'] = str_replace('{'.$matches[1].'}', '#slider#', $actionConfig['value']);
                                 }
                                 //log::add(__CLASS__, 'debug', 'CONTROLWIFI match value3 ' . $matches[1]);
                             }
@@ -1891,6 +1925,17 @@ class lgthinq2 extends eqLogic
         $html = translate::exec($html, 'plugins/lgthinq2/core/template/' . $version . '/lgthinq2.tempate.html');
         return $html;
     }
+
+    public static function isValidJson($string)
+    {
+        if ($string !== false && $string !== null && $string !== '') {
+            json_decode($string);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 class lgthinq2Cmd extends cmd
@@ -1928,6 +1973,11 @@ class lgthinq2Cmd extends cmd
         }
         $value = str_replace(array_keys($replace),$replace,$this->getConfiguration('updateLGCmdToValue', ''));
         $keyValue = str_replace(array_keys($replace),$replace,$this->getConfiguration('value', ''));
+        if (lgthinq2::isValidJson($keyValue)) {
+            $keyValue = json_decode($keyValue, true);
+        }
+            log::add('lgthinq2','debug','TEST data $value  : ' . $value);
+            log::add('lgthinq2','debug','TEST data $keyValue  : ' . $keyValue);
 
         lgthinq2::getTokenIsExpired();
 
@@ -1943,7 +1993,7 @@ class lgthinq2Cmd extends cmd
                     'cmd' => $this->getConfiguration('cmd'),
                     'cmdOpt' => $this->getConfiguration('cmdOpt'),
                     'deviceId' => $eqLogic->getLogicalId(),
-                    'value' => ($keyValue?$keyValue:$value),
+                    'value' => ($keyValue!=''?$keyValue:$value),
                     'workId' => lgthinq2::setUUID(),
                     'data' => ''
                 )
