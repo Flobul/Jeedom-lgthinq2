@@ -35,7 +35,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
         <?php
           if ((config::byKey('access_token', 'lgthinq2', '') == '' || config::byKey('expires_in', 'lgthinq2', '') == '' ||
-              config::byKey('refresh_token', 'lgthinq2', '') == '' || config::byKey('jsessionId', 'lgthinq2', '') == '') && 
+              config::byKey('refresh_token', 'lgthinq2', '') == '' || config::byKey('jsessionId', 'lgthinq2', '') == '') &&
               (config::byKey('id', 'lgthinq2', '') != '' || config::byKey('password', 'lgthinq2', '') != '')) {
               lgthinq2_display::displayActionCard('{{Connexion}}', 'fa-fingerprint', 'id="bt_getCredentials"', 'eqLogicAction logoPrimaryGreenLGthinq2');
           }
@@ -147,13 +147,30 @@ $eqLogics = eqLogic::byType($plugin->getId());
               </div>
           </form>
         </div>
+
+
+        <div class="col-sm-6">
+          <form class="form-horizontal">
+            <legend><i class="fas fa-wrench icon_yellow"></i> {{Configuration}}</legend>
+            <fieldset>
+              <div class="form-group">
+                <div class="col-sm-3">
+                    <a class="btn btn-warning roundedLeft roundedRight" id="bt_autoDetectModule"><i class="fas fa-search"></i> {{Recréer les commandes}}</a>
+                </div>
+                <label class="col-sm-4 control-label">{{Nombre de commandes}}</label>
+                <div class="col-sm-2" id="nbTotalCmds">
+                </div>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+
         <div class="col-sm-6">
           <form class="form-horizontal">
             <legend><i class="fas fa-info-circle icon_yellow"></i> {{Informations}}</legend>
             <fieldset>
 
-
-<div class="form-group">
+              <div class="form-group">
                 <table id="table_infoseqlogic" class="col-sm-9 table-bordered table-condensed" style="border-radius: 10px;">
                   <thead>
                   </thead>

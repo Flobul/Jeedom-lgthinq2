@@ -1460,7 +1460,7 @@ class lgthinq2 extends eqLogic
                                                     $optionValue = $langPack[$optionValue];
                                                 }
                                             }
-                                            $listValue .= $optionKey . '|' . $optionValue . ';';
+                                            $listValue .= str_replace('|','-', $optionKey) . '|' . $optionValue . ';';
                                         }
                                         $listValue = substr($listValue, 0, -1);
                                     }
@@ -1490,7 +1490,7 @@ class lgthinq2 extends eqLogic
                                                     $optionValue = $langPack[$optionValue];
                                                 }
                                             }
-                                            $listValue .= $optionKey . '|' . $optionValue . ';';
+                                            $listValue .= str_replace('|','-', $optionKey) . '|' . $optionValue . ';';
                                         }
                                         $listValue = substr($listValue, 0, -1);
                                     }
@@ -1564,7 +1564,7 @@ class lgthinq2 extends eqLogic
                                                                 $optionValue['label'] = $langPack[$optionValue['label']];
                                                             }
                                                         }
-                                                        $listValue .= $optionKey . '|' . ($optionValue['label']!=''?$optionValue['label']:$optionValue['index']) . ';';
+                                                        $listValue .= str_replace('|','-', $optionKey) . '|' . ($optionValue['label']!=''?$optionValue['label']:$optionValue['index']) . ';';
                                                     }
                                                     $listValue = substr($listValue, 0, -1);
                                                 }
@@ -1637,7 +1637,7 @@ class lgthinq2 extends eqLogic
                     foreach ($cmdtypes as $cmdtype) { //each Get/Set/Stop/Start/Operation...
                         $listValue = '';
                         foreach ($datakeytypes as $key) {
-                            $listValue .= $key . '|' . $key . ';';
+                            $listValue .= str_replace('|','-', $key) . '|' . $key . ';';
                         }
                         $listValue = substr($listValue, 0, -1);
 

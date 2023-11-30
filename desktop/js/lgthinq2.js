@@ -198,41 +198,51 @@ $('#bt_documentationlgthinq2').off('click').on('click', function() {
   window.open($(this).attr("data-location"), "_blank", null);
 });
 
-
-
-function printEqLogic(_eqLogic) {
-
-  $.ajax({
-    type: "POST",
-    url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
-    data: {
-      action: "getImage",
-      id: _eqLogic.id
-    },
-    dataType: 'json',
-    error: function(request, status, error) {
-      handleAjaxError(request, status, error);
-    },
-    success: function(data) {
-      if (data.state != 'ok') {
-        $.fn.showAlert({
-          message: data.result,
-          level: 'danger'
-        });
-        return;
-      }
-      if (data.result != '') {
-        $('#img_device').attr("src", data.result);
-      }
+$('#bt_autoDetectModule').on('click', function() {
+  var dialog_title = '{{Recharger la configuration}}';
+  var dialog_message = '<form class="form-horizontal onsubmit="return false;"> ';
+  dialog_title = '<span class="col-sm-10" style="background-color: #939be5; padding: 2px 5px; color: white; margin: 10px 0; font-weight: bold;">{{Recharger la configuration}}</span>';
+  dialog_message += '<label class="control-label" > {{Sélectionner le mode de rechargement de la configuration.}} </label> ' +
+    '<div> <div class="radio"> <label > ' +
+    '<input type="radio" name="command" id="command-0" value="0" checked="checked">1) {{Garder les commandes actuelles et synchroniser.}} </label> ' +
+    '</div><div class="radio"> <label > ' +
+    '<input type="radio" name="command" id="command-1" value="1">2) {{Supprimer toutes les commandes et les recréer.}}</label> ' +
+    '</div> ' +
+    '</div><br>' +
+    '<label class="lbl lbl-warning" for="name">{{Attention au choix 2), toutes les commandes et leur historique sera supprimé.}}</label> ';
+  dialog_message += '</form>';
+  bootbox.dialog({
+    title: dialog_title,
+    message: dialog_message,
+    buttons: {
+      "{{Annuler}}": {
+        className: "btn-danger",
+        callback: function() {}
+      },
+      success: {
+        label: "{{Recharger}}",
+        className: "btn-success",
+        callback: function() {
+          if ($("input[name='command']:checked").val() == "1") {
+            bootbox.confirm('{{Êtes-vous sûr de vouloir récréer toutes les commandes ? Cela va supprimer les commandes existantes.}}', function(result) {
+              if (result) {
+                synchronize($('.eqLogicAttr[data-l1key=id]').value(), true);
+              }
+            });
+          } else {
+            synchronize($('.eqLogicAttr[data-l1key=id]').value(), false);
+          }
+        }
+      },
     }
-  })
-}
+  });
+});
 
 $('#bt_synchronizelgthinq2').on('click', function() {
   synchronize();
 });
 
-function synchronize() {
+function synchronize(_id = false, _deleteCmds = false) {
   $.fn.showAlert({
     message: '{{Synchronisation en cours}}',
     level: 'warning'
@@ -242,7 +252,9 @@ function synchronize() {
     type: "POST",
     url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
     data: {
-      action: "synchronize"
+      action: "synchronize",
+      id: _id,
+      deleteCmds: _deleteCmds
     },
     async: true,
     dataType: 'json',
@@ -273,6 +285,34 @@ function synchronize() {
       }
     }
   });
+}
+
+function printEqLogic(_eqLogic) {
+  $('#nbTotalCmds').html('<span class="label label-info">'+_eqLogic.cmd.length+'</span>')
+  $.ajax({
+    type: "POST",
+    url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
+    data: {
+      action: "getImage",
+      id: _eqLogic.id
+    },
+    dataType: 'json',
+    error: function(request, status, error) {
+      handleAjaxError(request, status, error);
+    },
+    success: function(data) {
+      if (data.state != 'ok') {
+        $.fn.showAlert({
+          message: data.result,
+          level: 'danger'
+        });
+        return;
+      }
+      if (data.result != '') {
+        $('#img_device').attr("src", data.result);
+      }
+    }
+  })
 }
 
 $('.eqLogicAction[data-action=delete]').on('click', function(e) {

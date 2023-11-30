@@ -35,7 +35,18 @@ try {
         if (config::byKey('id', 'lgthinq2', '') == '' || config::byKey('password', 'lgthinq2', '') == '') {
             $result = false;
         } else {
-            $result = lgthinq2::synchronize();
+            if (init('id') == false) {
+                $eqLogic = lgthinq2::byId(init('id'));
+                if (!is_object($eqLogic)) {
+                    throw new Exception(__('LGThinq2 eqLogic non trouvé : ', __FILE__) . init('id'));
+                }
+                if (init('deleteCmds') == true) {
+                    foreach ($eqLogic->getCmd() as $cmd) {
+                        $cmd->remove();
+                    }
+                }
+            }
+            $result = lgthinq2::synchronize(init('id'));
         }
         ajax::success($result);
     }
