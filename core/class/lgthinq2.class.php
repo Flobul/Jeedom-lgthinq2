@@ -22,20 +22,15 @@ require_once __DIR__ . "/../../../../core/php/core.inc.php";
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.36';
+    public static $_pluginVersion = '0.37';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
-    const LGE_MEMBERS_URL       = 'https://fr.lgemembers.com';
-    const LGACC_SIGNIN_URL      = 'https://fr.lgemembers.com/lgacc/front/v1/signin/';
-    const LGACC_SERVSIGNIN_URL  = 'https://fr.lgemembers.com/lgacc/service/v1/signin';
     const LGAPI_DATETIME        = 'https://fr.lgeapi.com/datetime';
-    const LG_EMPTERMS_URL       = 'https://fr.emp.lgsmartplatform.com/';
-    const LGACC_SPX_URL         = 'https://fr.m.lgaccount.com/spx/';
     const LGTHINQ1_SERV_DEVICES = 'https://eic.lgthinq.com:46030/api/';
     const LGTHINQ2_SERV_DEVICES = 'https://eic-service.lgthinq.com:46030/v1/service/devices/';
 
-    const APPLICATION_KEY       = '6V1V8H2BN5P9ZQGOI5DAQ92YZBDO3EK9'; // for spx login
+    const APPLICATION_KEY       = '6V1V8H2BN5P9ZQGOI5DAQ92YZBDO3EK9';
     const OAUTHSECRETKEY        = 'c053c2a6ddeb7ad97cb0eed0dcb31cf8';
     const APPKEY                = 'LGAO221A02';
     const SVCCODE               = 'SVC202';
@@ -279,7 +274,7 @@ class lgthinq2 extends eqLogic
                 if ($rawContent) {
                     $res = json_decode($result, true);
                     if ($res && isset($res['error']) && isset($res['error']['message'])) {
-                        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 2 a échoué ', __FILE__) . $res['error']['message'] . ', tentative ' . $i . '/' . lgthinq2::MAXRETRY);
+                        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape a échoué ', __FILE__) . $res['error']['message'] . ', tentative ' . $i . '/' . lgthinq2::MAXRETRY);
                         sleep(2);
                     } else {
                         return $result;
@@ -323,7 +318,7 @@ class lgthinq2 extends eqLogic
             'Accept-Language: ' . lgthinq2::getLanguage('hyphen') . ',' . lgthinq2::getLanguage('lowercase') . ';q=0.9',
             'Accept-Encoding: gzip, deflate, br',
             'Content-Type: application/x-www-form-urlencoded; charset=UTF-8',
-            'origin: ' . lgthinq2::LGE_MEMBERS_URL,
+            'origin: ' . config::byKey('LGE_MEMBERS_URL', __CLASS__),
             'sec-fetch-mode: cors',
             'sec-fetch-site: same-origin',
             'User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 16_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
@@ -347,6 +342,33 @@ class lgthinq2 extends eqLogic
             'Access-Control-Allow-Origin: *',
             'Accept-Encoding: gzip, deflate, br',
             'Accept-Language: ' . lgthinq2::getLanguage('hyphen')  . ',' . lgthinq2::getLanguage('lowercase') . ';q=0.9',
+        );
+    }
+
+    public static function defaultGwHeaders() {
+        return array(
+            'Accept: application/json',
+            'Accept-Encoding: gzip, deflate, br',
+            'Accept-Language: ' . lgthinq2::getLanguage('hyphen') . ';q=1',
+            'Content-Type: application/json;charset=UTF-8',
+            'User-Agent: LG ThinQ/4.1.49230 (iPhone; iOS 16.7; Scale/2.00)',
+            'x-api-key: ' . lgthinq2::XAPIKEY,
+            'x-app-version: 4.1.49230',
+            'x-client-id: ' . lgthinq2::getClientId(),
+            'x-country-code: ' . lgthinq2::getLanguage('uppercase'),
+            'x-language-code: ' . lgthinq2::getLanguage('hyphen'),
+            'x-message-id: ' . bin2hex(random_bytes(22)),
+            'x-model-name: iPhone SE(2nd Gen)',
+            'x-origin: app-native',
+            'x-os-version: 16.7',
+            'x-service-code: ' . lgthinq2::SVCCODE,
+            'x-service-phase: OP',
+            'x-thinq-app-logintype: LGE',
+            'x-thinq-app-level: PRD',
+            'x-thinq-app-os: IOS',
+            'x-thinq-app-type: NUTS',
+            'x-thinq-app-ver: 4.1.4800',
+            'x-user-no: ' . config::byKey('user_number', __CLASS__)
         );
     }
 
@@ -397,24 +419,44 @@ class lgthinq2 extends eqLogic
         return $_urlEncoded ? urlencode(config::byKey('id', __CLASS__)) : config::byKey('id', __CLASS__);
     }
 
-  // Étape 1
-    public static function oldStep1() {
-        $headers = lgthinq2::defaultHeaders();
-        $headers[] = 'origin: ' . lgthinq2::LGE_MEMBERS_URL;
-        $data = ['userAuth2' => lgthinq2::getPassword(true)];
-        $headers[] = 'content-length: ' . strlen(http_build_query($data));
-        $rep = lgthinq2::postData(lgthinq2::LGACC_SIGNIN_URL . 'signInPre', http_build_query($data), $headers);
-        return $rep;
-    }
+    // Étape 0
+    public static function step0() {
+        $headers = lgthinq2::defaultGwHeaders();
+        $curlGw = curl_init();
+        curl_setopt_array($curlGw, array(
+            CURLOPT_URL => lgthinq2::LGTHINQ_GATEWAY,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => $headers
+        ));
+        $rep = curl_exec($curlGw);
+        curl_close($curlGw);
+        $gatewayRes = json_decode($rep, true);
+        if (!$gatewayRes || !isset($gatewayRes['result'])) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 0 a planté ', __FILE__) . json_encode($gatewayRes));
+            return;
+        }
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 0 a result ', __FILE__) . parse_url($gatewayRes['result']['empFrontBaseUri2'], PHP_URL_HOST));
 
-  // Étape 1
+        config::save('LGE_MEMBERS_URL', 'https://' . parse_url($gatewayRes['result']['uris']['empFrontBaseUri2'], PHP_URL_HOST), __CLASS__);
+        config::save('LG_EMPTERMS_URL', $gatewayRes['result']['empTermsUri'], __CLASS__);
+        config::save('LGACC_SPX_URL', $gatewayRes['result']['empSpxUri'], __CLASS__);
+
+        return true;
+    }
+    // Étape 1
     public static function step1() {
         $headers = lgthinq2::defaultHeaders();
         $data = array(
             'user_auth2' => lgthinq2::getPassword(true),
             'log_param' => 'login request / user_id : ' . lgthinq2::getUsername() . ' / third_party : null / svc_list : SVC202,SVC710 / 3rd_service : '
         );
-        $rep = lgthinq2::postData(lgthinq2::LGACC_SPX_URL . 'preLogin', http_build_query($data), $headers);
+        $rep = lgthinq2::postData(config::byKey('LGACC_SPX_URL', __CLASS__) . '/preLogin', http_build_query($data), $headers);
         return $rep;
     }
     // Étape 2
@@ -422,8 +464,8 @@ class lgthinq2 extends eqLogic
         $headers = lgthinq2::defaultHeaders();
         $headers[] = 'sec-fetch-mode: cors';
         $headers[] = 'sec-fetch-site: same-origin';
-        $headers[] = 'origin: ' . lgthinq2::LGE_MEMBERS_URL;
-        $headers[] = 'referer: ' . lgthinq2::LGACC_SERVSIGNIN_URL . '?callback_url=lgaccount.lgsmartthinq:/&redirect_url=lgaccount.lgsmartthinq:/&client_id=LGAO221A02&country=FR&language=fr&state=12345&svc_code=SVC202,SVC710&close_type=0&svc_integrated=Y&webview_yn=Y&pre_login=Y';
+        $headers[] = 'origin: ' . config::byKey('LGE_MEMBERS_URL', __CLASS__);
+        $headers[] = 'referer: ' . config::byKey('LGE_MEMBERS_URL', __CLASS__) . '/lgacc/service/v1/signin?callback_url=lgaccount.lgsmartthinq:/&redirect_url=lgaccount.lgsmartthinq:/&client_id=LGAO221A02&country=FR&language=fr&state=12345&svc_code=SVC202,SVC710&close_type=0&svc_integrated=Y&webview_yn=Y&pre_login=Y';
         $data = array(
             'userId'          => lgthinq2::getUsername(true),
             'userPw'          => $rep1,
@@ -436,7 +478,7 @@ class lgthinq2 extends eqLogic
             'local_lang'      => lgthinq2::getLanguage('lowercase')
         );
         $headers[] = 'content-length: ' . strlen(http_build_query($data));
-        $rep = lgthinq2::postData(lgthinq2::LGACC_SIGNIN_URL . 'signInAct', http_build_query($data), $headers);
+        $rep = lgthinq2::postData(config::byKey('LGE_MEMBERS_URL', __CLASS__) . '/lgacc/front/v1/signin/signInAct', http_build_query($data), $headers);
         return $rep;
     }
     // Étape 2
@@ -449,13 +491,13 @@ class lgthinq2 extends eqLogic
             'password_hash_prameter_flag' => 'Y',
             'svc_list' => 'SVC202,SVC710', // SVC202=LG SmartHome, SVC710=EMP OAuth
         );
-        $rep = lgthinq2::postData(lgthinq2::LG_EMPTERMS_URL . 'emp/v2.0/account/session/' . lgthinq2::getUsername(true), http_build_query($data), $headers);
+        $rep = lgthinq2::postData(config::byKey('LG_EMPTERMS_URL', __CLASS__) . '/emp/v2.0/account/session/' . lgthinq2::getUsername(true), http_build_query($data), $headers);
         return $rep;
     }
     // Étape 3
     public static function step3($accountData) {
         $headers = lgthinq2::oldDefaultHeaders();
-        $headers[] = 'referer: ' . lgthinq2::LGACC_SERVSIGNIN_URL . '?callback_url=lgaccount.lgsmartthinq:/&redirect_url=lgaccount.lgsmartthinq:/&client_id=LGAO221A02&country=FR&language=fr&state=12345&svc_code=SVC202&close_type=0&svc_integrated=Y&webview_yn=Y&pre_login=Y';
+        $headers[] = 'referer: ' . config::byKey('LGE_MEMBERS_URL', __CLASS__) . '/lgacc/service/v1/signin?callback_url=lgaccount.lgsmartthinq:/&redirect_url=lgaccount.lgsmartthinq:/&client_id=LGAO221A02&country=FR&language=fr&state=12345&svc_code=SVC202&close_type=0&svc_integrated=Y&webview_yn=Y&pre_login=Y';
         $data = array(
             'loginSessionID' => $accountData['account']['loginSessionID'],
             'clientId'  => lgthinq2::APPKEY,
@@ -467,7 +509,7 @@ class lgthinq2 extends eqLogic
             'local_country' => lgthinq2::getLanguage('uppercase'),
             'local_lang' => lgthinq2::getLanguage('lowercase'),
         );
-        $rep = lgthinq2::postData(lgthinq2::LGACC_SIGNIN_URL . 'oauth', http_build_query($data), $headers);
+        $rep = lgthinq2::postData(config::byKey('LGE_MEMBERS_URL', __CLASS__) . '/lgacc/front/v1/signin/oauth', http_build_query($data), $headers);
         return $rep;
     }
 
@@ -553,6 +595,9 @@ class lgthinq2 extends eqLogic
 
     public static function login() {
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('debut', __FILE__));
+
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : ÉTAPE 0', __FILE__));
+        $rep0 = lgthinq2::step0();
 
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : ÉTAPE 1', __FILE__));
         $rep1 = lgthinq2::doRetry('lgthinq2::step1');
@@ -1829,6 +1874,9 @@ class lgthinq2 extends eqLogic
     public static function synchronize()
     {
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('début', __FILE__));
+        if (config::byKey('LGE_MEMBERS_URL', __CLASS__, '') == '' || config::byKey('LG_EMPTERMS_URL', __CLASS__, '') == '' || config::byKey('LGACC_SPX_URL', __CLASS__, '') == '') {
+            $rep0 = lgthinq2::step0();
+        }
         lgthinq2::getDevices();
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('fin', __FILE__));
     }
