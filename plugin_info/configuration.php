@@ -178,6 +178,33 @@
           </div>
         </div>
 
+        <div class="form-group">
+          <label class="col-sm-2 control-label"><strong> {{LGE members URL}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+          </label>
+          <div class="input-group col-sm-6">
+              <input type="text" disabled class="configKey form-control" data-l1key="LGE_MEMBERS_URL"></input>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="col-sm-2 control-label"><strong> {{LGE Emp terms URL}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+          </label>
+          <div class="input-group col-sm-6">
+              <input type="text" disabled class="configKey form-control" data-l1key="LG_EMPTERMS_URL"></input>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="col-sm-2 control-label"><strong> {{LG Account SPX URL}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+          </label>
+          <div class="input-group col-sm-6">
+              <input type="text" disabled class="configKey form-control" data-l1key="LGACC_SPX_URL"></input>
+          </div>
+        </div>
+
       </div>
       </div>
    </fieldset>
