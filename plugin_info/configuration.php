@@ -101,6 +101,73 @@
               </div>
           </div>
 
+          <div class="form-group">
+              <label class="col-lg-4 control-label">{{Langue}}
+                  <sup><i class="fas fa-question-circle" tooltip="{{Langue utilisée par le plugin LG Thinq}}"></i></sup>
+              </label>
+              <div class="col-lg-2 col-md-3 col-sm-4 col-xs-6">
+                  <select class="form-control configKey" data-l1key="language">
+                      <option value="bg_BG">български (България)</option>
+                      <option value="ca_ES">Català (Espanya)</option>
+                      <option value="cs_CZ">Čeština (Česko)</option>
+                      <option value="da_DK">Dansk (Danmark)</option>
+                      <option value="de_DE">Deutsch (Deutschland)</option>
+                      <option value="de_AT">Deutsch (Österreich)</option>
+                      <option value="de_CH">Deutsch (Schweiz)</option>
+                      <option value="en_US">English (United States)</option>
+                      <option value="en_GB">English (United Kingdom)</option>
+                      <option value="en_AU">English (Australia)</option>
+                      <option value="en_CA">English (Canada)</option>
+                      <option value="en_DE">English (Germany)</option>
+                      <option value="en_IE">English (Ireland)</option>
+                      <option value="en_NZ">English (New Zealand)</option>
+                      <option value="en_SG">English (Singapore)</option>
+                      <option value="en_ZA">English (South Africa)</option>
+                      <option value="es_ES">Español (Espana)</option>
+                      <option value="es_MX">Español (México)</option>
+                      <option value="es_AR">Español (Argentina)</option>
+                      <option value="es_BO">Español (Bolivia)</option>
+                      <option value="es_CL">Español (Chile)</option>
+                      <option value="es_CO">Español (Colombia)</option>
+                      <option value="es_CR">Español (Costa Rica)</option>
+                      <option value="es_DO">Español (Républica Dominicana)</option>
+                      <option value="es_EC">Español (Ecuador)</option>
+                      <option value="es_SV">Español (El Salvador)</option>
+                      <option value="es_GT">Español (Guatemala)</option>
+                      <option value="es_HN">Español (Honduras)</option>
+                      <option value="es_NI">Español (Nicaragua)</option>
+                      <option value="es_PA">Español (Panamá)</option>
+                      <option value="es_PY">Español (Paraguay)</option>
+                      <option value="es_PE">Español (Perú)</option>
+                      <option value="es_PR">Español (Puerto Rico)</option>
+                      <option value="es_US">Español (United States)</option>
+                      <option value="et_EE">eesti (Eesti)</option>
+                      <option value="fi_FI">Suomi (Suomi)</option>
+                      <option value="fr_FR">Français (France)</option>
+                      <option value="fr_CA">Français (Canada)</option>
+                      <option value="fr_CH">Français (Suisse)</option>
+                      <option value="fr_BE">Français (Belgique)</option>
+                      <option value="hu_HU">Magyar (Magyarország)</option>
+                      <option value="it_IT">Italiano (Italia)</option>
+                      <option value="it_CH">Italiano (Svizzera)</option>
+                      <option value="lv_LV">Latviešu (Latvija)</option>
+                      <option value="nl_NL">Nederlands (Nederland)</option>
+                      <option value="nl_BE">Nederlands (België)</option>
+                      <option value="nb_NO">Norsk (Norge)</option>
+                      <option value="pl_PL">Polski (Polska)</option>
+                      <option value="pt_BR">Português (Brasil)</option>
+                      <option value="ru_RU">Pусский (Россия)</option>
+                      <option value="ro_RO">Română (România)</option>
+                      <option value="sk_SK">Slovenčina (Slovensko)</option>
+                      <option value="sv_SE">Svenska (Sverige)</option>
+                      <option value="tr_TR">Türkçe (Türkiye)</option>
+                      <option value="ja_JP">日本語 (日本)</option>
+                      <option value="zh_CN">中文 (简体)</option>
+                      <option value="zh_TW">中文 (繁體)</option>
+                  </select>
+              </div>
+          </div>
+
       <div class="form-group">
 		<legend>
 		    <i class="fas fa-user-cog"></i> {{Authentification}}

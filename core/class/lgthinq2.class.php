@@ -296,7 +296,7 @@ class lgthinq2 extends eqLogic
     }
 
     public static function getLanguage($_type) {
-        $lang = config::byKey('language', 'core', 'fr_FR');
+        $lang = config::byKey('language', __CLASS__, 'fr_FR');
         $arrLang = explode('_', $lang);
         switch ($_type) {
             case 'lowercase':
@@ -337,7 +337,7 @@ class lgthinq2 extends eqLogic
             'X-Device-Language-Type: IETF',
             'X-Device-Publish-Flag: Y',
             'X-Device-Country: ' . lgthinq2::getLanguage('uppercase'),
-            'X-Device-Language: ' . str_replace('_', '-', config::byKey('language', 'core', 'fr_FR')),
+            'X-Device-Language: ' . str_replace('_', '-', config::byKey('language', __CLASS__, 'fr_FR')),
             'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
             'Access-Control-Allow-Origin: *',
             'Accept-Encoding: gzip, deflate, br',
