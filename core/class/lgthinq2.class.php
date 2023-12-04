@@ -2151,6 +2151,7 @@ class lgthinq2Cmd extends cmd
                         $value = $resValue;
 						break;
 				}
+        log::add('lgthinq2', 'debug', __FUNCTION__ . ' : Réponse décodée ' . $resValue . ' transmise dans ' . $cmd->getName());
 				$cmd->event($value);
 			}
 		}
