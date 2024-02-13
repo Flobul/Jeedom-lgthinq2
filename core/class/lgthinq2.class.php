@@ -22,7 +22,7 @@ require_once __DIR__ . "/../../../../core/php/core.inc.php";
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.37';
+    public static $_pluginVersion = '0.40';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -34,10 +34,19 @@ class lgthinq2 extends eqLogic
     const OAUTHSECRETKEY        = 'c053c2a6ddeb7ad97cb0eed0dcb31cf8';
     const APPKEY                = 'LGAO221A02';
     const SVCCODE               = 'SVC202';
-    const XAPIKEY               = 'VGhpblEyLjAgU0VSVklDRQ==';
+    const XAPIKEY               = 'VGhpblEyLjAgU0VSVklDRQ=='; //base64 "ThinQ2.0 SERVICE"
     const DATA_ROOT             = 'lgedmRoot';
     const MAXRETRY              = 3;
 
+    /**
+     * Renvoie le libellé correspondant à un type de périphérique à partir de son identifiant.
+     *
+     * Cette méthode prend en paramètre l'identifiant numérique d'un type de périphérique et renvoie son libellé associé.
+     * Si aucun libellé correspondant n'est trouvé pour l'identifiant donné, l'identifiant lui-même est renvoyé.
+     *
+     * @param int $_id L'identifiant numérique du type de périphérique.
+     * @return string Le libellé correspondant au type de périphérique ou l'identifiant lui-même s'il n'existe pas de libellé correspondant.
+     */
     public static function deviceTypeConstants($_id) {
         $_deviceTypes = array(
             000 => __('Inconnu', __FILE__),
@@ -96,6 +105,15 @@ class lgthinq2 extends eqLogic
         return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:$_id;
     }
 
+    /**
+     * Renvoie le libellé correspondant à un code de type de périphérique à partir de son identifiant.
+     *
+     * Cette méthode prend en paramètre l'identifiant d'un code de type de périphérique et renvoie son libellé associé.
+     * Si aucun libellé correspondant n'est trouvé pour l'identifiant donné, la méthode renvoie false.
+     *
+     * @param string $_id L'identifiant du code de type de périphérique.
+     * @return string|false Le libellé correspondant au code de type de périphérique, ou false si aucun libellé n'est trouvé.
+     */
     public static function deviceTypeCodeConstants($_id) {
         $_deviceTypes = array(
             'AI01'    => __('Climatisation/Air Care', __FILE__),
@@ -156,6 +174,14 @@ class lgthinq2 extends eqLogic
         return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:false;
     }
 
+    /* Renvoie le libellé correspondant à un code de type de périphérique à partir de son identifiant.
+     *
+     * Cette méthode prend en paramètre l'identifiant d'un code de type de périphérique et renvoie son libellé associé.
+     * Si aucun libellé correspondant n'est trouvé pour l'identifiant donné, la méthode renvoie false.
+     *
+     * @param string $_id L'identifiant du code de type de périphérique.
+     * @return string|false Le libellé correspondant au code de type de périphérique, ou false si aucun libellé n'est trouvé.
+     */
     public static function deviceTypeConstantsIcon($_id) {
         $_deviceTypes = array(
             000 => '', // Inconnu
@@ -215,6 +241,15 @@ class lgthinq2 extends eqLogic
         return isset($_deviceTypes[$_id]) ? $_deviceTypes[$_id] : '';
     }
 
+    /**
+     * Renvoie l'état correspondant à un type de périphérique à partir de son identifiant.
+     *
+     * Cette méthode prend en paramètre l'identifiant numérique d'un type de périphérique et renvoie l'état associé.
+     * Si aucun état correspondant n'est trouvé pour l'identifiant donné, la méthode renvoie false.
+     *
+     * @param int|string $_id L'identifiant numérique ou alphabétique du type de périphérique.
+     * @return string|false L'état correspondant au type de périphérique, ou false si aucun état n'est trouvé.
+     */
     public static function deviceTypeConstantsState($_id) {
         $_deviceTypes = array(
             101 => 'refState',
@@ -244,7 +279,52 @@ class lgthinq2 extends eqLogic
         return isset($_deviceTypes[$_id])?$_deviceTypes[$_id]:false;
     }
 
-    // Fonction pour effectuer une requête POST
+    /**
+     * Vérifie si une chaîne de caractères est un JSON valide.
+     *
+     * Cette fonction vérifie si une chaîne de caractères est un JSON valide.
+     *
+     * @param string $string La chaîne de caractères à vérifier.
+     * @return bool True si la chaîne est un JSON valide ; sinon, false.
+     */
+    public static function isValidJson($string)
+    {
+        if ($string !== false && $string !== null && $string !== '') {
+            json_decode($string);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Remplace le début d'une chaîne donnée.
+     *
+     * Cette fonction remplace la chaîne de début $_needle par une chaîne vide dans $_haystack si $_haystack commence par $_needle.
+     *
+     * @param string $_needle La chaîne à rechercher au début de $_haystack.
+     * @param string $_haystack La chaîne à modifier.
+     * @return string|false La chaîne modifiée si le remplacement a réussi ; sinon, retourne false.
+     */
+    public static function replaceBeginString($_needle, $_haystack) {
+        if (substr($_haystack, 0, strlen($_needle)) == $_needle) {
+            return substr($_haystack, strlen($_needle));
+        }
+        return false;
+    }
+
+    /**
+     * Effectue une requête POST vers une URL donnée avec les données et les en-têtes spécifiés.
+     *
+     * Cette méthode prend en paramètres l'URL cible, les données à envoyer et les en-têtes HTTP à inclure dans la requête.
+     * Elle effectue une requête POST vers l'URL avec les paramètres spécifiés et renvoie la réponse obtenue.
+     *
+     * @param string $url L'URL cible de la requête POST.
+     * @param array|string $data Les données à envoyer dans la requête POST, sous forme de tableau associatif ou de chaîne de requête.
+     * @param array $headers Les en-têtes HTTP à inclure dans la requête POST, sous forme de tableau.
+     * @return string|false La réponse de la requête POST, ou false en cas d'échec.
+     */
     public static function postData($url, $data, $headers) {
         $curl = curl_init();
         curl_setopt_array($curl, array(
@@ -264,17 +344,28 @@ class lgthinq2 extends eqLogic
         return $response;
     }
 
+    /**
+     * Effectue plusieurs tentatives pour exécuter une fonction donnée.
+     *
+     * Cette méthode prend en paramètres la fonction à exécuter et un indicateur indiquant si le contenu brut doit être renvoyé en cas de succès.
+     * Elle exécute la fonction donnée plusieurs fois (jusqu'à un maximum de tentatives) et renvoie le résultat de la dernière tentative réussie.
+     * Si la fonction échoue à chaque tentative, la méthode renvoie null.
+     *
+     * @param callable $stepFunction La fonction à exécuter.
+     * @param bool $rawContent Indique si le contenu brut doit être renvoyé en cas de succès.
+     * @return mixed|null Le résultat de la dernière tentative réussie, ou null en cas d'échec.
+     */
     public static function doRetry($stepFunction, $rawContent = false) {
         $result = null;
         for ($i = 1; $i <= lgthinq2::MAXRETRY; $i++) {
             $result = $stepFunction();
             if (!$result) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . ' : '. __('Étape a échoué, tentative ', __FILE__) . $i . '/' . lgthinq2::MAXRETRY);
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __('Étape a échoué, tentative ', __FILE__) . $i . '/' . lgthinq2::MAXRETRY);
             } else {
                 if ($rawContent) {
                     $res = json_decode($result, true);
                     if ($res && isset($res['error']) && isset($res['error']['message'])) {
-                        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape a échoué ', __FILE__) . $res['error']['message'] . ', tentative ' . $i . '/' . lgthinq2::MAXRETRY);
+                        log::add(__CLASS__, 'debug', __FUNCTION__ . __('Étape a échoué ', __FILE__) . $res['error']['message'] . ', tentative ' . $i . '/' . lgthinq2::MAXRETRY);
                         sleep(2);
                     } else {
                         return $result;
@@ -287,6 +378,14 @@ class lgthinq2 extends eqLogic
         return null;
     }
 
+    /**
+     * Renvoie l'identifiant du client, en le générant s'il n'existe pas déjà.
+     *
+     * Cette méthode renvoie l'identifiant du client stocké dans la configuration de la classe.
+     * Si aucun identifiant de client n'est trouvé, un nouvel identifiant est généré et stocké dans la configuration.
+     *
+     * @return string L'identifiant du client.
+     */
     public static function getClientId() {
          if (config::byKey('cliend_id', __CLASS__, '') == '') {
              log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Création du client_id ', __FILE__));
@@ -295,6 +394,15 @@ class lgthinq2 extends eqLogic
          return config::byKey('cliend_id', __CLASS__);
     }
 
+    /**
+     * Renvoie la langue configurée sous différents formats.
+     *
+     * Cette méthode renvoie la langue configurée dans la classe, sous différents formats en fonction du type spécifié.
+     * Les types supportés sont : 'lowercase', 'uppercase', 'hyphen' et 'plain'.
+     *
+     * @param string $_type Le type de format de langue à renvoyer.
+     * @return string La langue configurée sous le format spécifié.
+     */
     public static function getLanguage($_type) {
         $lang = config::byKey('language', __CLASS__, 'fr_FR');
         $arrLang = explode('_', $lang);
@@ -312,6 +420,11 @@ class lgthinq2 extends eqLogic
         }
     }
 
+    /**
+     * Renvoie les en-têtes par défaut pour les requêtes vers les anciens services LG ThinQ.
+     *
+     * @return array Les en-têtes par défaut pour les requêtes vers les anciens services LG ThinQ.
+     */
     public static function oldDefaultHeaders() {
         return array(
             'Accept: */*',
@@ -326,6 +439,11 @@ class lgthinq2 extends eqLogic
         );
     }
 
+    /**
+     * Renvoie les en-têtes par défaut pour les requêtes vers les services LG ThinQ.
+     *
+     * @return array Les en-têtes par défaut pour les requêtes vers les services LG ThinQ.
+     */
     public static function defaultHeaders() {
         return array(
             'Accept: application/json',
@@ -345,6 +463,11 @@ class lgthinq2 extends eqLogic
         );
     }
 
+    /**
+     * Renvoie les en-têtes par défaut pour les requêtes vers les passerelles LG ThinQ.
+     *
+     * @return array Les en-têtes par défaut pour les requêtes vers les passerelles LG ThinQ.
+     */
     public static function defaultGwHeaders() {
         return array(
             'Accept: application/json',
@@ -372,6 +495,11 @@ class lgthinq2 extends eqLogic
         );
     }
 
+    /**
+     * Renvoie les en-têtes par défaut pour les requêtes vers les appareils LG ThinQ.
+     *
+     * @return array Les en-têtes par défaut pour les requêtes vers les appareils LG ThinQ.
+     */
     public static function defaultDevicesHeaders() {
         return array(
             'Accept: application/json',
@@ -400,6 +528,11 @@ class lgthinq2 extends eqLogic
         );
     }
 
+    /**
+     * Renvoie les en-têtes par défaut pour les requêtes vers les appareils LG ThinQ avec EMP.
+     *
+     * @return array Les en-têtes par défaut pour les requêtes vers les appareils LG ThinQ avec EMP.
+     */
     public static function defaultDevicesEmpHeaders() {
         return array(
             'Accept: application/json',
@@ -407,19 +540,34 @@ class lgthinq2 extends eqLogic
             'x-thinq-application-key: wideq',
             'x-thinq-security-key: nuts_securitykey',
             'x-thinq-token: ' . config::byKey('access_token', __CLASS__)
-
         );
     }
 
+    /**
+     * Renvoie le mot de passe configuré, éventuellement hashé en SHA-512.
+     *
+     * @param bool $_encrypted Indique si le mot de passe doit être hashé en SHA-512.
+     * @return string Le mot de passe configuré.
+     */
     public static function getPassword($_encrypted = false) {
         return $_encrypted ? hash('sha512', config::byKey('password', __CLASS__)) : config::byKey('password', __CLASS__);
     }
 
+    /**
+     * Renvoie le nom d'utilisateur configuré, éventuellement encodé pour une utilisation dans une URL.
+     *
+     * @param bool $_urlEncoded Indique si le nom d'utilisateur doit être encodé pour une utilisation dans une URL.
+     * @return string Le nom d'utilisateur configuré.
+     */
     public static function getUsername($_urlEncoded = false) {
         return $_urlEncoded ? urlencode(config::byKey('id', __CLASS__)) : config::byKey('id', __CLASS__);
     }
 
-    // Étape 0
+    /**
+     * Étape 0 : Obtient les informations de la passerelle LG ThinQ.
+     *
+     * @return bool|string Retourne true en cas de succès, sinon retourne null.
+     */
     public static function step0() {
         $headers = lgthinq2::defaultGwHeaders();
         $curlGw = curl_init();
@@ -438,10 +586,10 @@ class lgthinq2 extends eqLogic
         curl_close($curlGw);
         $gatewayRes = json_decode($rep, true);
         if (!$gatewayRes || !isset($gatewayRes['result'])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 0 a planté ', __FILE__) . json_encode($gatewayRes));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Étape 0 a planté ', __FILE__) . json_encode($gatewayRes));
             return;
         }
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 0 a result ', __FILE__) . parse_url($gatewayRes['result']['empFrontBaseUri2'], PHP_URL_HOST));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __('Étape 0 a result ', __FILE__) . parse_url($gatewayRes['result']['empFrontBaseUri2'], PHP_URL_HOST));
 
         config::save('LGE_MEMBERS_URL', 'https://' . parse_url($gatewayRes['result']['uris']['empFrontBaseUri2'], PHP_URL_HOST), __CLASS__);
         config::save('LG_EMPTERMS_URL', $gatewayRes['result']['empTermsUri'], __CLASS__);
@@ -449,7 +597,12 @@ class lgthinq2 extends eqLogic
 
         return true;
     }
-    // Étape 1
+
+    /**
+     * Étape 1 : Effectue la première étape de connexion.
+     *
+     * @return string|bool Retourne la réponse de la requête POST si réussie, sinon retourne false.
+     */
     public static function step1() {
         $headers = lgthinq2::defaultHeaders();
         $data = array(
@@ -459,7 +612,13 @@ class lgthinq2 extends eqLogic
         $rep = lgthinq2::postData(config::byKey('LGACC_SPX_URL', __CLASS__) . '/preLogin', http_build_query($data), $headers);
         return $rep;
     }
-    // Étape 2
+
+    /**
+     * Ancienne Étape 2 : Effectue la deuxième étape de connexion.
+     *
+     * @param string $rep1 La réponse de l'étape précédente.
+     * @return string|bool Retourne la réponse de la requête POST si réussie, sinon retourne false.
+     */
     public static function oldStep2($rep1) {
         $headers = lgthinq2::defaultHeaders();
         $headers[] = 'sec-fetch-mode: cors';
@@ -481,7 +640,13 @@ class lgthinq2 extends eqLogic
         $rep = lgthinq2::postData(config::byKey('LGE_MEMBERS_URL', __CLASS__) . '/lgacc/front/v1/signin/signInAct', http_build_query($data), $headers);
         return $rep;
     }
-    // Étape 2
+
+    /**
+     * Étape 2 : Effectue la deuxième étape de connexion.
+     *
+     * @param array $rep1 La réponse de l'étape précédente.
+     * @return string|bool Retourne la réponse de la requête POST si réussie, sinon retourne false.
+     */
     public static function step2($rep1) {
         $headers = lgthinq2::defaultHeaders();
         $headers[] = 'X-Signature: ' . $rep1['signature'];
@@ -494,7 +659,13 @@ class lgthinq2 extends eqLogic
         $rep = lgthinq2::postData(config::byKey('LG_EMPTERMS_URL', __CLASS__) . '/emp/v2.0/account/session/' . lgthinq2::getUsername(true), http_build_query($data), $headers);
         return $rep;
     }
-    // Étape 3
+
+    /**
+     * Étape 3 : Effectue la troisième étape de connexion.
+     *
+     * @param array $accountData Les données du compte.
+     * @return string|bool Retourne la réponse de la requête POST si réussie, sinon retourne false.
+     */
     public static function step3($accountData) {
         $headers = lgthinq2::oldDefaultHeaders();
         $headers[] = 'referer: ' . config::byKey('LGE_MEMBERS_URL', __CLASS__) . '/lgacc/service/v1/signin?callback_url=lgaccount.lgsmartthinq:/&redirect_url=lgaccount.lgsmartthinq:/&client_id=LGAO221A02&country=FR&language=fr&state=12345&svc_code=SVC202&close_type=0&svc_integrated=Y&webview_yn=Y&pre_login=Y';
@@ -513,7 +684,11 @@ class lgthinq2 extends eqLogic
         return $rep;
     }
 
-    // Étape 4
+    /**
+     * Étape 4 : Obtient la date et l'heure à partir de l'API LG.
+     *
+     * @return string|bool Retourne la réponse de la requête GET si réussie, sinon retourne false.
+     */
     public static function step4() {
         $curlTime = curl_init();
         curl_setopt_array($curlTime, array(
@@ -532,7 +707,13 @@ class lgthinq2 extends eqLogic
         return $responseTime;
     }
 
-    // Étape 5
+    /**
+     * Étape 5 : Effectue la cinquième étape de connexion.
+     *
+     * @param string $code Le code d'autorisation.
+     * @param array $time Les informations de date et d'heure.
+     * @return string|bool Retourne la réponse de la requête POST si réussie, sinon retourne false.
+     */
     public static function step5($code, $time) {
         $headers = array(
             'content-type: application/x-www-form-urlencoded',
@@ -559,7 +740,11 @@ class lgthinq2 extends eqLogic
         return $rep;
     }
 
-    // Étape 6 : thinq1 old login method
+    /**
+     * Étape 6 : Ancienne méthode de connexion à thinq1.
+     *
+     * @return string|bool Retourne l'ID de session si réussi, sinon retourne null.
+     */
     public static function step6() {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
 
@@ -574,27 +759,30 @@ class lgthinq2 extends eqLogic
 
         $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'member/login', json_encode($data, JSON_PRETTY_PRINT), $headers);
         if (!$response) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 6 a échoué.', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Étape 6 a échoué.', __FILE__));
             return;
         }
         $arr6 = json_decode($response, true);
         if (!$arr6 || !isset($arr6[lgthinq2::DATA_ROOT])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Erreur de la requête ', __FILE__) . json_encode($arr6));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Erreur de la requête ', __FILE__) . json_encode($arr6));
             return;
         }
         if (!isset($arr6[lgthinq2::DATA_ROOT]['returnCd'])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Erreur de la réponse ', __FILE__) . json_encode($arr6[lgthinq2::DATA_ROOT]));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Erreur de la réponse ', __FILE__) . json_encode($arr6[lgthinq2::DATA_ROOT]));
             return;
         }
         if ($arr6[lgthinq2::DATA_ROOT]['returnCd'] != '0000') {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Code retour erroné ', __FILE__) . json_encode($arr6[lgthinq2::DATA_ROOT]));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Code retour erroné ', __FILE__) . json_encode($arr6[lgthinq2::DATA_ROOT]));
             return;
         }
         return $arr6[lgthinq2::DATA_ROOT]['jsessionId'];
     }
 
+    /**
+     * Méthode de connexion.
+     */
     public static function login() {
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('debut', __FILE__));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __('debut', __FILE__));
 
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : ÉTAPE 0', __FILE__));
         $rep0 = lgthinq2::step0();
@@ -602,12 +790,12 @@ class lgthinq2 extends eqLogic
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : ÉTAPE 1', __FILE__));
         $rep1 = lgthinq2::doRetry('lgthinq2::step1');
         if (!$rep1) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 1 a échoué après plusieurs tentatives.', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Étape 1 a échoué après plusieurs tentatives.', __FILE__));
             return;
         }
         $spxLogin = json_decode($rep1, true);
         if (!$spxLogin || !isset($spxLogin['encrypted_pw'])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 2 a planté ', __FILE__) . json_encode($spxLogin));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Étape 2 a planté ', __FILE__) . json_encode($spxLogin));
             return;
         }
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : EncryptedPw = ' . $rep1);
@@ -615,12 +803,12 @@ class lgthinq2 extends eqLogic
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : ÉTAPE 2', __FILE__));
         $rep2 = lgthinq2::doRetry(function() use ($spxLogin) { return lgthinq2::step2($spxLogin); }, true);
         if (!$rep2) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 2 a échoué après plusieurs tentatives.', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Étape 2 a échoué après plusieurs tentatives.', __FILE__));
             return;
         }
         $accountData = json_decode($rep2, true);
         if (!$accountData || !isset($accountData['account'])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 2 a planté', __FILE__) . json_encode($accountData));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Étape 2 a planté', __FILE__) . json_encode($accountData));
             return;
         }
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ACCOUNT INFOS = ' . json_encode($accountData['account']));
@@ -631,7 +819,7 @@ class lgthinq2 extends eqLogic
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : ÉTAPE 3', __FILE__));
         $rep3 = lgthinq2::doRetry(function() use ($accountData) { return lgthinq2::step3($accountData); });
         if (!$rep3) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 3 a échoué après plusieurs tentatives.', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Étape 3 a échoué après plusieurs tentatives.', __FILE__));
             return;
         }
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : REDIRECTURI = '. $rep3 );
@@ -652,35 +840,35 @@ class lgthinq2 extends eqLogic
                 config::save('user_number', $queryParams['user_number'], __CLASS__);
             }
         } else {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Aucun paramètre d\'URL trouvé dans la clé redirect_uri.', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Aucun paramètre d\'URL trouvé dans la clé redirect_uri.', __FILE__));
             return;
         }
 
-        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : ÉTAPE 4', __FILE__));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' ÉTAPE 4', __FILE__));
         $rep4 = lgthinq2::step4();
         if (!$rep4) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 4 a échoué.', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Étape 4 a échoué.', __FILE__));
             return;
         }
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : REPTIME = ' . $rep4);
         $time = json_decode($rep4, true);
         if (!$time || !isset($time['date'])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Impossible de récupérer l\'heure.', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Impossible de récupérer l\'heure.', __FILE__));
             return;
         }
         $dateTime = new DateTime('now', new DateTimeZone('UTC'));
         $rfc2822Date = ($time['date']?$time['date']:$dateTime->format(DateTime::RFC2822));
 
-        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : ÉTAPE 5', __FILE__));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' ÉTAPE 5', __FILE__));
         $rep5 = lgthinq2::step5($code, $time);
         if (!$rep5) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Étape 5 a échoué.', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Étape 5 a échoué.', __FILE__));
             return;
         }
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ACCESS/REFRESH TOKENS = ' . $rep5);
         $token = json_decode($rep5, true);
         if (!$token || !isset($token['access_token'])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Impossible de récupérer le token d\'accès.', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Impossible de récupérer le token d\'accès.', __FILE__));
             return;
         }
 
@@ -689,26 +877,36 @@ class lgthinq2 extends eqLogic
         config::save('refresh_token', $token['refresh_token'], __CLASS__);
         config::save('oauth2_backend_url', $token['oauth2_backend_url'], __CLASS__);
 
-        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : ÉTAPE 6', __FILE__));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' ÉTAPE 6', __FILE__));
         $jsession = lgthinq2::step6();
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Jeton de session ', __FILE__) . $jsession);
 
         config::save('jsessionId', $jsession, __CLASS__);
     }
 
+    /**
+     * Vérifie si le token est expiré.
+     *
+     * @return bool Retourne true si le token est expiré et a été rafraîchi avec succès, sinon retourne false.
+     */
     public static function getTokenIsExpired() {
         if (config::byKey('expires_in', __CLASS__, 0) < time()) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token en cours, expiré depuis ', __FILE__) . (time() - config::byKey('expires_in', __CLASS__, 0)) . __(' secondes', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' refresh_token en cours, expiré depuis ', __FILE__) . (time() - config::byKey('expires_in', __CLASS__, 0)) . __(' secondes', __FILE__));
             return lgthinq2::refreshToken();
         }
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token à jour, il expire dans ', __FILE__) . (config::byKey('expires_in', __CLASS__, 0) - time()) . __(' secondes', __FILE__));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' refresh_token à jour, il expire dans ', __FILE__) . (config::byKey('expires_in', __CLASS__, 0) - time()) . __(' secondes', __FILE__));
         return false;
     }
 
+    /**
+     * Rafraîchit le token d'accès.
+     *
+     * @return string|void Retourne la réponse de la requête de rafraîchissement du token d'accès si réussie, sinon rien.
+     */
     public static function refreshToken() {
         $refreshToken = config::byKey('refresh_token', __CLASS__, '');
         if ($refreshToken != '') {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token en cours...', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' refresh_token en cours...', __FILE__));
             $headers = array(
                 'x-lge-app-os: ADR',
                 'x-lge-appkey: ' . lgthinq2::APPKEY,
@@ -725,7 +923,7 @@ class lgthinq2 extends eqLogic
             $urlToken = '/oauth/1.0/oauth2/token?' . http_build_query($data);
             $headers[] = 'x-lge-oauth-signature: ' . base64_encode(hash_hmac('sha1', $urlToken."\n".$time, lgthinq2::OAUTHSECRETKEY, true));
             $rep = lgthinq2::postData('https://gb.lgeapi.com' . $urlToken, '', $headers);
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token résultat : ', __FILE__) . $rep);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' refresh_token résultat : ', __FILE__) . $rep);
             $token = json_decode($rep, true);
             if (!$token || !isset($token['access_token'])) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Impossible de récupérer le token d\'accès.');
@@ -735,14 +933,21 @@ class lgthinq2 extends eqLogic
             config::save('expires_in', (time() + $token['expires_in']), __CLASS__);
             config::save('jsessionId', lgthinq2::step6(), __CLASS__); //because jessionId is related to current access_token, it needs to be asked again
 
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('refresh_token effectué ', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' refresh_token effectué ', __FILE__));
             return $rep;
         } else {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('Pas de refresh_token, demande de login', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Pas de refresh_token, demande de login', __FILE__));
             lgthinq2::login();
         }
     }
 
+    /**
+     * Obtient la liste des appareils.
+     *
+     * @param string $_deviceId L'identifiant de l'appareil (facultatif).
+     * @param bool $_tokenRefreshed Indique si le token d'accès a été rafraîchi (facultatif).
+     * @return void
+     */
     public static function getDevices($_deviceId = '', $_tokenRefreshed = false) {
 
         lgthinq2::getTokenIsExpired();
@@ -761,18 +966,18 @@ class lgthinq2 extends eqLogic
             CURLOPT_CUSTOMREQUEST => 'GET',
             CURLOPT_HTTPHEADER => $headers
         ));
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' getDEVICES HEADERS : ', __FILE__) . json_encode($headers));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' getDEVICES HEADERS : ', __FILE__) . json_encode($headers));
 
         $response = curl_exec($curl);
         curl_close($curl);
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' getDEVICES : ', __FILE__) . $response);
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' getDEVICES : ', __FILE__) . $response);
         if (!$response) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' erreur : '. $response);
             return;
         }
         $devices = json_decode($response, true);
         if (!$devices || !isset($devices['resultCode'])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de la requête  ' . json_encode($devices));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Erreur de la requête ', __FILE__) . json_encode($devices));
             return;
         }
         if ($devices['resultCode'] != '0000' && $_tokenRefreshed == false) {
@@ -786,7 +991,6 @@ class lgthinq2 extends eqLogic
                 $eqLogic = lgthinq2::createEquipement($items, $items['platformType']);
                 if (is_object($eqLogic) && isset($items['modelJsonUri'])) {
                     $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType'));
-                    log::add(__CLASS__, 'debug', __FUNCTION__ . ' : modelJsonUri ' . $refState . ' => ' . $items['modelJsonUri']);
                     $langProduct = $eqLogic->getLangJson('langPackProductType', $items['langPackProductTypeUri'], $items['langPackProductTypeVer']);
                     $langModel = $eqLogic->getLangJson('langPackModel', $items['langPackModelUri'], $items['langPackModelVer']);
                     if ($refState) {
@@ -800,7 +1004,182 @@ class lgthinq2 extends eqLogic
         }
     }
 
+    /**
+     * Génère un identifiant UUID.
+     *
+     * @param string|null $data Les données à utiliser (facultatif).
+     * @return string L'identifiant UUID généré.
+     */
+    public static function setUUID($data = null) {
+        $data = $data ?? random_bytes(16);
+        assert(strlen($data) == 16);
 
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    }
+
+    /**
+     * Méthode appellée par le core (moteur de tâche) cron configuré dans la fonction lgthinq2_install
+     * Lance une fonction pour récupérer les appareils et une fonction pour rafraichir les commandes
+     */
+    public static function update() {
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' début', __FILE__));
+        $autorefresh = config::byKey('autorefresh', __CLASS__, '');
+        if ($autorefresh != '') {
+            try {
+                $c = new Cron\CronExpression($autorefresh, new Cron\FieldFactory);
+                if ($c->isDue()) {
+                    try {
+                        lgthinq2::getTokenIsExpired();
+                        foreach (eqLogic::byType(__CLASS__) as $eqLogic) {
+                            if ($eqLogic->getIsEnable()) {
+                                $eqLogic->refresh();
+                            }
+                        }
+                    } catch (Exception $exc) {
+                        log::add(__CLASS__, 'error', __('Erreur : ', __FILE__) . $exc->getMessage());
+                    }
+                }
+            } catch (Exception $exc) {
+                log::add(__CLASS__, 'error', __('Expression cron non valide : ', __FILE__) . $autorefresh);
+            }
+        }
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' fin', __FILE__));
+    }
+
+    /**
+     * Récupère le nom traduit à partir de la configuration.
+     *
+     * Cette fonction récupère le nom traduit d'un élément de configuration à partir des données de configuration fournies.
+     *
+     * @param string $_name Le nom à traduire.
+     * @param array $_config Les données de configuration.
+     * @return string Le nom traduit s'il est trouvé ; sinon, retourne le nom d'origine.
+     */
+    public static function getTranslatedNameFromConfig($_name, $_config) {
+        if (isset($_config['MonitoringValue'][$_name]) && isset($_config['MonitoringValue'][$_name]['label'])) {
+            return $_config['MonitoringValue'][$_name]['label'];
+        } elseif (isset($_config['Config'])) {
+            if (isset($_config['Config']['visibleItems'])) {
+                foreach ($_config['Config']['visibleItems'] as $visibleItems) {
+                     if ($visibleItems['feature'] == $_name) {
+                         //log::add(__CLASS__, 'debug', 'TERMMMMMMM => ' . $visibleItems['monTitle']);
+                         return $visibleItems['monTitle'];
+                     }
+                }
+            }
+        }
+        return $_name;
+    }
+
+    /**
+     * Synchronise les données avec les appareils.
+     *
+     * Cette fonction effectue la synchronisation des données avec les appareils.
+     *
+     * @return void
+     */
+    public static function synchronize()
+    {
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' début', __FILE__));
+        if (config::byKey('LGE_MEMBERS_URL', __CLASS__, '') == '' || config::byKey('LG_EMPTERMS_URL', __CLASS__, '') == '' || config::byKey('LGACC_SPX_URL', __CLASS__, '') == '') {
+            $rep0 = lgthinq2::step0();
+        }
+        lgthinq2::getDevices();
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' fin', __FILE__));
+    }
+
+    /**
+     * Charge les données de configuration à partir d'un fichier.
+     *
+     * Cette fonction charge les données de configuration à partir d'un fichier JSON en fonction du type fourni.
+     *
+     * @param string $_type Le type de données de configuration à charger.
+     * @return array|null Les données de configuration chargées si elles sont réussies ; sinon, retourne null.
+     */
+    private static function loadConfigFile($_type) {
+        log::add(__CLASS__, 'debug', __FUNCTION__ .' début' . $_type);
+        $filename = __DIR__ . '/../../data/' . $_type . '.json';
+        if (!file_exists($filename)) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Impossible de trouver le fichier de configuration pour l\'équipement ', __FILE__));
+            return;
+        }
+        $content = file_get_contents($filename);
+        if (!is_json($content)) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration ' . $filename . ' est corrompu', __FILE__));
+            return;
+        }
+        $data = json_decode($content, true);
+        if (!is_array($data)/* || !isset($data['commands'])*/) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration ' . $filename . ' est invalide', __FILE__));
+            return;
+        }
+        return $data;
+    }
+
+    /**
+     * Crée un équipement.
+     *
+     * Cette fonction crée un équipement en fonction des capacités et de la plateforme fournies.
+     *
+     * @param array $_capa Les capacités de l'équipement à créer.
+     * @param mixed $_platform La plateforme de l'équipement.
+     * @return lgthinq2|null L'équipement créé si la création réussit ; sinon, retourne null.
+     */
+    public static function createEquipement($_capa, $_platform) {
+        log::add(__CLASS__, 'debug', __FUNCTION__ .' début' . json_encode($_capa));
+        if (!isset($_capa['deviceId'])) {
+            log::add(__CLASS__, 'error', __FUNCTION__ . __(' erreur uuid inexistant ', __FILE__) . json_encode($_capa));
+            return;
+        }
+        $eqLogic = lgthinq2::byLogicalId($_capa['deviceId'], __CLASS__);
+        if (!is_object($eqLogic)) {
+            $eqLogic = new lgthinq2();
+            $eqLogic->setName($_capa['alias']);
+            $eqLogic->setLogicalId($_capa['deviceId']);
+            $eqLogic->setObject_id(null);
+            $eqLogic->setEqType_name(__CLASS__);
+            $eqLogic->setIsEnable(1);
+            $eqLogic->setIsVisible(1);
+            event::add('jeedom::alert', array(
+                'level' => 'success',
+                'page' => __CLASS__,
+                'message' => __("L'équipement ", __FILE__) . $eqLogic->getHumanName() . __(" vient d'être créé", __FILE__),
+            ));
+        }
+        if (isset($_capa['deviceType'])) {
+            $eqLogic->setConfiguration('deviceType', $_capa['deviceType']);
+        }
+        if (isset($_capa['deviceCode'])) {
+            $eqLogic->setConfiguration('deviceCode', $_capa['deviceCode']);
+            $eqLogic->setConfiguration('deviceCodeName', lgthinq2::deviceTypeCodeConstants($_capa['deviceCode']));
+        }
+        if (isset($_capa['homeId'])) {
+            $eqLogic->setConfiguration('homeId', $_capa['homeId']);
+        }
+        if (isset($_capa['deviceId'])) {
+            $eqLogic->setConfiguration('deviceId', $_capa['deviceId']);
+        }
+        if (isset($_capa['roomId'])) {
+            $eqLogic->setConfiguration('roomId', $_capa['roomId']);
+        }
+        if (isset($_capa['modelName'])) {
+            $eqLogic->setConfiguration('modelName', $_capa['modelName']);
+        }
+        if (isset($_platform)) {
+            $eqLogic->setConfiguration('platformType', $_platform);
+        }
+        $eqLogic->save();
+        return $eqLogic;
+    }
+
+    /**
+     * Obtient le statut des appareils.
+     *
+     * @param bool $_repeat Indique s'il faut répéter la requête (facultatif).
+     * @return void
+     */
     public function getDevicesStatus($_repeat = false) {
 
         lgthinq2::getTokenIsExpired();
@@ -828,7 +1207,6 @@ class lgthinq2 extends eqLogic
                         $logicalid = $dkey;
                     }
                     if ($logicalid !== false) {
-                        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : FOUND ' . $dkey . ' => ' . $logicalid  . ' => ' . $dvalue);
                         if (!is_object($this->getCmd('info', $logicalid))) {
                             $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $logicalid);
                         }
@@ -854,18 +1232,18 @@ class lgthinq2 extends eqLogic
             CURLOPT_CUSTOMREQUEST => 'GET',
             CURLOPT_HTTPHEADER => $headers
         ));
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' getDEVICES HEADERS : ', __FILE__) . json_encode($headers));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' getDEVICES HEADERS : ', __FILE__) . json_encode($headers));
 
         $response = curl_exec($curl);
         curl_close($curl);
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' getDEVICES : ', __FILE__) . $response);
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' getDEVICES : ', __FILE__) . $response);
         if (!$response) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' erreur : '. $response);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' erreur : ', __FILE__) . $response);
             return;
         }
         $devices = json_decode($response, true);
         if (!$devices || !isset($devices['resultCode'])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de la requête  ' . json_encode($devices));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Erreur de la requête ', __FILE__) . json_encode($devices));
             return;
         }
         if ($devices['resultCode'] != '0000' && $_tokenRefreshed == false) {
@@ -873,10 +1251,11 @@ class lgthinq2 extends eqLogic
         }
 
         $modelJson = false;
+        //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/FAY_'.$this->getLogicalId().'.json'),true); // developper only
+        //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/PAC.json'),true); // developper only
 
         if (isset($devices['result']['snapshot'])) {
             $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getLogicalId());
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $deviceTypeConfigFile ' . json_encode($deviceTypeConfigFile));
             if (!is_object($this->getCmd('info', 'online'))) {
                 $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, 'online');
             }
@@ -900,6 +1279,12 @@ class lgthinq2 extends eqLogic
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $devices  ' . json_encode($devices));
     }
 
+    /**
+     * Change le statut du moniteur.
+     *
+     * @param string $_action L'action à effectuer (Stop ou Start).
+     * @return void
+     */
     public function changeMonitorStatus($_action) {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
         $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__, lgthinq2::step6());
@@ -913,40 +1298,46 @@ class lgthinq2 extends eqLogic
             )
         );
         //$headers[] = 'Content-Length: ' . strlen(json_encode($data));
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' URL : ', __FILE__) . lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiMon' );
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' DATA : ', __FILE__) . json_encode($data));
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' HEADERS : ', __FILE__) . json_encode($headers));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' URL : ', __FILE__) . lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiMon' );
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DATA : ', __FILE__) . json_encode($data));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' HEADERS : ', __FILE__) . json_encode($headers));
 
         $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiMon', json_encode($data), $headers);
 
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' RESPONSE : ', __FILE__) . $response);
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' RESPONSE : ', __FILE__) . $response);
         if (!$response) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' erreur : '. $response);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' erreur : ', __FILE__) . $response);
             return;
         }
         $work = json_decode($response, true);
         if (!$work || !isset($work[lgthinq2::DATA_ROOT])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : Erreur de la requête  ', __FILE__) . json_encode($work));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Erreur de la requête  ', __FILE__) . json_encode($work));
             return;
         }
         if (isset($work[lgthinq2::DATA_ROOT]['returnCd']) && $work[lgthinq2::DATA_ROOT]['returnCd'] != '0000') {
             $this->setConfiguration('workId', '')->save();
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de code ' . $work[lgthinq2::DATA_ROOT]['returnCd'] . ' ' . $work[lgthinq2::DATA_ROOT]['returnMsg']);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Erreur de code ', __FILE__) . $work[lgthinq2::DATA_ROOT]['returnCd'] . ' ' . $work[lgthinq2::DATA_ROOT]['returnMsg']);
             if ($work[lgthinq2::DATA_ROOT]['returnCd'] == '0102') {
                 config::save('jsessionId', lgthinq2::step6(), __CLASS__);
             }
             return;
         }
         if (isset($work[lgthinq2::DATA_ROOT]['workId'])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : Requête réussie ', __FILE__) . json_encode($work));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Requête réussie ', __FILE__) . json_encode($work));
             $this->setConfiguration('workId', $work[lgthinq2::DATA_ROOT]['workId'])->save();
         } else {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' : workId non présent ', __FILE__) . json_encode($work));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' workId non présent ', __FILE__) . json_encode($work));
             $this->setConfiguration('workId', '')->save();
             $this->setConfiguration('needRtiControl', true)->save();
         }
     }
 
+    /**
+     * Interroge périodiquement le statut du moniteur.
+     *
+     * @param bool $_repeat Indique s'il faut répéter la requête (facultatif).
+     * @return mixed|null Retourne les données obtenues ou null en cas d'erreur.
+     */
     public function pollMonitorStatus($_repeat = false) {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
         $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__, lgthinq2::step6());
@@ -962,27 +1353,29 @@ class lgthinq2 extends eqLogic
             )
         );
         //$headers[] = 'Content-Length: ' . strlen(http_build_query($data));
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' URL : ', __FILE__) . lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiResult' );
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' DATA : ', __FILE__) . json_encode($data));
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' HEADERS : ', __FILE__) . json_encode($headers));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' URL : ', __FILE__) . lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiResult' );
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DATA : ', __FILE__) . json_encode($data));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' HEADERS : ', __FILE__) . json_encode($headers));
 
         $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiResult', json_encode($data, JSON_PRETTY_PRINT), $headers);
         //$response = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/OTH_'.$this->getLogicalId().'.json'),true); // developper only
 
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' response : ', __FILE__) . $response);
+//{"lgedmRoot":{"returnCd":"0000","returnMsg":"OK","workList":{"deviceId":"d27af0a0-7149-11d3-80aa-044eaf4149f1","deviceState":"E","returnCode":"0106","stateCode":"N","workId":"n-d27af0a0-7149-11d3-80aa-044eaf4149f1"}}}
+
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' response : ', __FILE__) . $response);
         if (!$response) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' erreur : '. $response);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' erreur : ', __FILE__) . $response);
             return;
         }
         $rti = json_decode($response, true);
         if (!$rti || !isset($rti[lgthinq2::DATA_ROOT]['returnCd'])) {
             $this->setConfiguration('workId', '')->save();
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de la requête  ' . json_encode($devices));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Erreur de la requête ', __FILE__) . json_encode($devices));
             return;
         }
         if ($rti[lgthinq2::DATA_ROOT]['returnCd'] != '0000') {
             $this->setConfiguration('workId', '')->save();
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de code ' . $rti[lgthinq2::DATA_ROOT]['returnCd'] . ' ' . $rti[lgthinq2::DATA_ROOT]['returnMsg']);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Erreur de code ', __FILE__) . $rti[lgthinq2::DATA_ROOT]['returnCd'] . ' ' . $rti[lgthinq2::DATA_ROOT]['returnMsg']);
             if ($rti[lgthinq2::DATA_ROOT]['returnCd'] == '0102' && $_repeat == false) {
                 config::save('jsessionId', lgthinq2::step6(), __CLASS__);
                 return lgthinq2::pollMonitorStatus(true);
@@ -991,13 +1384,13 @@ class lgthinq2 extends eqLogic
         }
         if (!isset($rti[lgthinq2::DATA_ROOT]['workList'])) {
             $this->setConfiguration('workId', '')->save();
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : WorkList non existant ' . json_encode($rti));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' WorkList non existant ', __FILE__) . json_encode($rti));
             return;
         }
 
         if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) || $rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0106') {
             $nbDisconnects = (int)$this->getConfiguration('nbDisconnections', 0);
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode null ou 0106, $nbDisconnects ' . $nbDisconnects);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' returnCode null ou 0106, $nbDisconnects ', __FILE__) . $nbDisconnects);
             if ($nbDisconnects >= 3) {
                 $this->setConfiguration('workId', '');
                 $this->setConfiguration('nbDisconnections', 0)->save();
@@ -1017,7 +1410,7 @@ class lgthinq2 extends eqLogic
         }*/
         if (isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) && $rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] != '0000') {
             if ($rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0100' && $_repeat == false) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode non existant ' . json_encode($rti));
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' returnCode non existant ', __FILE__) . json_encode($rti));
                 $this->setConfiguration('workId', '')->save();
                 $this->getDevicesStatus(true);
             }
@@ -1026,10 +1419,18 @@ class lgthinq2 extends eqLogic
         if (isset($rti[lgthinq2::DATA_ROOT]['workList']['returnData']) && $rti[lgthinq2::DATA_ROOT]['workList']['format'] == 'B64') {
             $this->setConfiguration('nbDisconnections', 0); // reset nb disconnections
             return json_decode(base64_decode($rti[lgthinq2::DATA_ROOT]['workList']['returnData']), true);
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Requête réussie ' . json_encode($reData));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Requête réussie ', __FILE__) . json_encode($reData));
         }
     }
 
+    /**
+     * Obtient le contrôle RTI de l'appareil.
+     *
+     * @param string $_cmd La commande.
+     * @param string $_cmdOpt L'option de commande.
+     * @param string $_value La valeur.
+     * @return array|null Retourne les données obtenues ou null en cas d'erreur.
+     */
     public function getDeviceRtiControl($_cmd, $_cmdOpt, $_value) {
         $headers = lgthinq2::defaultDevicesEmpHeaders();
         $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', __CLASS__, lgthinq2::step6());
@@ -1045,72 +1446,30 @@ class lgthinq2 extends eqLogic
         );
         $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiControl', json_encode($data, JSON_PRETTY_PRINT), $headers);
 
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __(' response : ', __FILE__) . $response);
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' response : ', __FILE__) . $response);
         if (!$response) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' erreur : '. $response);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' erreur : ', __FILE__) . $response);
             return;
         }
         $rti = json_decode($response, true);
         if (!$rti || !isset($rti[lgthinq2::DATA_ROOT])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de la requête  ' . json_encode($devices));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Erreur de la requête ', __FILE__) . json_encode($devices));
             return;
         }
         if ($rti[lgthinq2::DATA_ROOT]['returnCd'] != '0000') {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Erreur de code ' . json_encode($rti));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Erreur de code ', __FILE__) . json_encode($rti));
             return;
         }
         if (isset($rti[lgthinq2::DATA_ROOT]['returnData']) && $rti[lgthinq2::DATA_ROOT]['format'] == 'B64') {
             $reData = json_decode(base64_decode($rti[lgthinq2::DATA_ROOT]['returnData']), true);
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Requête réussie ' . json_encode($reData));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Requête réussie ', __FILE__) . json_encode($reData));
             return $reData;
         }
-    }
-
-    public static function setUUID($data = null) {
-        $data = $data ?? random_bytes(16);
-        assert(strlen($data) == 16);
-
-        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-    }
-
-    /**
-     * Méthode appellée par le core (moteur de tâche) cron configuré dans la fonction lgthinq2_install
-     * Lance une fonction pour récupérer les appareils et une fonction pour rafraichir les commandes
-     * @param
-     * @return
-     */
-    public static function update() {
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('début', __FILE__));
-        $autorefresh = config::byKey('autorefresh', 'lgthinq2', '');
-        if ($autorefresh != '') {
-            try {
-                $c = new Cron\CronExpression($autorefresh, new Cron\FieldFactory);
-                if ($c->isDue()) {
-                    try {
-                        lgthinq2::getTokenIsExpired();
-                        foreach (eqLogic::byType('lgthinq2') as $eqLogic) {
-                            if ($eqLogic->getIsEnable()) {
-                                $eqLogic->refresh();
-                            }
-                        }
-                    } catch (Exception $exc) {
-                        log::add(__CLASS__, 'error', __('Erreur : ', __FILE__) . $exc->getMessage());
-                    }
-                }
-            } catch (Exception $exc) {
-                log::add(__CLASS__, 'error', __('Expression cron non valide : ', __FILE__) . $autorefresh);
-            }
-        }
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('fin', __FILE__));
     }
 
     /**
      * Méthode appellée avant la création de l'objet
      * Active et affiche l'objet
-     * @param
-     * @return
      */
     public function preInsert()
     {
@@ -1121,8 +1480,6 @@ class lgthinq2 extends eqLogic
     /**
      * Méthode appellée après la création de l'objet
      * Ajoute la commande refresh
-     * @param
-     * @return
      */
     public function postInsert()
     {
@@ -1148,10 +1505,13 @@ class lgthinq2 extends eqLogic
         }
     }
 
+    /**
+     * Rafraîchit les données.
+     */
     public function refresh() {
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('début ', __FILE__));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' début', __FILE__));
         $this->getDevicesStatus();
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('fin', __FILE__));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' fin', __FILE__));
     }
 
     /**
@@ -1168,6 +1528,14 @@ class lgthinq2 extends eqLogic
         return false;
     }
 
+    /**
+     * Obtient les données JSON de langue.
+     *
+     * @param string $_type Type de fichier JSON de langue ('langPackProductType' ou 'langPackModel').
+     * @param string $_langFileUri URI du fichier JSON de langue.
+     * @param string $_langFileVer Version du fichier JSON de langue.
+     * @return array|false Les données JSON de langue ou false en cas d'erreur.
+     */
     public function getLangJson($_type, $_langFileUri = '', $_langFileVer) {
 
         $curVersion = $this->getConfiguration($_type . 'Ver', '');
@@ -1201,6 +1569,17 @@ class lgthinq2 extends eqLogic
         return $data['pack'];
     }
 
+    /**
+     * Crée des commandes à partir de fichiers JSON de modèle et de langue.
+     *
+     * @param string $_modelJsonUri URI du fichier JSON de modèle.
+     * @param string $_modelJsonVer Version du fichier JSON de modèle.
+     * @param array $_refState État de référence.
+     * @param array $_configProductLang Configuration de la langue du produit.
+     * @param array $_configModelLang Configuration de la langue du modèle.
+     * @param mixed|null $refState État de référence.
+     * @return false
+     */
     public function createCmdFromModelAndLangFiles($_modelJsonUri, $_modelJsonVer, $_refState, $_configProductLang, $_configModelLang, $refState = null) {
         if ($_modelJsonUri != '') {
             $curVersion = $this->getConfiguration('modelJsonVer', '0.0');
@@ -1433,7 +1812,6 @@ class lgthinq2 extends eqLogic
                                             $lastValue = $currentValue;
                                         }
                                     }
-                                    log::add(__CLASS__, 'debug', __FUNCTION__ . ' TEST' . json_encode($data['MonitoringValue'][$tempUnitValue]));
                                 }
                             }
                         }
@@ -1705,9 +2083,7 @@ class lgthinq2 extends eqLogic
                 foreach ($commands as $cmd) {
                     $this->createCommand($cmd);
                 }
-                    //log::add(__CLASS__, 'debug', 'ControlDeviceControlDeviceControlDevice  $commands ' . json_encode($commands));
             }
-
         }
         foreach ($this->getCmd('action') as $actCmd) {
             if (is_object($cmdInfo = $this->getCmd('info', lgthinq2::replaceBeginString('Set', $actCmd->getLogicalId())))) {
@@ -1718,29 +2094,16 @@ class lgthinq2 extends eqLogic
         return false;
     }
 
-    public static function getTranslatedNameFromConfig($_name, $_config) {
-        if (isset($_config['MonitoringValue'][$_name]) && isset($_config['MonitoringValue'][$_name]['label'])) {
-            return $_config['MonitoringValue'][$_name]['label'];
-        } elseif (isset($_config['Config'])) {
-            if (isset($_config['Config']['visibleItems'])) {
-                foreach ($_config['Config']['visibleItems'] as $visibleItems) {
-                     if ($visibleItems['feature'] == $_name) {
-                         //log::add(__CLASS__, 'debug', 'TERMMMMMMM => ' . $visibleItems['monTitle']);
-                         return $visibleItems['monTitle'];
-                     }
-                }
-            }
-        }
-        return $_name;
-    }
-
-    public static function replaceBeginString($_needle, $_haystack) {
-        if (substr($_haystack, 0, strlen($_needle)) == $_needle) {
-            return substr($_haystack, strlen($_needle));
-        }
-        return false;
-    }
-
+    /**
+     * Vérifie la valeur et met à jour la commande.
+     *
+     * Cette fonction vérifie la valeur et met à jour une commande en fonction de l'ID d'état, du tableau de valeurs d'état et du timestamp fournis.
+     *
+     * @param mixed $refStateId L'ID d'état de référence.
+     * @param mixed $refStateValueArray Le tableau de valeurs d'état de référence.
+     * @param mixed $timestamp Le timestamp.
+     * @return mixed La commande mise à jour.
+     */
     public function checkValueAndUpdateCmd($refStateId, $refStateValueArray, $timestamp) {
         $cmd = array();
         if (is_object($cmdInfo = $this->getCmd('info', $refStateId))) {
@@ -1783,81 +2146,14 @@ class lgthinq2 extends eqLogic
         return $this->checkAndUpdateCmd($refStateId, $refStateValueArray, $timestamp);
     }
 
-    private static function loadConfigFile($_type) {
-        log::add(__CLASS__, 'debug', __FUNCTION__ .' début' . $_type);
-        $filename = __DIR__ . '/../../data/' . $_type . '.json';
-        if (file_exists($filename) === false) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Impossible de trouver le fichier de configuration pour l\'équipement ', __FILE__));
-            return;
-        }
-        $content = file_get_contents($filename);
-        if (!is_json($content)) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration ' . $filename . ' est corrompu', __FILE__));
-            return;
-        }
-        $data = json_decode($content, true);
-        if (!is_array($data)/* || !isset($data['commands'])*/) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration ' . $filename . ' est invalide', __FILE__));
-            return;
-        }
-        return $data;
-    }
-
     /**
-     * Crée l'équipement avec les valeurs de paramètres
-     * @param		array		$_data		Tableau des paramètres
-     * @return		object		$eqLogic	Retourne l'équipement créé
+     * Vérifie si l'équipement est connecté.
+     *
+     * Cette fonction vérifie si l'équipement est connecté en interrogeant l'état de la commande 'online'.
+     *
+     * @return bool True si l'équipement est connecté ; sinon, false.
      */
-    public static function createEquipement($_capa, $_platform) {
-        log::add(__CLASS__, 'debug', __FUNCTION__ .' début' . json_encode($_capa));
-        if (!isset($_capa['deviceId'])) {
-            log::add(__CLASS__, 'error', __FUNCTION__ .' erreur uuid inexistant ' . json_encode($_capa));
-            return;
-        }
-        $eqLogic = lgthinq2::byLogicalId($_capa['deviceId'], __CLASS__);
-        if (!is_object($eqLogic)) {
-            $eqLogic = new lgthinq2();
-            $eqLogic->setName($_capa['alias']);
-            $eqLogic->setLogicalId($_capa['deviceId']);
-            $eqLogic->setObject_id(null);
-            $eqLogic->setEqType_name(__CLASS__);
-            $eqLogic->setIsEnable(1);
-            $eqLogic->setIsVisible(1);
-            event::add('jeedom::alert', array(
-                'level' => 'success',
-                'page' => __CLASS__,
-                'message' => __("L'équipement ", __FILE__) . $eqLogic->getHumanName() . __(" vient d'être créé", __FILE__),
-            ));
-        }
-        if (isset($_capa['deviceType'])) {
-            $eqLogic->setConfiguration('deviceType', $_capa['deviceType']);
-        }
-        if (isset($_capa['deviceCode'])) {
-            $eqLogic->setConfiguration('deviceCode', $_capa['deviceCode']);
-            $eqLogic->setConfiguration('deviceCodeName', lgthinq2::deviceTypeCodeConstants($_capa['deviceCode']));
-        }
-
-        if (isset($_capa['homeId'])) {
-            $eqLogic->setConfiguration('homeId', $_capa['homeId']);
-        }
-        if (isset($_capa['deviceId'])) {
-            $eqLogic->setConfiguration('deviceId', $_capa['deviceId']);
-        }
-        if (isset($_capa['roomId'])) {
-            $eqLogic->setConfiguration('roomId', $_capa['roomId']);
-        }
-        if (isset($_capa['modelName'])) {
-            $eqLogic->setConfiguration('modelName', $_capa['modelName']);
-        }
-        if (isset($_platform)) {
-            $eqLogic->setConfiguration('platformType', $_platform);
-        }
-        $eqLogic->save();
-        return $eqLogic;
-    }
-
-    // @return		bool	(true)
-	public function isConnected()
+    public function isConnected()
     {
 		$cmdConnected = $this->getCmd('info', 'online');
 		if (is_object($cmdConnected)) {
@@ -1871,20 +2167,18 @@ class lgthinq2 extends eqLogic
 		}
 	}
 
-    public static function synchronize()
-    {
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('début', __FILE__));
-        if (config::byKey('LGE_MEMBERS_URL', __CLASS__, '') == '' || config::byKey('LG_EMPTERMS_URL', __CLASS__, '') == '' || config::byKey('LGACC_SPX_URL', __CLASS__, '') == '') {
-            $rep0 = lgthinq2::step0();
-        }
-        lgthinq2::getDevices();
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('fin', __FILE__));
-    }
-
+    /**
+     * Crée une commande pour l'équipement.
+     *
+     * Cette fonction crée une nouvelle commande pour l'équipement en fonction des propriétés fournies.
+     *
+     * @param array $_properties Les propriétés de la commande à créer.
+     * @param lgthinq2Cmd|null $_cmdInfo Les informations sur la commande, facultatif.
+     * @return lgthinq2Cmd|null La commande créée si la création réussit ; sinon, retourne null.
+     */
     public function createCommand($_properties, $_cmdInfo = null)
     {
         if ($this->getIsEnable()) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('début ', __FILE__) . $this->getName() . ' ' . json_encode($_properties));
             $type = (!isset($_properties['type'])?(!$_cmdInfo?'info':'action'):$_properties['type']);
             $cmd = $this->getCmd($type, $_properties['logicalId']);
             foreach ($this->getCmd() as $aCmd) {
@@ -1893,21 +2187,23 @@ class lgthinq2 extends eqLogic
                 }
             }
             if (!is_object($cmd)) {
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Nouvelle commande ajoutée ', __FILE__) . '[' . $cmd->getType() .'='. $cmd->getSubType() . '] => ' . $cmd->getLogicalId());
                 $cmd = new lgthinq2Cmd();
                 $cmd->setType($type);
                 $cmd->setEqLogic_id($this->getId());
                 utils::a2o($cmd, $_properties);
                 $cmd->save();
-                //log::add(__CLASS__, 'debug', __FUNCTION__ . ' => ' . __('Nouvelle commande ajoutée ', __FILE__) . '[' . $cmd->getType() .'='. $cmd->getSubType() . '] => ' . $cmd->getLogicalId());
             }
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : ' . __('fin', __FILE__));
             return $cmd;
         }
     }
 
     /**
-     * Renvoi le lien de l'image de l'object eqLogic
-     * @return		string		url		url du fichier image
+     * Renvoie le lien de l'image de l'équipement.
+     *
+     * Cette fonction renvoie le lien de l'image de l'équipement.
+     *
+     * @return string L'URL de l'image de l'équipement.
      */
     public function getImage()
     {
@@ -1919,6 +2215,14 @@ class lgthinq2 extends eqLogic
         }
     }
 
+    /**
+     * Récupère une commande à partir de son ID logique.
+     *
+     * Cette fonction récupère les informations sur la commande correspondant à l'ID logique spécifié.
+     *
+     * @param string $_logicalId L'ID logique de la commande.
+     * @return lgthinq2Cmd|false Les informations sur la commande si elles existent ; sinon, retourne false.
+     */
     public function getCmdInfo($_logicalId = '') {
         if ($_logicalId == '') {
             return false;
@@ -1930,9 +2234,12 @@ class lgthinq2 extends eqLogic
     }
 
     /**
-     * Créé l'équipement avec les valeurs de paramètres
-     * @param		string		$_version	Dashboard ou mobile
-     * @return		string		$html		Retourne la page générée de l'équipement
+     * Génère le code HTML pour l'affichage de l'équipement.
+     *
+     * Cette fonction génère le code HTML pour l'affichage de l'équipement selon la version spécifiée.
+     *
+     * @param string $_version La version de l'affichage (par défaut : 'dashboard').
+     * @return string Le code HTML généré pour l'affichage de l'équipement.
      */
     public function toHtml($_version = 'dashboard')
     {
@@ -1972,17 +2279,6 @@ class lgthinq2 extends eqLogic
 		$html = template_replace($replace, getTemplate('core', $_version, 'lgthinq2.template',__CLASS__));
         $html = translate::exec($html, 'plugins/lgthinq2/core/template/' . $version . '/lgthinq2.tempate.html');
         return $html;
-    }
-
-    public static function isValidJson($string)
-    {
-        if ($string !== false && $string !== null && $string !== '') {
-            json_decode($string);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                return true;
-            }
-        }
-        return false;
     }
 }
 
@@ -2024,8 +2320,6 @@ class lgthinq2Cmd extends cmd
         if (lgthinq2::isValidJson($keyValue)) {
             $keyValue = json_decode($keyValue, true);
         }
-            log::add('lgthinq2','debug','TEST data $value  : ' . $value);
-            log::add('lgthinq2','debug','TEST data $keyValue  : ' . $keyValue);
 
         lgthinq2::getTokenIsExpired();
 
@@ -2046,22 +2340,20 @@ class lgthinq2Cmd extends cmd
                     'data' => ''
                 )
             );
-            log::add('lgthinq2','debug','TEST data cmd  : ' . json_encode($data));
 
             $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiControl', json_encode($data, JSON_PRETTY_PRINT), $headers);
-            log::add('lgthinq2','debug','TEST Résultat cmd $response : ' . $response);
             if ($response) {
                 $arr = json_decode($response, true);
                 if (!$arr || !isset($arr[lgthinq2::DATA_ROOT])) {
-                    log::add('lgthinq2', 'debug', __FUNCTION__ . ' : ' . __('Erreur de la requête ', __FILE__) . json_encode($arr));
+                    log::add('lgthinq2', 'debug', __FUNCTION__ . __(' Erreur de la requête ', __FILE__) . json_encode($arr));
                     return;
                 }
                 if (!isset($arr[lgthinq2::DATA_ROOT]['returnCd'])) {
-                    log::add('lgthinq2', 'debug', __FUNCTION__ . ' : ' . __('Erreur de la réponse ', __FILE__) . json_encode($arr[lgthinq2::DATA_ROOT]));
+                    log::add('lgthinq2', 'debug', __FUNCTION__ . __(' Erreur de la réponse ', __FILE__) . json_encode($arr[lgthinq2::DATA_ROOT]));
                     return;
                 }
                 if ($arr[lgthinq2::DATA_ROOT]['returnCd'] != '0000') {
-                    log::add('lgthinq2', 'debug', __FUNCTION__ . ' : ' . __('Code retour erroné ', __FILE__) . json_encode($arr[lgthinq2::DATA_ROOT]));
+                    log::add('lgthinq2', 'debug', __FUNCTION__ . __(' Code retour erroné ', __FILE__) . json_encode($arr[lgthinq2::DATA_ROOT]));
                     return;
                 }
                 if (isset($arr[lgthinq2::DATA_ROOT]['returnData'])) {
@@ -2087,7 +2379,6 @@ class lgthinq2Cmd extends cmd
             log::add('lgthinq2', 'debug', __("Données à envoyer en thinq2 ", __FILE__));
 
             $headers = lgthinq2::defaultDevicesHeaders();
-            log::add('lgthinq2','debug','TEST cmd headers : ' . json_encode($headers));
 
             $data = array(
                 'command' => $this->getConfiguration('cmd'),
@@ -2104,18 +2395,16 @@ class lgthinq2Cmd extends cmd
                     )
                 );
             }
-            log::add('lgthinq2','debug','TEST data cmd : ' . json_encode($data) .  ' url : ' . lgthinq2::LGTHINQ2_SERV_DEVICES . $eqLogic->getLogicalId() . '/control-sync');
 
             $response = lgthinq2::postData(lgthinq2::LGTHINQ2_SERV_DEVICES . $eqLogic->getLogicalId() . '/control-sync', json_encode($data, JSON_PRETTY_PRINT), $headers);
-            log::add('lgthinq2','debug','TEST Résultat cmd $response : ' . $response);
             if ($response) {
                 $arr = json_decode($response, true);
                 if (!$arr || !isset($arr['resultCode'])) {
-                    log::add('lgthinq2', 'debug', __FUNCTION__ . ' : ' . __('Erreur de la requête ', __FILE__) . json_encode($arr));
+                    log::add('lgthinq2', 'debug', __FUNCTION__ . __(' Erreur de la requête ', __FILE__) . json_encode($arr));
                     return;
                 }
                 if ($arr['resultCode'] != '0000') {
-                    log::add('lgthinq2', 'debug', __FUNCTION__ . ' : ' . __('Erreur de code ', __FILE__) . json_encode($arr));
+                    log::add('lgthinq2', 'debug', __FUNCTION__ . __(' Erreur de code ', __FILE__) . json_encode($arr));
                     return;
                 }
                 if (is_array($arr['result'])) {
@@ -2151,7 +2440,7 @@ class lgthinq2Cmd extends cmd
                         $value = $resValue;
 						break;
 				}
-        log::add('lgthinq2', 'debug', __FUNCTION__ . ' : Réponse décodée ' . $resValue . ' transmise dans ' . $cmd->getName());
+                log::add('lgthinq2', 'debug', __FUNCTION__ . __(' Réponse décodée ', __FILE__) . $resValue . __(' transmise dans ', __FILE__) . $cmd->getName());
 				$cmd->event($value);
 			}
 		}
