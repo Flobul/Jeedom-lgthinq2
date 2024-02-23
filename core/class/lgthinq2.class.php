@@ -287,8 +287,7 @@ class lgthinq2 extends eqLogic
      * @param string $string La chaîne de caractères à vérifier.
      * @return bool True si la chaîne est un JSON valide ; sinon, false.
      */
-    public static function isValidJson($string)
-    {
+    public static function isValidJson($string) {
         if ($string !== false && $string !== null && $string !== '') {
             json_decode($string);
             if (json_last_error() === JSON_ERROR_NONE) {
@@ -949,7 +948,6 @@ class lgthinq2 extends eqLogic
      * @return void
      */
     public static function getDevices($_deviceId = '', $_tokenRefreshed = false) {
-
         lgthinq2::getTokenIsExpired();
 
         $curl = curl_init();
@@ -1080,8 +1078,7 @@ class lgthinq2 extends eqLogic
      *
      * @return void
      */
-    public static function synchronize()
-    {
+    public static function synchronize() {
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' début', __FILE__));
         if (config::byKey('LGE_MEMBERS_URL', __CLASS__, '') == '' || config::byKey('LG_EMPTERMS_URL', __CLASS__, '') == '' || config::byKey('LGACC_SPX_URL', __CLASS__, '') == '') {
             $rep0 = lgthinq2::step0();
@@ -1181,7 +1178,6 @@ class lgthinq2 extends eqLogic
      * @return void
      */
     public function getDevicesStatus($_repeat = false) {
-
         lgthinq2::getTokenIsExpired();
         $timestamp = null;
         $platformType = $this->getConfiguration('platformType');
@@ -1359,10 +1355,7 @@ class lgthinq2 extends eqLogic
 
         $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiResult', json_encode($data, JSON_PRETTY_PRINT), $headers);
         //$response = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/OTH_'.$this->getLogicalId().'.json'),true); // developper only
-
-//{"lgedmRoot":{"returnCd":"0000","returnMsg":"OK","workList":{"deviceId":"d27af0a0-7149-11d3-80aa-044eaf4149f1","deviceState":"E","returnCode":"0106","stateCode":"N","workId":"n-d27af0a0-7149-11d3-80aa-044eaf4149f1"}}}
-
-        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' response : ', __FILE__) . $response);
+        //log::add(__CLASS__, 'debug', __FUNCTION__ . __(' response : ', __FILE__) . $response);
         if (!$response) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' erreur : ', __FILE__) . $response);
             return;
@@ -1471,8 +1464,7 @@ class lgthinq2 extends eqLogic
      * Méthode appellée avant la création de l'objet
      * Active et affiche l'objet
      */
-    public function preInsert()
-    {
+    public function preInsert() {
         $this->setIsEnable(1);
         $this->setIsVisible(1);
     }
@@ -1481,8 +1473,7 @@ class lgthinq2 extends eqLogic
      * Méthode appellée après la création de l'objet
      * Ajoute la commande refresh
      */
-    public function postInsert()
-    {
+    public function postInsert() {
         $cmdRefresh = $this->getCmd('action', 'refresh');
         if (!is_object($cmdRefresh)) {
             $cmdRefresh = new lgthinq2Cmd();
@@ -1537,7 +1528,6 @@ class lgthinq2 extends eqLogic
      * @return array|false Les données JSON de langue ou false en cas d'erreur.
      */
     public function getLangJson($_type, $_langFileUri = '', $_langFileVer) {
-
         $curVersion = $this->getConfiguration($_type . 'Ver', '');
         $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '_' . $_type . '.json';
         if ($curVersion != '' && version_compare($curVersion, $_langFileVer, '>=')) {
@@ -2153,19 +2143,18 @@ class lgthinq2 extends eqLogic
      *
      * @return bool True si l'équipement est connecté ; sinon, false.
      */
-    public function isConnected()
-    {
-		$cmdConnected = $this->getCmd('info', 'online');
-		if (is_object($cmdConnected)) {
-			if ($this->getIsEnable() && $cmdConnected->execCmd()) {
-				return true;
-			} else {
-				return false;
-			}
-		} else {
-			log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Commande online inexistante : ', __FILE__) . $this->getConfiguration('deviceType', '') . ' ' . $this->getLogicalId());
-		}
-	}
+    public function isConnected() {
+        $cmdConnected = $this->getCmd('info', 'online');
+        if (is_object($cmdConnected)) {
+            if ($this->getIsEnable() && $cmdConnected->execCmd()) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Commande online inexistante : ', __FILE__) . $this->getConfiguration('deviceType', '') . ' ' . $this->getLogicalId());
+        }
+    }
 
     /**
      * Crée une commande pour l'équipement.
@@ -2176,8 +2165,7 @@ class lgthinq2 extends eqLogic
      * @param lgthinq2Cmd|null $_cmdInfo Les informations sur la commande, facultatif.
      * @return lgthinq2Cmd|null La commande créée si la création réussit ; sinon, retourne null.
      */
-    public function createCommand($_properties, $_cmdInfo = null)
-    {
+    public function createCommand($_properties, $_cmdInfo = null) {
         if ($this->getIsEnable()) {
             $type = (!isset($_properties['type'])?(!$_cmdInfo?'info':'action'):$_properties['type']);
             $cmd = $this->getCmd($type, $_properties['logicalId']);
@@ -2205,8 +2193,7 @@ class lgthinq2 extends eqLogic
      *
      * @return string L'URL de l'image de l'équipement.
      */
-    public function getImage()
-    {
+    public function getImage() {
         $file = 'plugins/lgthinq2/core/config/img/' . $this->getConfiguration('deviceType') . '.png';
         if (is_file($file)) {
             return $file;
@@ -2241,8 +2228,7 @@ class lgthinq2 extends eqLogic
      * @param string $_version La version de l'affichage (par défaut : 'dashboard').
      * @return string Le code HTML généré pour l'affichage de l'équipement.
      */
-    public function toHtml($_version = 'dashboard')
-    {
+    public function toHtml($_version = 'dashboard') {
         if ($this->getConfiguration('widgetTemplate') != 1) {
             return parent::toHtml($_version);
         }
@@ -2250,7 +2236,7 @@ class lgthinq2 extends eqLogic
         if (!is_array($replace)) {
             return $replace;
         }
-		$_version = jeedom::versionAlias($_version);
+        $_version = jeedom::versionAlias($_version);
 
         foreach ($this->getCmd('info', null) as $cmd) {
             $replace['#cmd_' . $cmd->getLogicalId() . '_id#'] = $cmd->getId();
@@ -2276,7 +2262,7 @@ class lgthinq2 extends eqLogic
             $replace['#cmdAction_' . $parts[1] . '_valueDate#'] = $cmdAction->getValueDate();
         }
 
-		$html = template_replace($replace, getTemplate('core', $_version, 'lgthinq2.template',__CLASS__));
+        $html = template_replace($replace, getTemplate('core', $_version, 'lgthinq2.template',__CLASS__));
         $html = translate::exec($html, 'plugins/lgthinq2/core/template/' . $version . '/lgthinq2.tempate.html');
         return $html;
     }
@@ -2286,8 +2272,7 @@ class lgthinq2Cmd extends cmd
 {
     public static $_widgetPossibility = array('custom' => true);
 
-    public function execute($_options = array())
-    {
+    public function execute($_options = array()) {
         $eqLogic = $this->getEqLogic();
         log::add('lgthinq2', 'debug', __("Action sur ", __FILE__) . $this->getLogicalId() . __(" avec options ", __FILE__) . json_encode($_options));
 
@@ -2419,31 +2404,31 @@ class lgthinq2Cmd extends cmd
             }
         }
 
-		if ($this->getConfiguration('updateLGCmdId') != '') { // get action cmd config message and put result in cmd info result
-			$cmd = cmd::byId($this->getConfiguration('updateLGCmdId'));
-			if (is_object($cmd)) {
-				$value = $this->getConfiguration('updateLGCmdToValue');
-				switch ($this->getSubType()) {
-					case 'slider':
-						$value = str_replace('#slider#', $options['slider'], $value);
-						break;
-					case 'color':
-						$value = str_replace('#color#', $options['color'], $value);
-						break;
-					case 'select':
-						$value = str_replace('#select#', $options['select'], $value);
-						break;
-					case 'message':
-						$value = str_replace('#message#', $options['message'], $value);
-						break;
-					case 'other':
+        if ($this->getConfiguration('updateLGCmdId') != '') { // get action cmd config message and put result in cmd info result
+            $cmd = cmd::byId($this->getConfiguration('updateLGCmdId'));
+            if (is_object($cmd)) {
+                $value = $this->getConfiguration('updateLGCmdToValue');
+                switch ($this->getSubType()) {
+                    case 'slider':
+                        $value = str_replace('#slider#', $options['slider'], $value);
+                        break;
+                    case 'color':
+                        $value = str_replace('#color#', $options['color'], $value);
+                        break;
+                    case 'select':
+                        $value = str_replace('#select#', $options['select'], $value);
+                        break;
+                    case 'message':
+                        $value = str_replace('#message#', $options['message'], $value);
+                        break;
+                    case 'other':
                         $value = $resValue;
-						break;
-				}
+                        break;
+                }
                 log::add('lgthinq2', 'debug', __FUNCTION__ . __(' Réponse décodée ', __FILE__) . $resValue . __(' transmise dans ', __FILE__) . $cmd->getName());
-				$cmd->event($value);
-			}
-		}
+                $cmd->event($value);
+            }
+        }
         return true;
     }
 }
