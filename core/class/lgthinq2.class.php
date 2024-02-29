@@ -1581,7 +1581,7 @@ class lgthinq2 extends eqLogic
                 $config = file_get_contents($_modelJsonUri);
                 file_put_contents($file, $config);
                 $this->setConfiguration('modelJsonVer', $_modelJsonVer)->save();
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier existe pas ', __FILE__) . $curVersion);
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier modelJson existe pas ', __FILE__) . $curVersion);
             }
             if (!is_json($config)) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration est corrompu', __FILE__));
@@ -2175,7 +2175,7 @@ class lgthinq2 extends eqLogic
                 }
             }
             if (!is_object($cmd)) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Nouvelle commande ajoutée ', __FILE__) . '[' . $cmd->getType() .'='. $cmd->getSubType() . '] => ' . $cmd->getLogicalId());
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG $_properties ', __FILE__) . is_object($cmd) . ' => ' . $_properties['logicalId']);
                 $cmd = new lgthinq2Cmd();
                 $cmd->setType($type);
                 $cmd->setEqLogic_id($this->getId());
