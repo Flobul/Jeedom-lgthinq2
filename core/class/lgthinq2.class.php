@@ -22,7 +22,7 @@ require_once __DIR__ . "/../../../../core/php/core.inc.php";
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.40';
+    public static $_pluginVersion = '0.41';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -2046,9 +2046,10 @@ class lgthinq2 extends eqLogic
                     $datakeytypes = explode('|', $controlDeviceValue['dataKey']);
                     $valuetypes = explode('|', $controlDeviceValue['dataValue']);
                     $nbdatakeys = count($datakeytypes);
+                    $keyObject = null;
 
                     foreach ($cmdtypes as $cmdtype) { //each Get/Set/Stop/Start/Operation...
-                        $listValue = '';
+/*                        $listValue = '';
                         foreach ($datakeytypes as $key) {
                             $listValue .= str_replace('|','-', $key) . '|' . $key . ';';
                         }
@@ -2067,7 +2068,36 @@ class lgthinq2 extends eqLogic
                                 'updateLGCmdToValue' => ($nbdatakeys==1?null:'#select#')
                             )
                         );
-
+*/
+                        $listValue = null;
+                        foreach ($datakeytypes as $key) {
+                            if (isset($data['Value'][$key])) {
+                                if (isset($data['Value'][$key]['value_mapping'])) {
+                                    foreach ($data['Value'][$key]['value_mapping'] as $optionKey => $optionValue) {
+                                        if (is_array($langPack) && isset($optionValue) && (strpos($optionValue, '@') === 0)) {
+                                            if (isset($langPack[$optionValue])) {
+                                                $optionValue = $langPack[$optionValue];
+                                            }
+                                        }
+                                        $listValue .= str_replace('|','-', $optionKey) . '|' . $optionValue . ';';
+                                    }
+                                    $listValue = substr($listValue, 0, -1);
+                                }
+                            }
+                            $commands[] = array(
+                                'name' => $cmdtype . ' ' . $controlDeviceValue['ctrlKey'] . ' ' . $key,
+                                'type' => 'action',
+                                'logicalId' => $cmdtype . $controlDeviceValue['ctrlKey'] . $key,
+                                'subType' => ($nbdatakeys==1?'other':'select'),
+                                'configuration' => array(
+                                    'ctrlKey' => $controlDeviceValue['ctrlKey'],
+                                    'cmd' => $cmdtype,
+                                    'dataKey' => $datakeytype,
+                                    'listValue' => $listValue,
+                                    'updateLGCmdToValue' => ($listValue==null?null:'#select#')
+                                )
+                            );
+                        }
                     }
                 }
                 foreach ($commands as $cmd) {
