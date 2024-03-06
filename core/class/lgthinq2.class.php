@@ -22,7 +22,7 @@ require_once __DIR__ . "/../../../../core/php/core.inc.php";
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.41';
+    public static $_pluginVersion = '0.42';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -2069,10 +2069,17 @@ class lgthinq2 extends eqLogic
                             )
                         );
 */
-                        $listValue = null;
                         foreach ($datakeytypes as $key) {
+                            $listValue = null;
+                            $step = null;
+                            $minValue = null;
+                            $maxValue = null;
+                            $updateCmdToValue = null;
                             if (isset($data['Value'][$key])) {
-                                if (isset($data['Value'][$key]['value_mapping'])) {
+                                if ($data['Value'][$key]['data_type'] == 'enum') {
+                                    $subType = ($nbdatakeys==1?'other':'select');
+                                    $updateCmdToValue = ($nbdatakeys==1?null:'#slider#');
+                                    $listValue = '';
                                     foreach ($data['Value'][$key]['value_mapping'] as $optionKey => $optionValue) {
                                         if (is_array($langPack) && isset($optionValue) && (strpos($optionValue, '@') === 0)) {
                                             if (isset($langPack[$optionValue])) {
@@ -2082,19 +2089,32 @@ class lgthinq2 extends eqLogic
                                         $listValue .= str_replace('|','-', $optionKey) . '|' . $optionValue . ';';
                                     }
                                     $listValue = substr($listValue, 0, -1);
+                                } elseif ($data['Value'][$key]['data_type'] == 'range') {
+                                    $subType = 'slider';
+                                    $updateCmdToValue = '#slider#';
+                                    $minValue = $data['Value'][$key]['value_validation']['min'];
+                                    $maxValue = $data['Value'][$key]['value_validation']['max'];
+                                    $step = $data['Value'][$key]['value_validation']['step'];
                                 }
                             }
                             $commands[] = array(
                                 'name' => $cmdtype . ' ' . $controlDeviceValue['ctrlKey'] . ' ' . $key,
                                 'type' => 'action',
                                 'logicalId' => $cmdtype . $controlDeviceValue['ctrlKey'] . $key,
-                                'subType' => ($nbdatakeys==1?'other':'select'),
+                                'subType' => $subType,
                                 'configuration' => array(
                                     'ctrlKey' => $controlDeviceValue['ctrlKey'],
                                     'cmd' => $cmdtype,
-                                    'dataKey' => $datakeytype,
+                                    'dataKey' => $key,
                                     'listValue' => $listValue,
-                                    'updateLGCmdToValue' => ($listValue==null?null:'#select#')
+                                    'minValue' => $minValue,
+                                    'maxValue' => $maxValue,
+                                    'updateLGCmdToValue' => $updateCmdToValue
+                                ),
+                                'display' => array(
+                                    'parameters' => array(
+                                        'step' => $step
+                                    )
                                 )
                             );
                         }
@@ -2400,7 +2420,7 @@ class lgthinq2Cmd extends cmd
                 'ctrlKey' => $this->getConfiguration('ctrlKey'),
                 //'dataSetList' => array(),
                 'dataKey' => $this->getConfiguration('dataKey', null),
-                'dataValue' => $this->getConfiguration('dataValue', null),
+                'dataValue' => $this->getConfiguration('dataValue', $value)
             );
             $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType')); // to get "resState" keytree
             if ($refState && $value != '') {
@@ -2411,7 +2431,9 @@ class lgthinq2Cmd extends cmd
                 );
             }
 
-            $response = lgthinq2::postData(lgthinq2::LGTHINQ2_SERV_DEVICES . $eqLogic->getLogicalId() . '/control-sync', json_encode($data, JSON_PRETTY_PRINT), $headers);
+            log::add('lgthinq2', 'debug', __("Donnée envoyée en thinq2 ", __FILE__) . json_encode($data));
+            $response = lgthinq2::postData(lgthinq2::LGTHINQ2_SERV_DEVICES . $eqLogic->getLogicalId() . '/control-sync', json_encode($data, JSON_NUMERIC_CHECK), $headers);
+            log::add('lgthinq2', 'debug', __("Répopnse reçue en thinq2 ", __FILE__) . $response);
             if ($response) {
                 $arr = json_decode($response, true);
                 if (!$arr || !isset($arr['resultCode'])) {
