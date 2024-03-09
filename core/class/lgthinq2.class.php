@@ -18,11 +18,12 @@
 
 /* * ***************************Includes********************************* */
 require_once __DIR__ . "/../../../../core/php/core.inc.php";
+require_once __DIR__ . '/../../../../plugins/lgthinq2/core/class/lgthinq2.customLang.php';
 
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.42';
+    public static $_pluginVersion = '0.50';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -1591,7 +1592,6 @@ class lgthinq2 extends eqLogic
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration est invalide', __FILE__));
             }
 
-            mkdir(__DIR__ . '/../../data/');
             file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
 
             if ($_configModelLang && is_array($_configModelLang)) {
@@ -1599,10 +1599,13 @@ class lgthinq2 extends eqLogic
             } else {
                 $langPack = $_configProductLang;
             }
+            $translation = new lgthinq2_customLang();
+            $customLangFile = $translation->customlang;
+            $langPack = array_replace_recursive($langPack, $customLangFile);
             //$langPack = $this->getLangJson('langPackProductType', '', '0.0');
 
             if (isset($data['Value'])) {
-                //log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ', __FILE__) . json_encode($data['Value']));
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG Value ', __FILE__) . json_encode($data['Value']));
                 $commands = array();
                 foreach ($data['Value'] as $key => $value) {
                     if ($this->getConfiguration('platformType') == 'thinq2' && !isset($_refState[$key])) continue; // s'il n'y a pas de commande info dans refState
@@ -1717,7 +1720,7 @@ class lgthinq2 extends eqLogic
             }
             if (isset($data['MonitoringValue'])) {
 
-                //log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ', __FILE__) . json_encode($data['MonitoringValue']));
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG MonitoringValue ', __FILE__) . json_encode($data['MonitoringValue']));
                 $commands = array();
                 $commandsToRemove = array();
                 foreach ($data['MonitoringValue'] as $key => $value) {
@@ -1837,6 +1840,7 @@ class lgthinq2 extends eqLogic
             }
 
             if (isset($data['Monitoring'])) {
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG Monitoring ', __FILE__) . json_encode($data['Monitoring']));
                 if (isset($data['Monitoring']['type']) && $data['Monitoring']['type'] == 'JSON') {
                     if (isset($data['Monitoring']['protocol'])) {
                         $monit = array();
@@ -1849,6 +1853,7 @@ class lgthinq2 extends eqLogic
             }
 
             if (isset($data['ControlWifi'])) {
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ControlWifi ', __FILE__) . json_encode($data['ControlWifi']));
                 $commands = array();
                 if (isset($data['ControlWifi']['type']) && $data['ControlWifi']['type'] == 'JSON' && isset($data['ControlWifi']['action'])) {
                     foreach ($data['ControlWifi']['action'] as $actionName => $actionConfig) {
@@ -2039,6 +2044,7 @@ class lgthinq2 extends eqLogic
                 }
             }
             if (isset($data['ControlDevice'])) {
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ControlDevice ', __FILE__) . json_encode($data['ControlDevice']));
                 $commands = array();
                 foreach ($data['ControlDevice'] as $controlDeviceValue) {
                     //log::add(__CLASS__, 'debug', 'ControlDeviceControlDeviceControlDevice  $commands ' . json_encode($controlDeviceValue));
@@ -2046,77 +2052,80 @@ class lgthinq2 extends eqLogic
                     $datakeytypes = explode('|', $controlDeviceValue['dataKey']);
                     $valuetypes = explode('|', $controlDeviceValue['dataValue']);
                     $nbdatakeys = count($datakeytypes);
-                    $keyObject = null;
 
                     foreach ($cmdtypes as $cmdtype) { //each Get/Set/Stop/Start/Operation...
-/*                        $listValue = '';
-                        foreach ($datakeytypes as $key) {
-                            $listValue .= str_replace('|','-', $key) . '|' . $key . ';';
-                        }
-                        $listValue = substr($listValue, 0, -1);
-
-                        $commands[] = array(
-                            'name' => $cmdtype . ' ' . $controlDeviceValue['ctrlKey'],
-                            'type' => 'action',
-                            'logicalId' => $cmdtype . $controlDeviceValue['ctrlKey'],
-                            'subType' => ($nbdatakeys==1?'other':'select'),
-                            'configuration' => array(
-                                'ctrlKey' => $controlDeviceValue['ctrlKey'],
-                                'cmd' => $cmdtype,
-                                'dataKey' => $datakeytype,
-                                'listValue' => ($nbdatakeys==1?null:$listValue),
-                                'updateLGCmdToValue' => ($nbdatakeys==1?null:'#select#')
-                            )
-                        );
-*/
-                        foreach ($datakeytypes as $key) {
-                            $listValue = null;
-                            $step = null;
-                            $minValue = null;
-                            $maxValue = null;
-                            $updateCmdToValue = null;
-                            if (isset($data['Value'][$key])) {
-                                if ($data['Value'][$key]['data_type'] == 'enum') {
-                                    $subType = ($nbdatakeys==1?'other':'select');
-                                    $updateCmdToValue = ($nbdatakeys==1?null:'#slider#');
-                                    $listValue = '';
-                                    foreach ($data['Value'][$key]['value_mapping'] as $optionKey => $optionValue) {
-                                        if (is_array($langPack) && isset($optionValue) && (strpos($optionValue, '@') === 0)) {
-                                            if (isset($langPack[$optionValue])) {
-                                                $optionValue = $langPack[$optionValue];
-                                            }
-                                        }
-                                        $listValue .= str_replace('|','-', $optionKey) . '|' . $optionValue . ';';
-                                    }
-                                    $listValue = substr($listValue, 0, -1);
-                                } elseif ($data['Value'][$key]['data_type'] == 'range') {
-                                    $subType = 'slider';
-                                    $updateCmdToValue = '#slider#';
-                                    $minValue = $data['Value'][$key]['value_validation']['min'];
-                                    $maxValue = $data['Value'][$key]['value_validation']['max'];
-                                    $step = $data['Value'][$key]['value_validation']['step'];
-                                }
+                        if ($cmdtype == 'Get') {
+                            $listValue = '';
+                            foreach ($datakeytypes as $key) {
+                                $listValue .= str_replace('|','-', $key) . '|' . $key . ';';
                             }
+                            $listValue = substr($listValue, 0, -1);
+
                             $commands[] = array(
-                                'name' => $cmdtype . ' ' . $controlDeviceValue['ctrlKey'] . ' ' . $key,
+                                'name' => $cmdtype . ' ' . $controlDeviceValue['ctrlKey'],
                                 'type' => 'action',
-                                'logicalId' => $cmdtype . $controlDeviceValue['ctrlKey'] . $key,
-                                'subType' => $subType,
+                                'logicalId' => $cmdtype . $controlDeviceValue['ctrlKey'],
+                                'subType' => ($nbdatakeys==1?'other':'select'),
                                 'configuration' => array(
                                     'ctrlKey' => $controlDeviceValue['ctrlKey'],
                                     'cmd' => $cmdtype,
-                                    'dataKey' => $key,
-                                    'listValue' => $listValue,
-                                    'minValue' => $minValue,
-                                    'maxValue' => $maxValue,
-                                    'updateLGCmdToValue' => $updateCmdToValue
-                                ),
-                                'display' => array(
-                                    'parameters' => array(
-                                        'step' => $step
-                                    )
+                                    'dataKey' => $datakeytype,
+                                    'listValue' => ($nbdatakeys==1?null:$listValue),
+                                    'updateLGCmdToValue' => ($nbdatakeys==1?null:'#select#')
                                 )
                             );
+                        } else {
+                            foreach ($datakeytypes as $key) {
+                                $listValue = null;
+                                $step = null;
+                                $minValue = null;
+                                $maxValue = null;
+                                $updateCmdToValue = null;
+                                $subType = 'other';
+                                if (isset($data['Value'][$key])) {
+                                    if ($data['Value'][$key]['data_type'] == 'enum') {
+                                        $subType = ($nbdatakeys==1?'other':'select');
+                                        $updateCmdToValue = ($nbdatakeys==1?null:'#select#');
+                                        $listValue = '';
+                                        foreach ($data['Value'][$key]['value_mapping'] as $optionKey => $optionValue) {
+                                            if (is_array($langPack) && isset($optionValue) && (strpos($optionValue, '@') === 0)) {
+                                                if (isset($langPack[$optionValue])) {
+                                                    $optionValue = $langPack[$optionValue];
+                                                }
+                                            }
+                                            $listValue .= str_replace('|','-', $optionKey) . '|' . $optionValue . ';';
+                                        }
+                                        $listValue = substr($listValue, 0, -1);
+                                    } elseif ($data['Value'][$key]['data_type'] == 'range') {
+                                        $subType = 'slider';
+                                        $updateCmdToValue = '#slider#';
+                                        $minValue = $data['Value'][$key]['value_validation']['min'];
+                                        $maxValue = $data['Value'][$key]['value_validation']['max'];
+                                        $step = $data['Value'][$key]['value_validation']['step'];
+                                    }
+                                }
+                                $commands[] = array(
+                                    'name' => $cmdtype . ' ' . $controlDeviceValue['ctrlKey'] . ' ' . $key,
+                                    'type' => 'action',
+                                    'logicalId' => $cmdtype . $controlDeviceValue['ctrlKey'] . $key,
+                                    'subType' => $subType,
+                                    'configuration' => array(
+                                        'ctrlKey' => $controlDeviceValue['ctrlKey'],
+                                        'cmd' => $cmdtype,
+                                        'dataKey' => $key,
+                                        'dataGetList' => $controlDeviceValue['dataGetList']??null,
+                                        'listValue' => $listValue,
+                                        'minValue' => $minValue,
+                                        'maxValue' => $maxValue,
+                                        'updateLGCmdToValue' => $updateCmdToValue
+                                    ),
+                                    'display' => array(
+                                        'parameters' => array(
+                                            'step' => $step
+                                        )
+                                    )
+                                );
+                            }
                         }
                     }
                 }
