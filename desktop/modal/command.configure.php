@@ -65,7 +65,18 @@ sendVarToJS('cmdInfo', $cmdInfo);
                         <input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="originalType" placeholder="{{Sous-type}}" title="{{Sous-type}}" style="display:inline-block"></input>
                     </div>
                   </div>
-
+                    <?php if ($valueMapping = $cmd->getConfiguration('valueMapping', false)) { ?>
+                    <div class="form-group">
+                        <label class="col-xs-3 control-label">{{Valeurs possibles}}</label>
+                        <div class="col-xs-9">
+                        <?php
+                            foreach ($valueMapping as $keyM => $valueM) {
+                                echo '<span class="label">' . $keyM . '</span> => <span class="label">' . $valueM . '</span></br>';
+                            }
+                        }
+                    ?>
+                    </div>
+                  </div>
               <?php } else { ?>
                   <legend><i class="icon kiko-wrench"></i> {{Commande action}}</legend>
 
