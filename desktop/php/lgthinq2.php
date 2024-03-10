@@ -69,7 +69,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
                 foreach ($deviceTypes as $eqType) {
                     lgthinq2_display::displayEqLogicThumbnailContainer($eqLogics, $eqType);
                 }
-
             }
         ?>
   </div>
@@ -282,6 +281,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
         </div>
       </div>
       <div role="tabpanel" class="tab-pane" id="commandtab">
+		<a class="btn btn-success btn-sm cmdAction pull-right" data-action="add" style="margin-top:5px;"><i class="fas fa-plus-circle"></i> {{Commandes}}</a>
         <table id="table_cmd" class="table table-bordered table-condensed">
           <thead>
             <tr>

@@ -23,7 +23,7 @@ require_once __DIR__ . '/../../../../plugins/lgthinq2/core/class/lgthinq2.custom
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.50';
+    public static $_pluginVersion = '0.60';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -1592,6 +1592,7 @@ class lgthinq2 extends eqLogic
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration est invalide', __FILE__));
             }
 
+            mkdir(__DIR__ . '/../../data/');
             file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
 
             if ($_configModelLang && is_array($_configModelLang)) {

@@ -83,6 +83,7 @@ function addCmdToTable(_cmd) {
   tr += '<div class="input-group">';
   if (is_numeric(_cmd.id) && _cmd.id != '') {
     tr += '<a class="btn btn-default btn-xs cmdAction roundedLeft" data-action="configure" title="{{Configuration de la commande}} ' + _cmd.type + '"><i class="fa fa-cogs"></i></a>';
+    tr += '<a class="btn btn-warning btn-xs cmdAttr" data-action="configureCommand" title="{{Modification de la commande}} ' + _cmd.type + '"><i class="fas fa-wrench"></i></a>';
     tr += '<a class="btn btn-success btn-xs cmdAction" data-action="test" title="{{Tester}}"><i class="fa fa-rss"></i> {{Tester}}</a>';
   }
   tr += '<a class="btn btn-danger btn-xs cmdAction roundedRight" data-action="remove" title="{{Suppression de la commande}} ' + _cmd.type + '"><i class="fas fa-minus-circle"></i></a>';
@@ -189,7 +190,7 @@ $('#bt_getCredentials').on('click', function() {
 
 $('#bt_healthlgthinq2').on('click', function() {
   $('#md_modal').dialog({
-    title: "{{Santé lgthinq2}}"
+    title: "{{Santé LG Thinq}}"
   });
   $('#md_modal').load('index.php?v=d&plugin=lgthinq2&modal=health').dialog('open');
 });
@@ -197,6 +198,14 @@ $('#bt_healthlgthinq2').on('click', function() {
 $('#bt_documentationlgthinq2').off('click').on('click', function() {
   window.open($(this).attr("data-location"), "_blank", null);
 });
+
+$('body').delegate('.cmdAttr[data-action=configureCommand]', 'click', function() {
+    $('#md_modal').dialog({
+        title: "{{Configuration de la commande}}"
+    });
+    $('#md_modal').load('index.php?v=d&plugin=lgthinq2&modal=command.configure&id=' + $(this).closest('.cmd').getValues('.cmdAttr')[0]['id']).dialog('open');
+});
+
 
 $('#bt_autoDetectModule').on('click', function() {
   var dialog_title = '{{Recharger la configuration}}';
