@@ -28,9 +28,6 @@ global $JEEDOM_INTERNAL_CONFIG;
 $cmdInfo = jeedom::toHumanReadable(utils::o2a($cmd));
 $cmdInfo['eqLogicName'] = $cmd->getEqLogic()->getName();
 sendVarToJS('cmdInfo', $cmdInfo);
-sendVarToJS('cmdInfoSearchString', urlencode(str_replace('#', '', $cmd->getHumanName())));
-sendVarToJS('cmdInfoString', $cmd->getHumanName());
-$jsonPresent = false;
 ?>
 
 
@@ -93,16 +90,32 @@ $jsonPresent = false;
                     </div>
                   </div>
 
-                  <div class="form-group">
-                    <label class="col-xs-3 control-label">{{dataValue}}</label>
-                    <div class="col-xs-9">
-                        <input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="dataValue" placeholder="{{dataValue}}" title="{{dataValue}}" style="display:inline-block"></input>
-                    </div>
-                  </div>
 
+                  <?php if ($cmd->getSubType() == 'select') { ?>
+                      <div class="form-group">
+                        <label class="col-xs-3 control-label">{{Valeurs possibles}}</label>
+                        <div class="col-xs-9">
+                                  <textarea class="cmdAttr form-control input-sm tooltipstered" data-l1key="configuration" data-l2key="listValue" placeholder="Liste de valeur|texte séparé par ;" id="changeListValue"></textarea>
+                          <?php
+                              $elements = explode(';', $cmd->getConfiguration('listValue', ''));
+                              $i = 0;
+                              foreach ($elements as $element) {
+                                  $coupleArray = explode('|', $element);
+                                  echo '<input class="form-control input-sm coupleArray" style="display:inline-block;width:200px;" value="'.$coupleArray[1].'" id="coupleKey'.$i.'" > => <input class="form-control input-sm coupleArray" style="display:inline-block;width: 200px;" value="'.$coupleArray[0].'" id="coupleArray'.$i.'" ><br/>';
+                                  $i++;
+                              }
+                            ?>
+                        </div>
+                      </div>
+                  <?php } else { ?>
+                      <div class="form-group">
+                        <label class="col-xs-3 control-label">{{dataValue}}</label>
+                        <div class="col-xs-9">
+                            <input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="dataValue" placeholder="{{dataValue}}" title="{{dataValue}}" style="display:inline-block"></input>
+                        </div>
+                      </div>
+                  <?php } ?>
               <?php } ?>
-
-
             </fieldset>
           </form>
         </div>
@@ -122,6 +135,16 @@ $(function() {
     $('#cmdConfigureTab').parents('.ui-dialog').css('top', "50px")
   }
 })
+
+$('.coupleArray').on('change', function () {
+	var listValue = "";
+	let nbValue = $('.coupleArray').length / 2;
+	for (let pas = 0; pas < nbValue; pas++) {
+      listValue += $('#coupleArray'+pas)[0].value+'|'+$('#coupleKey'+pas)[0].value+';';
+	}
+	$('#changeListValue').empty().value(listValue.substring(0, listValue.length - 1))
+	modifyWithoutSave = false;
+});
 
 $('#div_displayCmdConfigure').setValues(cmdInfo, '.cmdAttr');
 
@@ -163,6 +186,9 @@ $('.bt_testEnum').off('click').on('click',function() {
           cmdInfo.configuration.cmd = cmd.configuration.cmd;
           cmdInfo.configuration.dataKey = cmd.configuration.dataKey;
           cmdInfo.configuration.dataValue = cmd.configuration.dataValue;
+          if (cmdInfo.configuration.listValue && cmdInfo.configuration.listValue != '') {
+              cmdInfo.configuration.listValue = cmd.configuration.listValue;
+          }
       }
       jeedom.cmd.save({
           cmd: cmdInfo,
