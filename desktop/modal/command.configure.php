@@ -71,6 +71,7 @@ sendVarToJS('cmdInfo', $cmdInfo);
                         <div class="col-xs-9">
                         <?php
                             foreach ($valueMapping as $keyM => $valueM) {
+                                $valueM = is_array($valueM)?json_encode($valueM):$valueM;
                                 echo '<span class="label">' . $keyM . '</span> => <span class="label">' . $valueM . '</span></br>';
                             }
                         }
@@ -146,7 +147,7 @@ $(function() {
     $('#cmdConfigureTab').parents('.ui-dialog').css('top', "50px")
   }
 })
-
+                
 $('.coupleArray').on('change', function () {
 	var listValue = "";
 	let nbValue = $('.coupleArray').length / 2;
