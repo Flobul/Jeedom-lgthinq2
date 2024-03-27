@@ -1,0 +1,5 @@
+{
+    "composer" : {
+        "plugins/lgthinq2": {}
+    }
+}
