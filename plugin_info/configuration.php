@@ -17,6 +17,7 @@
     */
 
    require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
+   require_once dirname(__FILE__) . '/../core/class/lgthinq2.class.php';
    include_file('core', 'authentification', 'php');
    if (!isConnect()) {
        include_file('desktop', '404', 'php');
@@ -33,16 +34,16 @@
 </style>
 <form class="form-horizontal">
    <fieldset>
-      <legend>
-         <i class="fa fa-list-alt"></i> {{Général}}
-      </legend>
       <div class="form-group">
+          <legend>
+             <i class="fa fa-list-alt"></i> {{Général}}
+          </legend>
          <?php
             $update = $plugin->getUpdate();
             if (is_object($update)) {
                 echo '<div class="col-lg-3">';
                 echo '<div>';
-                echo '<label>{{Branche}} :</label> '. $update->getConfiguration('version', 'stable');
+                echo '<label>{{Branche}} :</label> <span class="label label-info">'. $update->getConfiguration('version', 'stable') . '</span>';
                 echo '</div>';
                 echo '<div>';
                 echo '<label>{{Source}} :</label> ' . $update->getSource();
@@ -79,7 +80,7 @@
       </div>
       <div class="form-group">
         <legend>
-		<i class="fas fa-cogs"></i> {{Paramètres}}
+		  <i class="fas fa-cogs"></i> {{Paramètres}}
 		</legend>
           <div class="form-group">
               <label class="col-lg-4 control-label">{{Intervalle de rafraîchissement des informations (cron)}}
@@ -190,7 +191,7 @@
               </span>
           </div>
         </div>
-
+          
         <div class="form-group">
           <label class="col-sm-2 control-label"><strong> {{Connexion}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Connexion}}"></i></sup>
@@ -244,10 +245,10 @@
               </span>
           </div>
         </div>
-
+        
         <div class="form-group">
           <label class="col-sm-2 control-label"><strong> {{LGE members URL}}</strong>
-              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+              <sup><i class="fas fa-question-circle"></i></sup>
           </label>
           <div class="input-group col-sm-6">
               <input type="text" disabled class="configKey form-control" data-l1key="LGE_MEMBERS_URL"></input>
@@ -256,7 +257,7 @@
 
         <div class="form-group">
           <label class="col-sm-2 control-label"><strong> {{LGE Emp terms URL}}</strong>
-              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+              <sup><i class="fas fa-question-circle"></i></sup>
           </label>
           <div class="input-group col-sm-6">
               <input type="text" disabled class="configKey form-control" data-l1key="LG_EMPTERMS_URL"></input>
@@ -265,13 +266,13 @@
 
         <div class="form-group">
           <label class="col-sm-2 control-label"><strong> {{LG Account SPX URL}}</strong>
-              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+              <sup><i class="fas fa-question-circle"></i></sup>
           </label>
           <div class="input-group col-sm-6">
               <input type="text" disabled class="configKey form-control" data-l1key="LGACC_SPX_URL"></input>
           </div>
         </div>
-
+        
       </div>
       </div>
    </fieldset>
