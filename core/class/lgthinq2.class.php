@@ -932,7 +932,10 @@ class lgthinq2 extends eqLogic
             $return['state'] = 'ok';
         }
         $return['launchable'] = 'ok';
-
+        if (PHP_VERSION_ID < 70400) {
+            $return['state'] = 'nok';
+            $return['launchable'] = 'nok';
+        }
         return $return;
     }
 
@@ -948,6 +951,9 @@ class lgthinq2 extends eqLogic
     {
         log::add(__CLASS__, 'info', __('Lancement du service lgthinq2', __FILE__));
         $deamon_info = self::deamon_info();
+        if (PHP_VERSION_ID < 70400) {
+            return false;
+        }
         if ($deamon_info['launchable'] != 'ok') {
             throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
         }
