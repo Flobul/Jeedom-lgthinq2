@@ -3,7 +3,6 @@
     "description": "These are examples showcasing how to use php-mqtt/client.",
     "type": "project",
     "require": {
-        "php": "^7.4|^8.0",
         "ext-json": "*",
         "ext-pcntl": "*",
         "php-mqtt/client":"^1.8"
