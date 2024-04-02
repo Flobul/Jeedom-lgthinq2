@@ -12,7 +12,7 @@ $fileCertClient = dirname(__FILE__) . '/../../../data/certificatePem.pem';
 $fileCertClientKey = dirname(__FILE__) . '/../../../data/pass.pem';
 
 try {
-  
+
     // GET LG MQTT SERVER
     $headers = lgthinq2::defaultGwHeaders();
     $curlMqtt = curl_init();
@@ -113,7 +113,7 @@ try {
         }
 
     });*/
-    log::add('lgthinq2', 'debug', __('DÉMON MQTT : ', __FILE__) . __('connecté', __FILE__));
+    log::add('lgthinq2', 'info', __('DÉMON MQTT : ', __FILE__) . __('connecté', __FILE__));
     foreach ($cerRes['result']['subscriptions'] as $subscription) {
         $mqtt->subscribe($subscription, function (string $topic, string $message, bool $retained) use ($mqtt) {
             $json = json_decode($message, true);
@@ -140,7 +140,7 @@ try {
                                 $lgthinq2->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $refStateId);
                             }
                             $lgthinq2->checkValueAndUpdateCmd($refStateId, $refStateValue, $timestamp);
-                            log::add('lgthinq2', 'info', __('DÉMON MQTT : ', __FILE__) . __('commande mise à jour : ', __FILE__) . $refStateId . _(' à la valeur : ', __FILE__) .$refStateValue . __(' au temps : ', __FILE__) . $timestamp);
+                            log::add('lgthinq2', 'info', __('DÉMON MQTT : ', __FILE__) . __('commande mise à jour : ', __FILE__) . $refStateId . __(' à la valeur : ', __FILE__) .$refStateValue . __(' au temps : ', __FILE__) . $timestamp);
                         }
                     }
                 }
@@ -151,7 +151,7 @@ try {
     }
 
     $mqtt->loop(true, true, 60);
-      
+
     $mqtt->disconnect();
 
 } catch (\PhpMqtt\Client\MqttClientException $e) {
