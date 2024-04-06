@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.71';
+    public static $_pluginVersion = '0.73';
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -1762,18 +1762,29 @@ class lgthinq2 extends eqLogic
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration est invalide', __FILE__));
             }
 
-            mkdir(__DIR__ . '/../../data/');
+            //mkdir(__DIR__ . '/../../data/');
+            //save translation model into json file
             file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
 
+            //regroup translation array configModel and configProduct
             if ($_configModelLang && is_array($_configModelLang)) {
                 $langPack = array_replace_recursive($_configProductLang, $_configModelLang);
             } else {
                 $langPack = $_configProductLang;
             }
+
+            //regroup translation array configFile and langPackFile
+            $langPackCP = json_decode(file_get_contents(__DIR__ . '/../../data/langPack_CP.json'),true);
+            if (is_array($langPackCP) && isset($langPackCP['pack'])) {
+                $langPack = array_replace_recursive($langPack, $langPackCP['pack']);
+            }
+
+            //regroup translation array configLangPackFile and customFile
             $translation = new lgthinq2_customLang();
             $customLangFile = $translation->customlang;
             $langPack = array_replace_recursive($langPack, $customLangFile);
             //$langPack = $this->getLangJson('langPackProductType', '', '0.0');
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG $langPackCP ', __FILE__) . json_encode($langPack));
 
             if (isset($data['Value'])) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG Value ', __FILE__) . json_encode($data['Value']));
@@ -2390,17 +2401,17 @@ class lgthinq2 extends eqLogic
      */
     public function isConnected()
     {
-		$cmdConnected = $this->getCmd('info', 'online');
-		if (is_object($cmdConnected)) {
-			if ($this->getIsEnable() && $cmdConnected->execCmd()) {
-				return true;
-			} else {
-				return false;
-			}
-		} else {
-			log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Commande online inexistante : ', __FILE__) . $this->getConfiguration('deviceType', '') . ' ' . $this->getLogicalId());
-		}
-	}
+        $cmdConnected = $this->getCmd('info', 'online');
+        if (is_object($cmdConnected)) {
+            if ($this->getIsEnable() && $cmdConnected->execCmd()) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Commande online inexistante : ', __FILE__) . $this->getConfiguration('deviceType', '') . ' ' . $this->getLogicalId());
+        }
+    }
 
     /**
      * Crée une commande pour l'équipement.
@@ -2486,7 +2497,7 @@ class lgthinq2 extends eqLogic
         if (!is_array($replace)) {
             return $replace;
         }
-		$_version = jeedom::versionAlias($_version);
+        $_version = jeedom::versionAlias($_version);
 
         foreach ($this->getCmd('info', null) as $cmd) {
             $replace['#cmd_' . $cmd->getLogicalId() . '_id#'] = $cmd->getId();
