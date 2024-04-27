@@ -57,7 +57,7 @@
         <select class="selectCmd options" data-logicalId="dryLevel">#cmd_dryLevel_valueMapping#</select>
       </div>
     </div>
-    
+
     <div class="cmd cmd-widget reportModeHidden #cmd_temp_display#" data-type="action" data-subtype="select" data-template="default" data-cmd_id="#cmd_temp_id#">
       <div class="title #cmd_temp_nameDisplay#">
         <div class="cmdName">#cmd_temp_name#</div>
@@ -129,7 +129,7 @@
         <select class="selectCmd options" data-logicalId="creaseCare">#cmd_creaseCare_valueMapping#</select>
       </div>
     </div>
-      
+
     <div class="cmd cmd-widget reportModeHidden #cmd_ecoHybrid_display#" data-type="action" data-subtype="select" data-template="default" data-cmd_id="#cmd_ecoHybrid_id#">
       <div class="title #cmd_ecoHybrid_nameDisplay#">
         <div class="cmdName">#cmd_ecoHybrid_name#</div>
@@ -201,7 +201,7 @@
         <select class="selectCmd options" data-logicalId="medicRinse">#cmd_medicRinse_valueMapping#</select>
       </div>
     </div>
-      
+
     <div class="cmd cmd-widget reportModeHidden #cmd_remoteStart_display#" data-type="action" data-subtype="select" data-template="default" data-cmd_id="#cmd_remoteStart_id#">
       <div class="title #cmd_remoteStart_nameDisplay#">
         <div class="cmdName">#cmd_remoteStart_name#</div>
@@ -219,7 +219,8 @@
         <select class="selectCmd options" data-logicalId="doorLock">#cmd_doorLock_valueMapping#</select>
       </div>
     </div>
-    
+    #cmd#
+
     <div class="content">
       <a class="btn btn-sm btn-default execute tooltips" data-logicalid="#cmdAction_WMDownload_logicalid#" data-cmd_id="#cmdAction_WMDownload_id#">#cmdAction_WMDownload_name#</a>
       <a class="btn btn-sm btn-default execute tooltips" data-logicalid="#cmdAction_WMStart_logicalid#" data-cmd_id="#cmdAction_WMStart_id#">#cmdAction_WMStart_name#</a>
@@ -232,32 +233,37 @@
     <template></template>
     <script>
       var span = '';
-      var eqLogic = document.querySelector('.eqLogic[data-eqLogic_uid=#uid#]');
-      var smartCourseRef = JSON.parse('#cmd_smartCourseFL24inchBaseTitan_refInfo#');
-      var courseRef = JSON.parse('#cmd_courseFL24inchBaseTitan_refInfo#');
+      var smartCourseRef#id# = JSON.parse('#cmd_smartCourseFL24inchBaseTitan_refInfo#');
+      var courseRef#id# = JSON.parse('#cmd_courseFL24inchBaseTitan_refInfo#');
 
       if ('#cmd_courseFL24inchBaseTitan_id#' != '#' + 'cmd_courseFL24inchBaseTitan_id#') {
-          eqLogic.querySelector('.cmd[data-cmd_id="#cmd_courseFL24inchBaseTitan_id#"] .selectCmd')?.addEventListener('change', function() {
+          document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .cmd[data-cmd_id="#cmd_courseFL24inchBaseTitan_id#"] .selectCmd')?.addEventListener('change', function() {
               var courseValue = this.value;
-              if (courseRef[courseValue]) {
-                  for (var key in courseRef[courseValue]['default']) {
-                      if (eqLogic.querySelector('.selectCmd[data-logicalId="'+key+'"]')) {
-                          var cmdKey = eqLogic.querySelector('.selectCmd[data-logicalId="'+key+'"]');
-                          if (cmdKey.querySelector('option[value="'+courseRef[courseValue]['default'][key]+'"]')) {
-                              var cmdSelected = cmdKey.querySelector('option[value="'+courseRef[courseValue]['default'][key]+'"]');
+              if (courseRef#id#[courseValue]) {
+                  for (var key in courseRef#id#[courseValue]['default']) {
+                      if (document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd[data-logicalId="'+key+'"]')) {
+                          var cmdKey = document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd[data-logicalId="'+key+'"]');
+                          if (cmdKey.querySelector('option[value="'+courseRef#id#[courseValue]['default'][key]+'"]')) {
+                              var cmdSelected = cmdKey.querySelector('option[value="'+courseRef#id#[courseValue]['default'][key]+'"]');
                               cmdSelected.selected = true;
                               cmdKey.setAttribute('style', 'color:var(--logo-primary-color) !important');
                           } else if (cmdKey.querySelector('input.binarySwitch')){
                               cmdKey.querySelector('input.binarySwitch').checked = true;
                               cmdKey.setAttribute('style', 'color:var(--logo-primary-color) !important');
                           }
+                      } else if (document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .inputCmd[data-logicalId="'+key+'"]')) {
+                          var cmdKey = document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .inputCmd[data-logicalId="'+key+'"]');
+                          cmdKey.value = courseRef#id#[courseValue]['default'][key];
+                          cmdKey.setAttribute('style', 'color:var(--logo-primary-color) !important');
                       }
                   }
                   // unset color for changed values
                   setTimeout(function() {
-                      for (var key in courseRef[courseValue]['default']) {
-                          if (eqLogic.querySelector('.selectCmd[data-logicalId="'+key+'"]')) {
-                              eqLogic.querySelector('.selectCmd[data-logicalId="'+key+'"]').setAttribute('style', 'color:unset !important');
+                      for (var key in courseRef#id#[courseValue]['default']) {
+                          if (document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd[data-logicalId="'+key+'"]')) {
+                              document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd[data-logicalId="'+key+'"]').setAttribute('style', 'color:unset !important');
+                          } else if (document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .inputCmd[data-logicalId="'+key+'"]')) {
+                              document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .inputCmd[data-logicalId="'+key+'"]').setAttribute('style', 'color:var(--link-color) !important');
                           }
                       }
                   }, 1500);
@@ -266,36 +272,42 @@
       }
 
       if ('#cmd_smartCourseFL24inchBaseTitan_id#' != '#' + 'cmd_smartCourseFL24inchBaseTitan_id#') {
-          eqLogic.querySelector('.cmd[data-cmd_id="#cmd_smartCourseFL24inchBaseTitan_id#"] .selectCmd')?.addEventListener('change', function() {
+          document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .cmd[data-cmd_id="#cmd_smartCourseFL24inchBaseTitan_id#"] .selectCmd')?.addEventListener('change', function() {
               var courseValue = this.value;
-              if (smartCourseRef[courseValue]) {
-                  for (var key in smartCourseRef[courseValue]['default']) {
-                      if (eqLogic.querySelector('.selectCmd[data-logicalId="'+key+'"]')) {
-                          var cmdKey = eqLogic.querySelector('.selectCmd[data-logicalId="'+key+'"]');
-                          if (cmdKey.querySelector('option[value="'+smartCourseRef[courseValue]['default'][key]+'"]')) {
-                              var cmdSelected = cmdKey.querySelector('option[value="'+smartCourseRef[courseValue]['default'][key]+'"]');
+              if (smartCourseRef#id#[courseValue]) {
+                  for (var key in smartCourseRef#id#[courseValue]['default']) {
+                      if (document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd[data-logicalId="'+key+'"]')) {
+                          var cmdKey = document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd[data-logicalId="'+key+'"]');
+                          if (cmdKey.querySelector('option[value="'+smartCourseRef#id#[courseValue]['default'][key]+'"]')) {
+                              var cmdSelected = cmdKey.querySelector('option[value="'+smartCourseRef#id#[courseValue]['default'][key]+'"]');
                               cmdSelected.selected = true;
                               cmdKey.setAttribute('style', 'color:var(--logo-primary-color) !important');
                           } else if (cmdKey.querySelector('input.binarySwitch')){
                               cmdKey.querySelector('input.binarySwitch').checked = true;
-                              console.log(smartCourseRef[courseValue]['default'][key])
-                              cmdKey.querySelector('input.binarySwitch').value = smartCourseRef[courseValue]['default'][key];
+                              console.log(smartCourseRef#id#[courseValue]['default'][key])
+                              cmdKey.querySelector('input.binarySwitch').value = smartCourseRef#id#[courseValue]['default'][key];
                               cmdKey.setAttribute('style', 'color:var(--logo-primary-color) !important');
                           }
+                      } else if (document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .inputCmd[data-logicalId="'+key+'"]')) {
+                          var cmdKey = document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .inputCmd[data-logicalId="'+key+'"]');
+                          cmdKey.value = smartCourseRef#id#[courseValue]['default'][key];
+                          cmdKey.setAttribute('style', 'color:var(--logo-primary-color) !important');
                       }
                   }
                   // unset color for changed values
                   setTimeout(function() {
-                      for (var key in smartCourseRef[courseValue]['default']) {
-                          if (eqLogic.querySelector('.selectCmd[data-logicalId="'+key+'"]')) {
-                              eqLogic.querySelector('.selectCmd[data-logicalId="'+key+'"]').setAttribute('style', 'color:var(--link-color) !important');
+                      for (var key in smartCourseRef#id#[courseValue]['default']) {
+                          if (document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd[data-logicalId="'+key+'"]')) {
+                              document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd[data-logicalId="'+key+'"]').setAttribute('style', 'color:var(--link-color) !important');
+                          } else if (document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .inputCmd[data-logicalId="'+key+'"]')) {
+                              document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .inputCmd[data-logicalId="'+key+'"]').setAttribute('style', 'color:var(--link-color) !important');
                           }
                       }
                   }, 1500);
               }
           })
       }
-      
+
       if ('#panelLink#' == '') {
           document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .panelLink')?.remove()
       }
@@ -306,11 +318,20 @@
       } else {
           document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .refresh')?.remove()
       }
-      
+
       document.querySelectorAll('.eqLogic[data-eqLogic_uid="#uid#"] .cmds .cmd').forEach(_cmd => {
           var attrId = _cmd.getAttribute('data-cmd_id')
           if (isNaN(attrId) && /^#.*#$/.test(attrId)) {
-              _cmd.remove()
+              var sett = _cmd.querySelector('.inputCmd,.selectCmd').getAttribute('data-logicalId');
+              var found = Object.keys(courseRef#id#).some(function(key) {
+                  return courseRef#id#[key].default[sett];
+              });
+              var found2 = Object.keys(smartCourseRef#id#).some(function(key) {
+                  return smartCourseRef#id#[key].default[sett];
+              });
+              if (!found && !found2) {
+                  _cmd.remove();
+              }
           }
           if (_cmd.querySelector('.selectCmd') && _cmd.querySelector('.selectCmd').options.length == 2) {
               let selectCmd = _cmd.querySelector('.selectCmd');
@@ -318,7 +339,7 @@
               var option1value = selectCmd.options[0].value;
               var option2text = selectCmd.options[1].innerText;
               var option2value = selectCmd.options[1].value;
-            
+
               var select = '<div class="center selectCmd inputs tippied" data-logicalid="' + selectCmd.getAttribute("data-logicalId") + '" data-title="' + option1value + ' = ' + option1text + '</br>' + option2value + ' = ' + option2text+'">';
               select += '    <span>' + option1text + '</span>';
               select += '    <label class="binarySwitch tooltips">';
@@ -338,17 +359,20 @@
           }
       });
 
-      document.querySelector('.eqLogic[data-eqLogic_uid=#uid#]').addEventListener('click', function(e) {
-          if (_target = e.target.closest('.execute')) {
+      document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"]').addEventListener('click', function(e) {
+          if (_target = e.target.closest('.btn.execute')) {
               if (_target.getAttribute('data-logicalId') == 'WMStart') {
                   var payload = {};
-                  document.querySelectorAll('.eqLogic[data-eqLogic_uid=#uid#] .selectCmd.course').forEach(_cmd => {
+                  document.querySelectorAll('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd.course').forEach(_cmd => {
                       payload[_cmd.getAttribute('data-logicalId')] = _cmd.value==''?'NOT_SELECTED':_cmd.value;
                   });
-                  document.querySelectorAll('.eqLogic[data-eqLogic_uid=#uid#] .selectCmd.options').forEach(_cmd => {
+                  document.querySelectorAll('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd.options').forEach(_cmd => {
                       payload[_cmd.getAttribute('data-logicalId')] = _cmd.value;
-                  })
-                  document.querySelectorAll('.eqLogic[data-eqLogic_uid=#uid#] .selectCmd.inputs').forEach(_cmd => {
+                  });
+                  document.querySelectorAll('.eqLogic[data-eqLogic_uid="#uid#"] .inputCmd.options').forEach(_cmd => {
+                      payload[_cmd.getAttribute('data-logicalId')] = parseInt(_cmd.value);
+                  });
+                  document.querySelectorAll('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd.inputs').forEach(_cmd => {
                       var checkedValue = _cmd.querySelector('input.binarySwitch').getAttribute('data-checked');
                       var uncheckedValue = _cmd.querySelector('input.binarySwitch').getAttribute('data-unchecked');
                       payload[_cmd.getAttribute('data-logicalId')] = _cmd.querySelector('input.binarySwitch').checked?uncheckedValue:checkedValue;
@@ -360,13 +384,6 @@
               }
           }
       });
-      document.querySelector('.eqLogic[data-eqLogic_uid=#uid#]').addEventListener('change', function(e) {
-          if (_target = e.target.closest('.selectCmd.options')) {
-              console.log('change selected',  e.target.value);
-          }
-          if (_target = e.target.closest('.selectCmd:not(.options)')) {
-                console.log('eee',e)
-          }
-      });
+
     </script>
 </div>

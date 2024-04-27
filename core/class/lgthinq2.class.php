@@ -1098,7 +1098,6 @@ class lgthinq2 extends eqLogic
      */
     public static function getDevices($_deviceId = '', $_tokenRefreshed = false)
     {
-
         lgthinq2::getTokenIsExpired();
 
         $curl = curl_init();
@@ -2535,8 +2534,30 @@ class lgthinq2 extends eqLogic
         }
         $_version = jeedom::versionAlias($_version);
 
+        $deviceType = $this->getConfiguration('deviceType');
+        if ($deviceType == 201) {
+            $course = $this->getCmd('info', 'courseFL24inchBaseTitan');
+            $smartCourse = $this->getCmd('info', 'smartCourseFL24inchBaseTitan');
+        } elseif ($deviceType == 202) {
+            $course = $this->getCmd('info', 'courseDryer24inchBase');
+            $smartCourse = $this->getCmd('info', 'smartCourseDryer24inchBase');
+        }
 
+        $refList = array();
+        foreach ($course->getConfiguration('ref') as $refKey => $refVal) {
+            if (isset($refVal['default'])) {
+                $refList = array_merge($refList, array_keys($refVal['default']));
+            }
+        }
+        $refList = array_values(array_unique($refList));
+        $refList[] = $course->getLogicalId();
+        $refList[] = $smartCourse->getLogicalId();
+
+        $cmd_html = '';
         foreach ($this->getCmd('info', null) as $cmd) {
+
+            $valueMapping = $cmd->getConfiguration('valueMapping', '');
+            $refs = $cmd->getConfiguration('ref', '');
             $replace['#cmd_' . $cmd->getLogicalId() . '_id#'] = $cmd->getId();
 			$replace['#cmd_' . $cmd->getLogicalId() . '_name#'] = ($cmd->getDisplay('icon') != '') ? $cmd->getDisplay('icon') : $cmd->getName();
             $replace['#cmd_' . $cmd->getLogicalId() . '_value#'] = $cmd->execCmd();
@@ -2546,17 +2567,20 @@ class lgthinq2 extends eqLogic
             if ($cmd->getConfiguration('maxValue', '') != '') {
                 $replace['#cmd_' . $cmd->getLogicalId() . '_maxValue#'] = $cmd->getConfiguration('maxValue');
             }
-            if ($cmd->getConfiguration('valueMapping', '') != '') {
-                $elements = $cmd->getConfiguration('valueMapping');
-                if (isset($elements['min']) || isset($elements['max']) || isset($elements['step'])) {
-                    $replace['#cmd_' . $cmd->getLogicalId() . '_min#'] = $elements['min'];
-                    $replace['#cmd_' . $cmd->getLogicalId() . '_max#'] = $elements['max'];
+
+            if (!in_array($cmd->getLogicalId(), $refList)) {
+			    $cmd_html .= $cmd->toHtml($_version, '');
+            }
+
+            if ($valueMapping != '') {
+                if (isset($valueMapping['min']) || isset($valueMapping['max']) || isset($valueMapping['step'])) {
+                    $replace['#cmd_' . $cmd->getLogicalId() . '_min#'] = $valueMapping['min'];
+                    $replace['#cmd_' . $cmd->getLogicalId() . '_max#'] = $valueMapping['max'];
                 } else {
                     $listOption = '';
                     $foundSelect = false;
-                    foreach ($elements as $elementId => $elementValue) {
+                    foreach ($valueMapping as $elementId => $elementValue) {
                         $elementValue['label'] = ($elementValue['label'] == '')?'['.$elementId.']':$elementValue['label'];
-                      log::add(__CLASS__, 'debug', 'DEBUGGGG. : ' . $cmd->execCmd() . ' => ' . $elementId . ' => ' . $elementValue['index']);
                         if ($cmd->execCmd() === $elementId || $cmd->execCmd() === $elementValue['index']) {
                             $listOption .= '<option value="' . $elementId . '" selected="true">' . $elementValue['label'] . '</option>';
                             $foundSelect = true;
@@ -2570,8 +2594,7 @@ class lgthinq2 extends eqLogic
                     $replace['#cmd_' . $cmd->getLogicalId() . '_valueMapping#'] = $listOption;
                 }
             }
-            if ($cmd->getConfiguration('ref', '') != '') {
-                $refs = $cmd->getConfiguration('ref');
+            if ($refs != '') {
                 $replace['#cmd_' . $cmd->getLogicalId() . '_refInfo#'] = str_replace('\'', ' ',json_encode($refs));
                 $listOption = '';
                 $foundSelect = false;
@@ -2590,6 +2613,8 @@ class lgthinq2 extends eqLogic
             $replace['#cmd_' . $cmd->getLogicalId() . '_collectDate#'] = $cmd->getCollectDate();
             $replace['#cmd_' . $cmd->getLogicalId() . '_valueDate#'] = $cmd->getValueDate();
         }
+        $replace['#cmd#'] = $cmd_html;
+
         foreach ($this->getCmd('action', null) as $cmdAction) {
             if ($cmdAction->getConfiguration('ref', false)) {
                 $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_ref#'] = str_replace('\'', ' ',json_encode($cmdAction->getConfiguration('ref')));
@@ -2609,8 +2634,8 @@ class lgthinq2 extends eqLogic
             }
         }
 
-        $html = template_replace($replace, getTemplate('core', $_version, 'lgthinq2.template',__CLASS__));
-        $html = translate::exec($html, 'plugins/lgthinq2/core/template/' . $version . '/lgthinq2.template.html');
+        $html = template_replace($replace, getTemplate('core', $_version, 'lgthinq2.' . $deviceType . '.template',__CLASS__));
+        $html = translate::exec($html, 'plugins/lgthinq2/core/template/' . $version . '/lgthinq2.' . $deviceType . '.template.html');
         return $html;
     }
 }
@@ -2792,5 +2817,34 @@ class lgthinq2Cmd extends cmd
             }
         }
         return true;
+    }
+
+    /**
+     * Génère le code HTML pour l'affichage de la commande.
+     *
+     * Cette fonction génère le code HTML pour l'affichage de la commande selon la version spécifiée.
+     *
+     * @param string $_version La version de l'affichage (par défaut : 'dashboard').
+     * @return string Le code HTML généré pour l'affichage de l'équipement.
+     */
+    public function formatValueWidget($_value)
+    {
+        $valueMap = $this->getConfiguration('valueMapping', '');
+		if ($valueMap != '') {
+			if (isset($valueMap[$_value])) {
+                if ($valueMap[$_value]['label'] != '') {
+				    return $valueMap[$_value]['label'];
+                } elseif ($valueMap[$_value]['title'] != '') {
+				    return $valueMap[$_value]['title'];
+                } elseif ($valueMap[$_value]['content'] != '') {
+				    return $valueMap[$_value]['content'];
+                } elseif ($valueMap[$_value]['comment'] != '') {
+				    return $valueMap[$_value]['comment'];
+                } elseif ($valueMap[$_value]['index'] != '') {
+				    return $valueMap[$_value]['index'];
+                }
+			}
+		}
+		return $_value;
     }
 }
