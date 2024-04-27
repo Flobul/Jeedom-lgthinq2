@@ -35,7 +35,7 @@ sendVarToJS('cmdInfo', $cmdInfo);
   <div class="tab-content" id="div_displayCmdConfigure" style="overflow-x:hidden">
   <div class="input-group pull-right" style="display:inline-flex">
     <span class="input-group-btn">
-      </a><a class="btn btn-success btn-sm roundedLeft roundedRight" id="bt_cmdConfigureSave"><i class="fas fa-check-circle"></i> {{Ajouter}}</a>
+      </a><a class="btn btn-success btn-sm roundedLeft roundedRight" id="bt_cmdConfigureSave"><i class="fas fa-save"></i> {{Sauvegarder}}</a>
     </span>
   </div>
     <div role="tabpanel" class="tab-pane active" id="cmd_information">
@@ -95,37 +95,45 @@ sendVarToJS('cmdInfo', $cmdInfo);
                     </div>
                   </div>
 
-                  <div class="form-group">
-                    <label class="col-xs-3 control-label">{{dataKey}}</label>
-                    <div class="col-xs-9">
-                        <input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="dataKey" placeholder="{{dataKey}}" title="{{dataKey}}" style="display:inline-block"></input>
-                    </div>
-                  </div>
-
-
-                  <?php if ($cmd->getSubType() == 'select') { ?>
+                  <?php if ($cmd->getConfiguration('dataSetList', null) !== null) { ?>
                       <div class="form-group">
-                        <label class="col-xs-3 control-label">{{Valeurs possibles}}</label>
+                        <label class="col-xs-3 control-label">{{dataSetList}}</label>
                         <div class="col-xs-9">
-                                  <textarea class="cmdAttr form-control input-sm tooltipstered" data-l1key="configuration" data-l2key="listValue" placeholder="Liste de valeur|texte séparé par ;" id="changeListValue"></textarea>
-                          <?php
-                              $elements = explode(';', $cmd->getConfiguration('listValue', ''));
-                              $i = 0;
-                              foreach ($elements as $element) {
-                                  $coupleArray = explode('|', $element);
-                                  echo '<input class="form-control input-sm coupleArray" style="display:inline-block;width:200px;" value="'.$coupleArray[1].'" id="coupleKey'.$i.'" > => <input class="form-control input-sm coupleArray" style="display:inline-block;width: 200px;" value="'.$coupleArray[0].'" id="coupleArray'.$i.'" ><br/>';
-                                  $i++;
-                              }
-                            ?>
+                            <textarea id="prettyDataSetList" rows="10" class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="dataSetList" placeholder="{{dataSetList}}" title="{{dataSetList}}" style="display:inline-block;height: auto;"><?php echo json_encode($cmd->getConfiguration('dataSetList'), JSON_PRETTY_PRINT)?></textarea>
                         </div>
                       </div>
                   <?php } else { ?>
                       <div class="form-group">
-                        <label class="col-xs-3 control-label">{{dataValue}}</label>
+                        <label class="col-xs-3 control-label">{{dataKey}}</label>
                         <div class="col-xs-9">
-                            <input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="dataValue" placeholder="{{dataValue}}" title="{{dataValue}}" style="display:inline-block"></input>
+                            <input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="dataKey" placeholder="{{dataKey}}" title="{{dataKey}}" style="display:inline-block"></input>
                         </div>
                       </div>
+
+                      <?php if ($cmd->getSubType() == 'select') { ?>
+                          <div class="form-group">
+                            <label class="col-xs-3 control-label">{{Valeurs possibles}}</label>
+                            <div class="col-xs-9">
+                                      <textarea class="cmdAttr form-control input-sm tooltipstered" data-l1key="configuration" data-l2key="listValue" placeholder="Liste de valeur|texte séparé par ;" id="changeListValue"></textarea>
+                              <?php
+                                  $elements = explode(';', $cmd->getConfiguration('listValue', ''));
+                                  $i = 0;
+                                  foreach ($elements as $element) {
+                                      $coupleArray = explode('|', $element);
+                                      echo '<input class="form-control input-sm coupleArray" style="display:inline-block;width:200px;" value="'.$coupleArray[1].'" id="coupleKey'.$i.'" > => <input class="form-control input-sm coupleArray" style="display:inline-block;width: 200px;" value="'.$coupleArray[0].'" id="coupleArray'.$i.'" ><br/>';
+                                      $i++;
+                                  }
+                                ?>
+                            </div>
+                          </div>
+                      <?php } else { ?>
+                          <div class="form-group">
+                            <label class="col-xs-3 control-label">{{dataValue}}</label>
+                            <div class="col-xs-9">
+                                <input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="dataValue" placeholder="{{dataValue}}" title="{{dataValue}}" style="display:inline-block"></input>
+                            </div>
+                          </div>
+                      <?php } ?>
                   <?php } ?>
               <?php } ?>
             </fieldset>
@@ -138,6 +146,7 @@ sendVarToJS('cmdInfo', $cmdInfo);
 
 <script>
 $(function() {
+  console.log(cmdInfo)
   //modal title:
   var title = '{{Configuration commande}}'
   title += ' : ' + cmdInfo.eqLogicName
@@ -147,7 +156,7 @@ $(function() {
     $('#cmdConfigureTab').parents('.ui-dialog').css('top', "50px")
   }
 })
-                
+
 $('.coupleArray').on('change', function () {
 	var listValue = "";
 	let nbValue = $('.coupleArray').length / 2;
@@ -200,6 +209,9 @@ $('.bt_testEnum').off('click').on('click',function() {
           cmdInfo.configuration.dataValue = cmd.configuration.dataValue;
           if (cmdInfo.configuration.listValue && cmdInfo.configuration.listValue != '') {
               cmdInfo.configuration.listValue = cmd.configuration.listValue;
+          }
+          if (cmd.configuration.dataSetList && cmd.configuration.dataSetList != '') {
+              cmdInfo.configuration.dataSetList = cmd.configuration.dataSetList;
           }
       }
       jeedom.cmd.save({
