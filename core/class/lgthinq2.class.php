@@ -24,7 +24,8 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.73';
+    public static $_pluginVersion = '0.80';
+    public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
     const LGTHINQ_GATEWAY_LIST  = 'https://kic.lgthinq.com:46030/api/common/gatewayUriList';
@@ -1016,6 +1017,19 @@ class lgthinq2 extends eqLogic
         }
     }
 
+    public static function translateValueMapping($_arrayVM, $_trans)
+    {
+        foreach ($_arrayVM as $key => $value) {
+            if (isset($value['label']) && (strpos($value['label'], '@') === 0)) {
+                if (array_key_exists($value['label'], $_trans)) {
+                    $label = $value['label'];
+                    $_arrayVM[$key]['label'] = $_trans[$label];
+                }
+            }
+        }
+        return $_arrayVM;
+    }
+
     /**
      * Vérifie si le token est expiré.
      *
@@ -1879,7 +1893,7 @@ class lgthinq2 extends eqLogic
                             'maxValue' => $maxValue,
                             'default' => $value['default'],
                             'visibleItem' => $value['value_validation'],
-                            'valueMapping' => $value['value_mapping'] ?? $value['option'],
+                            'valueMapping' => self::translateValueMapping(($value['value_mapping'] ?? $value['option']), $langPack),
                             'targetKey' => $targetKey,
                             'targetKeyValues' => $targetKeyValues,
                             'tempUnitValue' => $tempUnitValue,
@@ -1958,6 +1972,26 @@ class lgthinq2 extends eqLogic
                         $name = $key;
                     }
 
+                    //course for dryer/washer action cmds
+                    $courseArray = null;
+                    if (isset($value['ref'])) {
+                        if (isset($data[$value['ref']])) {
+                            foreach ($data[$value['ref']] as $courseId => $courseValue) {
+                                $newArray = call_user_func_array('array_merge', array_map(function($item) {
+                                    return [$item['value'] => $item['default']];
+                                }, $courseValue['function']));
+                                $courseArray[$courseId] = array(
+                                    'course'  => $courseValue['Course'],
+                                    'type'    => $courseValue['courseType'],
+                                    'value'   => $courseValue['courseValue'],
+                                    'name'    => array_key_exists($courseValue['name'], $langPack)?$langPack[$courseValue['name']]:$courseValue['name'],
+                                    //'name'    => (isset($_configProductLang[$courseValue['name']])?$_configProductLang[$courseValue['name']]:$courseValue['name']),
+                                    'default' => $newArray
+                                );
+                            }
+                        }
+                    }
+
                     //unit and minValue&maxValue
                     if (isset($value['targetKey'])) {
                         $targetKey = $value['targetKey'];
@@ -2003,10 +2037,11 @@ class lgthinq2 extends eqLogic
                             'maxValue' => $maxValue,
                             'default' => $value['default'],
                             'visibleItem' => $value['visibleItem'],
-                            'valueMapping' => $value['valueMapping'],
+                            'valueMapping' => self::translateValueMapping($value['valueMapping'], $langPack),
                             'targetKey' => $targetKey,
                             'targetKeyValues' => $targetKeyValues,
-                            'tempUnitValue' => $tempUnitValue
+                            'tempUnitValue' => $tempUnitValue,
+                            'ref' => $courseArray ?? null
                         ),
                         'display' => array(
                             'parameters' => array(
@@ -2128,7 +2163,7 @@ class lgthinq2 extends eqLogic
                             );
                         }
                         $commands[] = array(
-                            'name' => ($iCKey?$actionName:$actionName.config::genKey(2)),
+                            'name' => ($iCKey?$actionName.' '.config::genKey(2):$actionName),
                             'type' => 'action',
                             'logicalId' => $actionName,
                             'subType' => $subType,
@@ -2215,13 +2250,14 @@ class lgthinq2 extends eqLogic
                                 );
                             }
                             $commands[] = array(
-                                'name' => ($iCKey?$controlKey:$controlKey.config::genKey(2)),
+                                'name' => ($iCKey?$controlKey.' '.config::genKey(2):$controlKey),
                                 'type' => 'action',
                                 'logicalId' => $controlKey,
                                 'subType' => 'other',
                                 'configuration' => array(
                                     'ctrlKey' => $controlKey,
                                     'cmd' => $controlValue['command'],
+                                    'dataSetList' => (in_array($controlKey, array('WMStart', 'WMDownload', 'WMOff', 'WMStop', 'WMWakeup'))?$controlValue['data']:null)
                                 )
                             );
                         }
@@ -2490,7 +2526,7 @@ class lgthinq2 extends eqLogic
      */
     public function toHtml($_version = 'dashboard')
     {
-        if ($this->getConfiguration('widgetTemplate') != 1) {
+        if ($this->getDisplay('widgetTmpl') != 1) {
             return parent::toHtml($_version);
         }
         $replace = $this->preToHtml($_version);
@@ -2499,32 +2535,82 @@ class lgthinq2 extends eqLogic
         }
         $_version = jeedom::versionAlias($_version);
 
+
         foreach ($this->getCmd('info', null) as $cmd) {
             $replace['#cmd_' . $cmd->getLogicalId() . '_id#'] = $cmd->getId();
-            $replace['#cmd_' . $cmd->getLogicalId() . '_name#'] = $cmd->getName();
+			$replace['#cmd_' . $cmd->getLogicalId() . '_name#'] = ($cmd->getDisplay('icon') != '') ? $cmd->getDisplay('icon') : $cmd->getName();
             $replace['#cmd_' . $cmd->getLogicalId() . '_value#'] = $cmd->execCmd();
             $replace['#cmd_' . $cmd->getLogicalId() . '_icon#'] = $cmd->getDisplay('icon', '');
+            $replace['#cmd_' . $cmd->getLogicalId() . '_display#'] = $cmd->getIsVisible() == 0?'hidden':'';
+            $replace['#cmd_' . $cmd->getLogicalId() . '_nameDisplay#'] = $cmd->getDisplay('showNameOn' . $_version, 1) != 0?'':'hidden';
             if ($cmd->getConfiguration('maxValue', '') != '') {
                 $replace['#cmd_' . $cmd->getLogicalId() . '_maxValue#'] = $cmd->getConfiguration('maxValue');
+            }
+            if ($cmd->getConfiguration('valueMapping', '') != '') {
+                $elements = $cmd->getConfiguration('valueMapping');
+                if (isset($elements['min']) || isset($elements['max']) || isset($elements['step'])) {
+                    $replace['#cmd_' . $cmd->getLogicalId() . '_min#'] = $elements['min'];
+                    $replace['#cmd_' . $cmd->getLogicalId() . '_max#'] = $elements['max'];
+                } else {
+                    $listOption = '';
+                    $foundSelect = false;
+                    foreach ($elements as $elementId => $elementValue) {
+                        $elementValue['label'] = ($elementValue['label'] == '')?'['.$elementId.']':$elementValue['label'];
+                      log::add(__CLASS__, 'debug', 'DEBUGGGG. : ' . $cmd->execCmd() . ' => ' . $elementId . ' => ' . $elementValue['index']);
+                        if ($cmd->execCmd() === $elementId || $cmd->execCmd() === $elementValue['index']) {
+                            $listOption .= '<option value="' . $elementId . '" selected="true">' . $elementValue['label'] . '</option>';
+                            $foundSelect = true;
+                        } else {
+                            $listOption .= '<option value="' . $elementId . '">' . $elementValue['label'] . '</option>';
+                        }
+                    }
+                    if (!$foundSelect) {
+                        $listOption = '<option value="">{{Aucun}}</option>' . $listOption;
+                    }
+                    $replace['#cmd_' . $cmd->getLogicalId() . '_valueMapping#'] = $listOption;
+                }
+            }
+            if ($cmd->getConfiguration('ref', '') != '') {
+                $refs = $cmd->getConfiguration('ref');
+                $replace['#cmd_' . $cmd->getLogicalId() . '_refInfo#'] = str_replace('\'', ' ',json_encode($refs));
+                $listOption = '';
+                $foundSelect = false;
+                foreach ($refs as $refId => $refValue) {
+                    $listOption .= '<option value="' . $refId . '">' . $refValue['name'] . ' [' . $refId . ']</option>';
+                }
+                if (!$foundSelect) {
+                    $listOption = '<option value="">{{Aucun}}</option>' . $listOption;
+                }
+                $replace['#cmd_' . $cmd->getLogicalId() . '_valueMapping#'] = $listOption;
+            }
+            if ($cmd->getDisplay('showIconAndName' . $_version, 0) == 1) {
+                $replace['#cmd_' . $cmd->getLogicalId() . '_name#'] = $cmd->getDisplay('icon') . ' ' . $cmd->getName();
             }
             $replace['#cmd_' . $cmd->getLogicalId() . '_unite#'] = $cmd->getUnite();
             $replace['#cmd_' . $cmd->getLogicalId() . '_collectDate#'] = $cmd->getCollectDate();
             $replace['#cmd_' . $cmd->getLogicalId() . '_valueDate#'] = $cmd->getValueDate();
         }
         foreach ($this->getCmd('action', null) as $cmdAction) {
-            $parts = explode('::', $cmdAction->getLogicalId());
-            $replace['#cmdAction_' . $parts[1] . '_id#'] = $cmdAction->getId();
-            $replace['#cmdAction_' . $parts[1] . '_name#'] = $cmdAction->getName();
-            if ($cmdAction->getConfiguration('maxValue', '') != '') {
-                $replace['#cmd_' . $cmd->getLogicalId() . '_maxValue#'] = $cmdAction->getConfiguration('maxValue');
+            if ($cmdAction->getConfiguration('ref', false)) {
+                $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_ref#'] = str_replace('\'', ' ',json_encode($cmdAction->getConfiguration('ref')));
             }
-            $replace['#cmdAction_' . $parts[1] . '_unite#'] = $cmdAction->getUnite();
-            $replace['#cmdAction_' . $parts[1] . '_collectDate#'] = $cmdAction->getCollectDate();
-            $replace['#cmdAction_' . $parts[1] . '_valueDate#'] = $cmdAction->getValueDate();
+            if ($cmdAction->getConfiguration('dataSetList', false)) {
+                $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_dataSetList#'] = str_replace('\'', ' ',json_encode($cmdAction->getConfiguration('dataSetList')));
+            }
+
+            $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_id#'] = $cmdAction->getId();
+            $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_logicalid#'] = $cmdAction->getLogicalId();
+			$replace['#cmdAction_' . $cmdAction->getLogicalId() . '_name#'] = ($cmdAction->getDisplay('icon') != '') ? $cmdAction->getDisplay('icon') : $cmdAction->getName();
+            $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_unite#'] = $cmdAction->getUnite();
+            $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_collectDate#'] = $cmdAction->getCollectDate();
+            $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_valueDate#'] = $cmdAction->getValueDate();
+            if ($cmdAction->getDisplay('showIconAndName' . $_version, 0) == 1) {
+                $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_name#'] = $cmdAction->getDisplay('icon') . ' ' . $cmdAction->getName();
+            }
         }
 
         $html = template_replace($replace, getTemplate('core', $_version, 'lgthinq2.template',__CLASS__));
-        $html = translate::exec($html, 'plugins/lgthinq2/core/template/' . $version . '/lgthinq2.tempate.html');
+        $html = translate::exec($html, 'plugins/lgthinq2/core/template/' . $version . '/lgthinq2.template.html');
         return $html;
     }
 }
@@ -2634,18 +2720,30 @@ class lgthinq2Cmd extends cmd
                 'dataKey' => $this->getConfiguration('dataKey', null),
                 'dataValue' => $this->getConfiguration('dataValue', $value)
             );
-            $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType')); // to get "resState" keytree
-            if ($refState && $value != '') {
-                $data['dataSetList'] = array(
-                    $refState => array(
-                       str_replace($this->getConfiguration('cmd'), '', $this->getLogicalId()) => $value
-                    )
-                );
+
+            if ($this->getConfiguration('dataSetList', '') == '') {
+                $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType')); // to get "resState" keytree
+                if ($refState && $value != '') {
+                    $data['dataSetList'] = array(
+                        $refState => array(
+                           str_replace($this->getConfiguration('cmd'), '', $this->getLogicalId()) => $value
+                        )
+                    );
+                }
+            } else {
+                if ($_options['course'] != '') {
+                    $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType')); // to get "resState" keytree
+                    $data['dataSetList'] = array(
+                        $refState => $_options['course']
+                    );
+                } else {
+                    $data['dataSetList'] = $this->getConfiguration('dataSetList');
+                }
             }
 
             log::add('lgthinq2', 'debug', __("Donnée envoyée en thinq2 ", __FILE__) . json_encode($data));
             $response = lgthinq2::postData(lgthinq2::LGTHINQ2_SERV_DEVICES . $eqLogic->getLogicalId() . '/control-sync', json_encode($data, JSON_NUMERIC_CHECK), $headers);
-            log::add('lgthinq2', 'debug', __("Répopnse reçue en thinq2 ", __FILE__) . $response);
+            log::add('lgthinq2', 'debug', __("Réponse reçue en thinq2 ", __FILE__) . $response);
             if ($response) {
                 $arr = json_decode($response, true);
                 if (!$arr || !isset($arr['resultCode'])) {

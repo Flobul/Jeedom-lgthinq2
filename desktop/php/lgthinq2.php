@@ -35,7 +35,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
         <?php
           if ((config::byKey('access_token', 'lgthinq2', '') == '' || config::byKey('expires_in', 'lgthinq2', '') == '' ||
-              config::byKey('refresh_token', 'lgthinq2', '') == '' || config::byKey('jsessionId', 'lgthinq2', '') == '') && 
+              config::byKey('refresh_token', 'lgthinq2', '') == '' || config::byKey('jsessionId', 'lgthinq2', '') == '') &&
               (config::byKey('id', 'lgthinq2', '') != '' || config::byKey('password', 'lgthinq2', '') != '')) {
               lgthinq2_display::displayActionCard('{{Connexion}}', 'fa-fingerprint', 'id="bt_getCredentials"', 'eqLogicAction logoPrimaryGreenLGthinq2');
           }
@@ -141,12 +141,12 @@ $eqLogics = eqLogic::byType($plugin->getId());
                 <label class="col-sm-4 control-label help" data-help="{{Cocher la case pour utiliser le widget associé au type de l'appareil.}}</br>{{Laissez décoché pour laisser le core générer le widget par défaut.}}">{{Widget équipement}}
                 </label>
                 <div class="col-sm-8">
-                  <input type="checkbox" class="eqLogicAttr form-control" id="widgetTemplate" data-l1key="configuration" data-l2key="widgetTemplate" />
+                  <input type="checkbox" class="eqLogicAttr form-control" id="widgetTemplate" data-l1key="display" data-l2key="widgetTmpl" />
                 </div>
               </div>
           </form>
         </div>
-        
+
 
         <div class="col-sm-6">
           <form class="form-horizontal">
