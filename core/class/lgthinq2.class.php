@@ -2525,7 +2525,8 @@ class lgthinq2 extends eqLogic
      */
     public function toHtml($_version = 'dashboard')
     {
-        if ($this->getDisplay('widgetTmpl') != 1) {
+        $deviceType = $this->getConfiguration('deviceType');
+        if ($this->getDisplay('widgetTmpl') != 1 || !in_array($deviceType, array(201, 202))) {
             return parent::toHtml($_version);
         }
         $replace = $this->preToHtml($_version);
@@ -2534,7 +2535,6 @@ class lgthinq2 extends eqLogic
         }
         $_version = jeedom::versionAlias($_version);
 
-        $deviceType = $this->getConfiguration('deviceType');
         if ($deviceType == 201) {
             $course = $this->getCmd('info', 'courseFL24inchBaseTitan');
             $smartCourse = $this->getCmd('info', 'smartCourseFL24inchBaseTitan');
