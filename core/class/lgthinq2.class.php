@@ -2236,7 +2236,7 @@ class lgthinq2 extends eqLogic
                             }
                         } else {
                             if ($controlValue['command'] == 'Get') {
-                                $nameCKey = str_replace('Get', '', $controlKey, $iCKey);
+                                $nameCKey = str_replace(array('Get', 'get'), '', $controlKey, $iCKey);
                                 $commands[] = array(
                                     'name' => $nameCKey,
                                     'type' => 'info',
