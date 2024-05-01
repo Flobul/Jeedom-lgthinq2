@@ -1340,7 +1340,7 @@ class lgthinq2 extends eqLogic
      */
     public function getDevicesStatus($_repeat = false)
     {
-
+      
         lgthinq2::getTokenIsExpired();
         $timestamp = null;
         $platformType = $this->getConfiguration('platformType');
@@ -1557,7 +1557,7 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' WorkList non existant ', __FILE__) . json_encode($rti));
             return;
         }
-
+      
         if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) || $rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0106') {
             $nbDisconnects = (int)$this->getConfiguration('nbDisconnections', 0);
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' returnCode null ou 0106, $nbDisconnects ', __FILE__) . $nbDisconnects);
@@ -1812,7 +1812,7 @@ class lgthinq2 extends eqLogic
                     $targetKeyValues = null;
                     $tempUnitValue = null;
                     $historized = 0;
-
+                    
                     // subtype
                     if ($value['data_type'] == 'enum') {
                         if (isset($value['value_mapping']) && count($value['value_mapping']) == 2) {
@@ -1928,7 +1928,7 @@ class lgthinq2 extends eqLogic
                     $targetKeyValues = null;
                     $tempUnitValue = null;
                     $historized = 0;
-
+                    
                     // subtype
                     if ($value['dataType'] == 'enum') {
                         if (isset($value['visibleItem']['monitoringIndex']) && count($value['visibleItem']['monitoringIndex']) == 2) {
@@ -2067,7 +2067,7 @@ class lgthinq2 extends eqLogic
                     }
                 }
             }
-
+          
             if (isset($data['ControlWifi'])) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ControlWifi ', __FILE__) . json_encode($data['ControlWifi']));
                 $commands = array();
@@ -2514,7 +2514,7 @@ class lgthinq2 extends eqLogic
         }
         return false;
     }
-
+  
     /**
      * Génère le code HTML pour l'affichage de l'équipement.
      *
@@ -2526,7 +2526,7 @@ class lgthinq2 extends eqLogic
     public function toHtml($_version = 'dashboard')
     {
         $deviceType = $this->getConfiguration('deviceType');
-        if ($this->getDisplay('widgetTmpl') != 1 || !in_array($deviceType, array(201, 202))) {
+        if ($this->getDisplay('widgetTmpl') != 1 || !in_array($deviceType, array(201, 202, 221, 222))) {
             return parent::toHtml($_version);
         }
         $replace = $this->preToHtml($_version);
@@ -2535,12 +2535,12 @@ class lgthinq2 extends eqLogic
         }
         $_version = jeedom::versionAlias($_version);
 
-        if ($deviceType == 201) {
+        if ($deviceType == 201 || $deviceType == 221) {
             $course = $this->getCmd('info', 'courseFL24inchBaseTitan');
             $smartCourse = $this->getCmd('info', 'smartCourseFL24inchBaseTitan');
-        } elseif ($deviceType == 202) {
+        } elseif ($deviceType == 202 || $deviceType == 222) {
             $course = $this->getCmd('info', 'courseDryer24inchBase');
-            $smartCourse = $this->getCmd('info', 'smartCourseDryer24inchBase');
+            $smartCourse = $this->getCmd('info', 'smartCourseDryer24inchBase');          
         }
 
         $refList = array();
@@ -2571,7 +2571,7 @@ class lgthinq2 extends eqLogic
             if (!in_array($cmd->getLogicalId(), $refList)) {
 			    $cmd_html .= $cmd->toHtml($_version, '');
             }
-
+              
             if ($valueMapping != '') {
                 if (isset($valueMapping['min']) || isset($valueMapping['max']) || isset($valueMapping['step'])) {
                     $replace['#cmd_' . $cmd->getLogicalId() . '_min#'] = $valueMapping['min'];
@@ -2614,7 +2614,7 @@ class lgthinq2 extends eqLogic
             $replace['#cmd_' . $cmd->getLogicalId() . '_valueDate#'] = $cmd->getValueDate();
         }
         $replace['#cmd#'] = $cmd_html;
-
+      
         foreach ($this->getCmd('action', null) as $cmdAction) {
             if ($cmdAction->getConfiguration('ref', false)) {
                 $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_ref#'] = str_replace('\'', ' ',json_encode($cmdAction->getConfiguration('ref')));
@@ -2790,7 +2790,7 @@ class lgthinq2Cmd extends cmd
                 }
             }
         }
-
+      
         if ($this->getConfiguration('updateLGCmdId') != '') { // get action cmd config message and put result in cmd info result
             $cmd = cmd::byId($this->getConfiguration('updateLGCmdId'));
             if (is_object($cmd)) {
@@ -2818,7 +2818,7 @@ class lgthinq2Cmd extends cmd
         }
         return true;
     }
-
+  
     /**
      * Génère le code HTML pour l'affichage de la commande.
      *
