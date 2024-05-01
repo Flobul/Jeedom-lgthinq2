@@ -156,7 +156,7 @@ $(function() {
     $('#cmdConfigureTab').parents('.ui-dialog').css('top', "50px")
   }
 })
-
+                
 $('.coupleArray').on('change', function () {
 	var listValue = "";
 	let nbValue = $('.coupleArray').length / 2;

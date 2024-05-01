@@ -47,7 +47,7 @@ $eqLogics = lgthinq2::byType('lgthinq2');
               $plate = '<span class="label label-'.($Ptype=='thinq1'?'info':'success').'" style="font-size : 1em; cursor : default;">' . $Ptype . '</span>';
           }
           echo '<td>' . $plate . '</td>';
-
+          
 
           $status = '<span class="label label-success" style="font-size : 1em; cursor : default;">{{OK}}</span>';
           if ($eqLogic->getStatus('state') == 'nok') {
@@ -62,7 +62,7 @@ $eqLogics = lgthinq2::byType('lgthinq2');
           }
           echo '<td>' . $print . '</td>';
 
-
+          
           $type = lgthinq2::deviceTypeConstants($eqLogic->getConfiguration('deviceType'));
           $couche = '<span class="label label-danger" style="font-size : 1em; cursor : default;">{{N/A}}</span>';
           if (isset($type)) {
