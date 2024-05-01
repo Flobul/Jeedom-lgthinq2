@@ -111,60 +111,6 @@ function addCmdToTable(_cmd) {
   });
 }
 
-$('.changeIncludeState').on('click', function() {
-  var el = $(this);
-  var state = $(this).attr('data-state');
-  jeedom.config.save({
-    plugin: 'lgthinq2',
-    configuration: {
-      include_mode: el.attr('data-state')
-    },
-    error: function(error) {
-      $.fn.showAlert({
-        message: error.message,
-        level: 'danger'
-      });
-    },
-    success: function() {
-      if (el.attr('data-state') == 1) {
-        $.hideAlert();
-        $('.changeIncludeState:not(.card)').removeClass('btn-default').addClass('btn-success');
-        $('.changeIncludeState').attr('data-state', 0);
-        $('.changeIncludeState.card').css('background-color', '#8000FF');
-        $('.changeIncludeState.card span center').text('{{Arrêter l\'inclusion}}');
-        $('.changeIncludeState:not(.card)').html('<i class="fa fa-sign-in fa-rotate-90"></i> {{Arrêter l\'inclusion}}');
-        $.fn.showAlert({
-          message: '{{Vous êtes en mode inclusion. Cliquez à nouveau sur le bouton d\'inclusion pour sortir de ce mode}}',
-          level: 'warning'
-        });
-      } else {
-        $.hideAlert();
-        $('.changeIncludeState:not(.card)').addClass('btn-default').removeClass('btn-success btn-danger');
-        $('.changeIncludeState').attr('data-state', 1);
-        $('.changeIncludeState:not(.card)').html('<i class="fa fa-sign-in fa-rotate-90"></i> {{Mode inclusion}}');
-        $('.changeIncludeState.card span center').text('{{Mode inclusion}}');
-        $('.changeIncludeState.card').css('background-color', '#ffffff');
-        $.fn.hideAlert();
-      }
-    }
-  });
-});
-
-$('body').on('lgthinq2::includeDevice', function(_event, _options) {
-  if (modifyWithoutSave) {
-    $.fn.showAlert({
-      message: '{{Un périphérique vient d\'être inclu/exclu. Veuillez réactualiser la page}}',
-      level: 'warning'
-    });
-  } else {
-    if (_options == '') {
-      window.location.reload();
-    } else {
-      window.location.href = 'index.php?v=d&p=lgthinq2&m=lgthinq2&id=' + _options;
-    }
-  }
-});
-
 $('#bt_getCredentials').on('click', function() {
     $.ajax({
         type: "POST",
@@ -248,7 +194,7 @@ $('#bt_autoDetectModule').on('click', function() {
 });
 
 $('#bt_synchronizelgthinq2').on('click', function() {
-  synchronize();
+  synchronize(false, false);
 });
 
 function synchronize(_id = false, _deleteCmds = false) {

@@ -33,7 +33,7 @@ class lgthinq2 extends eqLogic
     const LGTHINQ1_SERV_DEVICES = 'https://eic.lgthinq.com:46030/api/';
     const LGTHINQ2_SERV_URL     = 'https://eic-service.lgthinq.com:46030/v1/';
     const LGTHINQ2_SERV_DEVICES = 'https://eic-service.lgthinq.com:46030/v1/service/devices/';
-
+  
     const LGTHINQ_MQTT_URL      = 'https://common.lgthinq.com/route';
     const LGTHINQ_MQTT_CER      = 'https://www.amazontrust.com/repository/AmazonRootCA1.pem';
     const LGTHINQ_MQTT_AZU      = 'https://lgthinq.azurewebsites.net/api/certdata';
@@ -432,7 +432,7 @@ class lgthinq2 extends eqLogic
                 return str_replace('_', '-', $lang);
             case 'plain':
                 return $lang;
-            default:
+            default:   
                 return $lang;
         }
     }
@@ -771,7 +771,7 @@ class lgthinq2 extends eqLogic
         $rep = lgthinq2::postData('https://gb.lgeapi.com' . $urlToken, '', $headers);
         return $rep;
     }
-
+  
     /**
      * Étape 6 : Ancienne méthode de connexion à thinq1.
      *
@@ -1098,13 +1098,14 @@ class lgthinq2 extends eqLogic
      */
     public static function getDevices($_deviceId = '', $_tokenRefreshed = false)
     {
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' appareil ', __FILE__) . $_deviceId);
         lgthinq2::getTokenIsExpired();
 
         $curl = curl_init();
         $headers = lgthinq2::defaultDevicesHeaders();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => lgthinq2::LGTHINQ2_SERV_DEVICES . $_deviceId,
+            CURLOPT_URL => lgthinq2::LGTHINQ2_SERV_DEVICES/* . $_deviceId*/, // rollback: all langPacks are not sent on individual deviceId
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -1133,14 +1134,12 @@ class lgthinq2 extends eqLogic
             lgthinq2::getDevices($_deviceId, true);
         }
 
-        // all devices
-        if ($_deviceId == '') {
-            //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/FAY.json'),true); // developper only
+        if ($_deviceId == '' || $_deviceId != '') {
             //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/PAC.json'),true); // developper only
             //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/POC.json'),true); // developper only
 
             foreach ($devices['result']['item'] as $items) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' : $items ' . json_encode($items));
+                if ($_deviceId != '' && $_deviceId != $items['deviceId']) continue;
                 $eqLogic = lgthinq2::createEquipement($items, $items['platformType']);
                 if (is_object($eqLogic) && isset($items['modelJsonUri'])) {
                     $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType'));
@@ -1148,7 +1147,7 @@ class lgthinq2 extends eqLogic
                     $langModel = $eqLogic->getLangJson('langPackModel', $items['langPackModelUri'], $items['langPackModelVer']);
                     if ($refState) {
                         $eqLogic->createCmdFromModelAndLangFiles($items['modelJsonUri'], $items['modelJsonVer'], $items['snapshot'][$refState], $langProduct, $langModel, $refState);
-                    } else {
+                    } else { 
                         // cas où les infos sont directement sans dossier
                         $eqLogic->createCmdFromModelAndLangFiles($items['modelJsonUri'], $items['modelJsonVer'], $items['snapshot'], $langProduct, $langModel);
                     }
@@ -1172,7 +1171,7 @@ class lgthinq2 extends eqLogic
         $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
-
+  
     /**
      * Méthode appellée par le core (moteur de tâche) cron configuré dans la fonction lgthinq2_install
      * Lance une fonction pour récupérer les appareils et une fonction pour rafraichir les commandes
@@ -1236,14 +1235,15 @@ class lgthinq2 extends eqLogic
      *
      * @return void
      */
-    public static function synchronize()
+    public static function synchronize($_id = false)
     {
-        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' début', __FILE__));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' début ', __FILE__) . $_id);
         if (config::byKey('LGE_MEMBERS_URL', __CLASS__, '') == '' || config::byKey('LG_EMPTERMS_URL', __CLASS__, '') == '' || config::byKey('LGACC_SPX_URL', __CLASS__, '') == '') {
             $rep0 = lgthinq2::step0();
         }
-        lgthinq2::getDevices();
+        $_id = ($_id !== false) ? (is_object($toto = lgthinq2::byId($_id)) ? $toto->getLogicalId() : '') : '';
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' fin', __FILE__));
+        return lgthinq2::getDevices($_id);
     }
 
     /**
