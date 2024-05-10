@@ -33,7 +33,7 @@ class lgthinq2 extends eqLogic
     const LGTHINQ1_SERV_DEVICES = 'https://eic.lgthinq.com:46030/api/';
     const LGTHINQ2_SERV_URL     = 'https://eic-service.lgthinq.com:46030/v1/';
     const LGTHINQ2_SERV_DEVICES = 'https://eic-service.lgthinq.com:46030/v1/service/devices/';
-  
+
     const LGTHINQ_MQTT_URL      = 'https://common.lgthinq.com/route';
     const LGTHINQ_MQTT_CER      = 'https://www.amazontrust.com/repository/AmazonRootCA1.pem';
     const LGTHINQ_MQTT_AZU      = 'https://lgthinq.azurewebsites.net/api/certdata';
@@ -432,7 +432,7 @@ class lgthinq2 extends eqLogic
                 return str_replace('_', '-', $lang);
             case 'plain':
                 return $lang;
-            default:   
+            default:
                 return $lang;
         }
     }
@@ -771,7 +771,7 @@ class lgthinq2 extends eqLogic
         $rep = lgthinq2::postData('https://gb.lgeapi.com' . $urlToken, '', $headers);
         return $rep;
     }
-  
+
     /**
      * Étape 6 : Ancienne méthode de connexion à thinq1.
      *
@@ -1147,7 +1147,7 @@ class lgthinq2 extends eqLogic
                     $langModel = $eqLogic->getLangJson('langPackModel', $items['langPackModelUri'], $items['langPackModelVer']);
                     if ($refState) {
                         $eqLogic->createCmdFromModelAndLangFiles($items['modelJsonUri'], $items['modelJsonVer'], $items['snapshot'][$refState], $langProduct, $langModel, $refState);
-                    } else { 
+                    } else {
                         // cas où les infos sont directement sans dossier
                         $eqLogic->createCmdFromModelAndLangFiles($items['modelJsonUri'], $items['modelJsonVer'], $items['snapshot'], $langProduct, $langModel);
                     }
@@ -1171,7 +1171,7 @@ class lgthinq2 extends eqLogic
         $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
-  
+
     /**
      * Méthode appellée par le core (moteur de tâche) cron configuré dans la fonction lgthinq2_install
      * Lance une fonction pour récupérer les appareils et une fonction pour rafraichir les commandes
@@ -1340,7 +1340,7 @@ class lgthinq2 extends eqLogic
      */
     public function getDevicesStatus($_repeat = false)
     {
-      
+
         lgthinq2::getTokenIsExpired();
         $timestamp = null;
         $platformType = $this->getConfiguration('platformType');
@@ -1381,7 +1381,7 @@ class lgthinq2 extends eqLogic
 
         $curl = curl_init();
         $headers = lgthinq2::defaultDevicesHeaders();
-        //$response = file_get_contents(dirname(__FILE__) . '/../../data/POC_'.$this->getLogicalId().'.json'); // developper only
+        //$response = file_get_contents(dirname(__FILE__) . '/../../data/SKY_'.$this->getLogicalId().'.json'); // developper only
 
         curl_setopt_array($curl, array(
             CURLOPT_URL => lgthinq2::LGTHINQ2_SERV_DEVICES . $this->getLogicalId(),
@@ -1416,6 +1416,7 @@ class lgthinq2 extends eqLogic
         //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/FAY_'.$this->getLogicalId().'.json'),true); // developper only
         //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/PAC.json'),true); // developper only
         //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/POC_'.$this->getLogicalId().'.json'),true); // developper only
+        //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/SKY_'.$this->getLogicalId().'.json'),true); // developper only
 
         if (isset($devices['result']['snapshot'])) {
             $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getLogicalId());
@@ -1557,7 +1558,7 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' WorkList non existant ', __FILE__) . json_encode($rti));
             return;
         }
-      
+
         if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) || $rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0106') {
             $nbDisconnects = (int)$this->getConfiguration('nbDisconnections', 0);
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' returnCode null ou 0106, $nbDisconnects ', __FILE__) . $nbDisconnects);
@@ -1812,7 +1813,7 @@ class lgthinq2 extends eqLogic
                     $targetKeyValues = null;
                     $tempUnitValue = null;
                     $historized = 0;
-                    
+
                     // subtype
                     if ($value['data_type'] == 'enum') {
                         if (isset($value['value_mapping']) && count($value['value_mapping']) == 2) {
@@ -1928,7 +1929,7 @@ class lgthinq2 extends eqLogic
                     $targetKeyValues = null;
                     $tempUnitValue = null;
                     $historized = 0;
-                    
+
                     // subtype
                     if ($value['dataType'] == 'enum') {
                         if (isset($value['visibleItem']['monitoringIndex']) && count($value['visibleItem']['monitoringIndex']) == 2) {
@@ -2067,7 +2068,7 @@ class lgthinq2 extends eqLogic
                     }
                 }
             }
-          
+
             if (isset($data['ControlWifi'])) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ControlWifi ', __FILE__) . json_encode($data['ControlWifi']));
                 $commands = array();
@@ -2514,7 +2515,7 @@ class lgthinq2 extends eqLogic
         }
         return false;
     }
-  
+
     /**
      * Génère le code HTML pour l'affichage de l'équipement.
      *
@@ -2526,7 +2527,8 @@ class lgthinq2 extends eqLogic
     public function toHtml($_version = 'dashboard')
     {
         $deviceType = $this->getConfiguration('deviceType');
-        if ($this->getDisplay('widgetTmpl') != 1 || !in_array($deviceType, array(201, 202, 221, 222))) {
+        if ($this->getDisplay('widgetTmpl') != 1 && !in_array($deviceType, array(201, 202, 221, 222))) {
+             //affichage widget jeedom
             return parent::toHtml($_version);
         }
         $replace = $this->preToHtml($_version);
@@ -2540,7 +2542,7 @@ class lgthinq2 extends eqLogic
             $smartCourse = $this->getCmd('info', 'smartCourseFL24inchBaseTitan');
         } elseif ($deviceType == 202 || $deviceType == 222) {
             $course = $this->getCmd('info', 'courseDryer24inchBase');
-            $smartCourse = $this->getCmd('info', 'smartCourseDryer24inchBase');          
+            $smartCourse = $this->getCmd('info', 'smartCourseDryer24inchBase');
         }
 
         $refList = array();
@@ -2571,7 +2573,7 @@ class lgthinq2 extends eqLogic
             if (!in_array($cmd->getLogicalId(), $refList)) {
 			    $cmd_html .= $cmd->toHtml($_version, '');
             }
-              
+
             if ($valueMapping != '') {
                 if (isset($valueMapping['min']) || isset($valueMapping['max']) || isset($valueMapping['step'])) {
                     $replace['#cmd_' . $cmd->getLogicalId() . '_min#'] = $valueMapping['min'];
@@ -2614,7 +2616,7 @@ class lgthinq2 extends eqLogic
             $replace['#cmd_' . $cmd->getLogicalId() . '_valueDate#'] = $cmd->getValueDate();
         }
         $replace['#cmd#'] = $cmd_html;
-      
+
         foreach ($this->getCmd('action', null) as $cmdAction) {
             if ($cmdAction->getConfiguration('ref', false)) {
                 $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_ref#'] = str_replace('\'', ' ',json_encode($cmdAction->getConfiguration('ref')));
@@ -2790,7 +2792,7 @@ class lgthinq2Cmd extends cmd
                 }
             }
         }
-      
+
         if ($this->getConfiguration('updateLGCmdId') != '') { // get action cmd config message and put result in cmd info result
             $cmd = cmd::byId($this->getConfiguration('updateLGCmdId'));
             if (is_object($cmd)) {
@@ -2818,7 +2820,7 @@ class lgthinq2Cmd extends cmd
         }
         return true;
     }
-  
+
     /**
      * Génère le code HTML pour l'affichage de la commande.
      *
@@ -2830,21 +2832,21 @@ class lgthinq2Cmd extends cmd
     public function formatValueWidget($_value)
     {
         $valueMap = $this->getConfiguration('valueMapping', '');
-		if ($valueMap != '') {
-			if (isset($valueMap[$_value])) {
+        if ($valueMap != '') {
+            if (isset($valueMap[$_value])) {
                 if ($valueMap[$_value]['label'] != '') {
-				    return $valueMap[$_value]['label'];
+                    return $valueMap[$_value]['label'];
                 } elseif ($valueMap[$_value]['title'] != '') {
-				    return $valueMap[$_value]['title'];
+                    return $valueMap[$_value]['title'];
                 } elseif ($valueMap[$_value]['content'] != '') {
-				    return $valueMap[$_value]['content'];
+                    return $valueMap[$_value]['content'];
                 } elseif ($valueMap[$_value]['comment'] != '') {
-				    return $valueMap[$_value]['comment'];
+                    return $valueMap[$_value]['comment'];
                 } elseif ($valueMap[$_value]['index'] != '') {
-				    return $valueMap[$_value]['index'];
+                    return $valueMap[$_value]['index'];
                 }
-			}
-		}
-		return $_value;
+            }
+        }
+        return $_value;
     }
 }
