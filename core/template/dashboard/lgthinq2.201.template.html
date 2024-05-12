@@ -57,7 +57,7 @@
         <select class="selectCmd options" data-logicalId="dryLevel">#cmd_dryLevel_valueMapping#</select>
       </div>
     </div>
-    
+
     <div class="cmd cmd-widget reportModeHidden #cmd_temp_display#" data-type="action" data-subtype="select" data-template="default" data-cmd_id="#cmd_temp_id#">
       <div class="title #cmd_temp_nameDisplay#">
         <div class="cmdName">#cmd_temp_name#</div>
@@ -129,7 +129,7 @@
         <select class="selectCmd options" data-logicalId="creaseCare">#cmd_creaseCare_valueMapping#</select>
       </div>
     </div>
-      
+
     <div class="cmd cmd-widget reportModeHidden #cmd_ecoHybrid_display#" data-type="action" data-subtype="select" data-template="default" data-cmd_id="#cmd_ecoHybrid_id#">
       <div class="title #cmd_ecoHybrid_nameDisplay#">
         <div class="cmdName">#cmd_ecoHybrid_name#</div>
@@ -201,7 +201,7 @@
         <select class="selectCmd options" data-logicalId="medicRinse">#cmd_medicRinse_valueMapping#</select>
       </div>
     </div>
-      
+
     <div class="cmd cmd-widget reportModeHidden #cmd_remoteStart_display#" data-type="action" data-subtype="select" data-template="default" data-cmd_id="#cmd_remoteStart_id#">
       <div class="title #cmd_remoteStart_nameDisplay#">
         <div class="cmdName">#cmd_remoteStart_name#</div>
@@ -220,7 +220,7 @@
       </div>
     </div>
     #cmd#
-    
+
     <div class="content">
       <a class="btn btn-sm btn-default execute tooltips" data-logicalid="#cmdAction_WMDownload_logicalid#" data-cmd_id="#cmdAction_WMDownload_id#">#cmdAction_WMDownload_name#</a>
       <a class="btn btn-sm btn-default execute tooltips" data-logicalid="#cmdAction_WMStart_logicalid#" data-cmd_id="#cmdAction_WMStart_id#">#cmdAction_WMStart_name#</a>
@@ -233,13 +233,13 @@
     <template></template>
     <script>
       var span = '';
-      var smartCourseRef#id# = JSON.parse('#cmd_smartCourseFL24inchBaseTitan_refInfo#');
-      var courseRef#id# = JSON.parse('#cmd_courseFL24inchBaseTitan_refInfo#');
+      var smartCourseRef#id# = '#cmd_smartCourseFL24inchBaseTitan_refInfo#' != '#' + 'cmd_smartCourseFL24inchBaseTitan_refInfo#' ? JSON.parse('#cmd_smartCourseFL24inchBaseTitan_refInfo#') : null;
+      var courseRef#id# = '#cmd_courseFL24inchBaseTitan_refInfo#' != '#' + 'cmd_courseFL24inchBaseTitan_refInfo#' ? JSON.parse('#cmd_courseFL24inchBaseTitan_refInfo#') : null;
 
       if ('#cmd_courseFL24inchBaseTitan_id#' != '#' + 'cmd_courseFL24inchBaseTitan_id#') {
           document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .cmd[data-cmd_id="#cmd_courseFL24inchBaseTitan_id#"] .selectCmd')?.addEventListener('change', function() {
               var courseValue = this.value;
-              if (courseRef#id#[courseValue]) {
+              if (courseRef#id# && courseRef#id#[courseValue]) {
                   for (var key in courseRef#id#[courseValue]['default']) {
                       if (document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd[data-logicalId="'+key+'"]')) {
                           var cmdKey = document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd[data-logicalId="'+key+'"]');
@@ -274,7 +274,7 @@
       if ('#cmd_smartCourseFL24inchBaseTitan_id#' != '#' + 'cmd_smartCourseFL24inchBaseTitan_id#') {
           document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .cmd[data-cmd_id="#cmd_smartCourseFL24inchBaseTitan_id#"] .selectCmd')?.addEventListener('change', function() {
               var courseValue = this.value;
-              if (smartCourseRef#id#[courseValue]) {
+              if (smartCourseRef#id# && smartCourseRef#id#[courseValue]) {
                   for (var key in smartCourseRef#id#[courseValue]['default']) {
                       if (document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd[data-logicalId="'+key+'"]')) {
                           var cmdKey = document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .selectCmd[data-logicalId="'+key+'"]');
@@ -306,7 +306,7 @@
               }
           })
       }
-      
+
       if ('#panelLink#' == '') {
           document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .panelLink')?.remove()
       }
@@ -317,17 +317,21 @@
       } else {
           document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .refresh')?.remove()
       }
-      
+
       document.querySelectorAll('.eqLogic[data-eqLogic_uid="#uid#"] .cmds .cmd').forEach(_cmd => {
           var attrId = _cmd.getAttribute('data-cmd_id')
           if (isNaN(attrId) && /^#.*#$/.test(attrId)) {
               var sett = _cmd.querySelector('.inputCmd,.selectCmd').getAttribute('data-logicalId');
-              var found = Object.keys(courseRef#id#).some(function(key) {
-                  return courseRef#id#[key].default[sett];
-              });
-              var found2 = Object.keys(smartCourseRef#id#).some(function(key) {
-                  return smartCourseRef#id#[key].default[sett];
-              });
+              if (courseRef#id#) {
+                  var found = Object.keys(courseRef#id#).some(function(key) {
+                      return courseRef#id#[key].default[sett];
+                  });
+              }
+              if (smartCourseRef#id#) {
+                  var found2 = Object.keys(smartCourseRef#id#).some(function(key) {
+                      return smartCourseRef#id#[key].default[sett];
+                  });
+              }
               if (!found && !found2) {
                   _cmd.remove();
               }
@@ -338,7 +342,7 @@
               var option1value = selectCmd.options[0].value;
               var option2text = selectCmd.options[1].innerText;
               var option2value = selectCmd.options[1].value;
-            
+
               var select = '<div class="center selectCmd inputs tippied" data-logicalid="' + selectCmd.getAttribute("data-logicalId") + '" data-title="' + option1value + ' = ' + option1text + '</br>' + option2value + ' = ' + option2text+'">';
               select += '    <span>' + option1text + '</span>';
               select += '    <label class="binarySwitch tooltips">';

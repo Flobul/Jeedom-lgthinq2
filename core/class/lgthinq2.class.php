@@ -1119,7 +1119,6 @@ class lgthinq2 extends eqLogic
 
         $response = curl_exec($curl);
         curl_close($curl);
-            //$response = file_get_contents(dirname(__FILE__) . '/../../data/POC.json'); // developper only
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' getDEVICES : ', __FILE__) . $response);
         if (!$response) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' erreur : '. $response);
@@ -1135,6 +1134,8 @@ class lgthinq2 extends eqLogic
         }
 
         if ($_deviceId == '' || $_deviceId != '') {
+            //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/SKY.json'),true); // developper only
+            //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/ROM.json'),true); // developper only
             //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/PAC.json'),true); // developper only
             //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/POC.json'),true); // developper only
 
@@ -2527,7 +2528,7 @@ class lgthinq2 extends eqLogic
     public function toHtml($_version = 'dashboard')
     {
         $deviceType = $this->getConfiguration('deviceType');
-        if ($this->getDisplay('widgetTmpl') != 1 && !in_array($deviceType, array(201, 202, 221, 222))) {
+        if ($this->getDisplay('widgetTmpl', 0) == 0 && !in_array($deviceType, array(201, 202, 221, 222))) {
              //affichage widget jeedom
             return parent::toHtml($_version);
         }
