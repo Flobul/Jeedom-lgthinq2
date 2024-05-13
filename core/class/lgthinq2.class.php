@@ -1345,7 +1345,7 @@ class lgthinq2 extends eqLogic
         lgthinq2::getTokenIsExpired();
         $timestamp = null;
         $platformType = $this->getConfiguration('platformType');
-        $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getLogicalId());
+        $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getLogicalId() . '_modelJson');
         //if thinq1
         if ($platformType == 'thinq1') {
             if ($this->getConfiguration('workId', '') == '' && $this->getConfiguration('needRtiControl', false) == false) {
@@ -1420,7 +1420,7 @@ class lgthinq2 extends eqLogic
         //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/SKY_'.$this->getLogicalId().'.json'),true); // developper only
 
         if (isset($devices['result']['snapshot'])) {
-            $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getLogicalId());
+            $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getLogicalId() . '_modelJson');
             $onlineCmd = $this->getCmd('info', 'online');
             if (!is_object($onlineCmd)) {
                 $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, 'online');
@@ -1779,7 +1779,7 @@ class lgthinq2 extends eqLogic
 
             //mkdir(__DIR__ . '/../../data/');
             //save translation model into json file
-            file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
+            //file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
 
             //regroup translation array configModel and configProduct
             if ($_configModelLang && is_array($_configModelLang)) {
