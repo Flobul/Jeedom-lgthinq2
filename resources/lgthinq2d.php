@@ -140,7 +140,7 @@ try {
                                 $lgthinq2->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $refStateId);
                             }
                             $lgthinq2->checkValueAndUpdateCmd($refStateId, $refStateValue, $timestamp);
-                            log::add('lgthinq2', 'info', __('DÉMON MQTT : ', __FILE__) . __('commande mise à jour : ', __FILE__) . $refStateId . __(' à la valeur : ', __FILE__) .$refStateValue . __(' au temps : ', __FILE__) . $timestamp);
+                            log::add('lgthinq2', 'info', __('DÉMON MQTT : ', __FILE__) . $lgthinq2->getName() . __(' commande mise à jour : ', __FILE__) . $refStateId . __(' à la valeur : ', __FILE__) .$refStateValue . __(' au temps : ', __FILE__) . $timestamp);
                         }
                     }
                 }

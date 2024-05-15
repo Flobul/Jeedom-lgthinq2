@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.80';
+    public static $_pluginVersion = '0.81';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -964,7 +964,7 @@ class lgthinq2 extends eqLogic
         }
         log::add(__CLASS__, 'info', __('Lancement du démon lgthinq2', __FILE__));
         $cmd = substr(dirname(__FILE__),0,strpos (dirname(__FILE__),'/core/class')).'/resources/lgthinq2d.php';
-        log::add(__CLASS__, 'debug', __('Commande du Deamon : ', __FILE__) . $cmd);
+        log::add(__CLASS__, 'debug', __('Commande du démon : ', __FILE__) . $cmd);
         $result = exec('sudo php ' . $cmd . ' >> ' . log::getPathToLog('lgthinq2') . ' 2>&1 &');
         if (strpos(strtolower($result), 'error') !== false || strpos(strtolower($result), 'traceback') !== false) {
             log::add(__CLASS__, 'error', 'Deamon error : ' . $result);
@@ -1173,6 +1173,25 @@ class lgthinq2 extends eqLogic
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 
+    public static function decodeMonitorBinary($undecodeddata, $protocol) {
+        $data = unpack('C*', base64_decode($undecodeddata), 1);
+        $decoded = [];
+        foreach ($protocol as $item) {
+            $key = $item['value'];
+            $value = 0;
+            for ($i = $item['startByte']; $i < $item['startByte'] + $item['length']; $i++) {
+                $v = $data[$i];
+                $value = ($value << 8) + $v;
+            }
+            $decoded[$key] = strval($value);
+        }
+        return $decoded;
+    }
+
+    public static function encodeMonitorBinary($data) {
+        return base64_encode(call_user_func_array('pack', array_merge(['c*'], $data)));
+    }
+
     /**
      * Méthode appellée par le core (moteur de tâche) cron configuré dans la fonction lgthinq2_install
      * Lance une fonction pour récupérer les appareils et une fonction pour rafraichir les commandes
@@ -1287,7 +1306,7 @@ class lgthinq2 extends eqLogic
      */
     public static function createEquipement($_capa, $_platform)
     {
-        log::add(__CLASS__, 'debug', __FUNCTION__ .' début' . json_encode($_capa));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' début', __FILE__) . json_encode($_capa));
         if (!isset($_capa['deviceId'])) {
             log::add(__CLASS__, 'error', __FUNCTION__ . __(' erreur uuid inexistant ', __FILE__) . json_encode($_capa));
             return;
@@ -1341,7 +1360,7 @@ class lgthinq2 extends eqLogic
      */
     public function getDevicesStatus($_repeat = false)
     {
-
+        log::add(__CLASS__, 'debug', __FUNCTION__ . __(' début', __FILE__) . ' répète : ' . $_repeat);
         lgthinq2::getTokenIsExpired();
         $timestamp = null;
         $platformType = $this->getConfiguration('platformType');
@@ -1362,14 +1381,22 @@ class lgthinq2 extends eqLogic
             if (isset($data) && is_array($data)) {
                 log::add(__CLASS__, 'info', __FUNCTION__ . __(' commande mise à jour : ', __FILE__) . json_encode($data));
                 foreach ($data as $dkey => $dvalue) {
-                    if ($monitoring != '') {
+                    if ($monitoring != '' && array_search($dkey, $monitoring) === true) {
                         $logicalid = array_search($dkey, $monitoring);
                     } else {
                         $logicalid = $dkey;
                     }
+                    $valMap = json_decode($this->getConfiguration('valueMapping'),true);
                     if ($logicalid !== false) {
-                        if (!is_object($this->getCmd('info', $logicalid))) {
+                        $cmdKey = $this->getCmd('info', $logicalid);
+                        if (!is_object($cmdKey)) {
                             $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $logicalid);
+                        } else {
+                            if ($cmdKey->getConfiguration('valueMapping', '')) {
+                                if (isset($cmdKey->getConfiguration('valueMapping')[$dvalue])) {
+                                    $dvalue = $cmdKey->getConfiguration('valueMapping')[$dvalue];
+                                }
+                            }
                         }
                         $this->checkValueAndUpdateCmd($logicalid, $dvalue, $timestamp);
                         log::add(__CLASS__, 'info', __FUNCTION__ . __(' commande mise à jour : ', __FILE__) . $logicalid . __(' à la valeur : ', __FILE__) . $dvalue);
@@ -1589,9 +1616,18 @@ class lgthinq2 extends eqLogic
             return;
         }
         if (isset($rti[lgthinq2::DATA_ROOT]['workList']['returnData']) && $rti[lgthinq2::DATA_ROOT]['workList']['format'] == 'B64') {
+            $returnUndecodedData = $rti[lgthinq2::DATA_ROOT]['workList']['returnData'];
             $this->setConfiguration('nbDisconnections', 0); // reset nb disconnections
-            return json_decode(base64_decode($rti[lgthinq2::DATA_ROOT]['workList']['returnData']), true);
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Requête réussie ', __FILE__) . json_encode($reData));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Requête réussie ', __FILE__) . json_encode($returnUndecodedData));
+            if ($rti[lgthinq2::DATA_ROOT]['workList']['format'] == 'B64') {
+                if ($this->getConfiguration('MonitoringType') == 'JSON') {
+                    return json_decode(base64_decode($returnUndecodedData), true);
+                } else if ($this->getConfiguration('MonitoringType') == 'BINARY(BYTE)') {
+                    return self::decodeMonitorBinary($returnUndecodedData, $this->getConfiguration('Monitoring'));
+                }
+            } else {
+                return $returnUndecodedData; // else put it on string info cmd
+            }
         }
     }
 
@@ -1634,9 +1670,17 @@ class lgthinq2 extends eqLogic
             return;
         }
         if (isset($rti[lgthinq2::DATA_ROOT]['returnData']) && $rti[lgthinq2::DATA_ROOT]['format'] == 'B64') {
-            $reData = json_decode(base64_decode($rti[lgthinq2::DATA_ROOT]['returnData']), true);
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Requête réussie ', __FILE__) . json_encode($reData));
-            return $reData;
+            $returnUndecodedData = $rti[lgthinq2::DATA_ROOT]['returnData'];
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Requête réussie ', __FILE__) . json_encode($returnUndecodedData));
+            if ($rti[lgthinq2::DATA_ROOT]['format'] == 'B64') {
+                if ($this->getConfiguration('MonitoringType') == 'JSON') {
+                    return json_decode(base64_decode($returnUndecodedData), true);
+                } else if ($this->getConfiguration('MonitoringType') == 'BINARY(BYTE)') {
+                    return self::decodeMonitorBinary($returnUndecodedData, $this->getConfiguration('Monitoring'));
+                }
+            } else {
+                return $returnUndecodedData; // else put it on string info cmd
+            }
         }
     }
 
@@ -1799,10 +1843,8 @@ class lgthinq2 extends eqLogic
             $customLangFile = $translation->customlang;
             $langPack = array_replace_recursive($langPack, $customLangFile);
             //$langPack = $this->getLangJson('langPackProductType', '', '0.0');
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG $langPackCP ', __FILE__) . json_encode($langPack));
 
             if (isset($data['Value'])) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG Value ', __FILE__) . json_encode($data['Value']));
                 $commands = array();
                 foreach ($data['Value'] as $key => $value) {
                     if ($this->getConfiguration('platformType') == 'thinq2' && !isset($_refState[$key])) continue; // s'il n'y a pas de commande info dans refState
@@ -1917,7 +1959,6 @@ class lgthinq2 extends eqLogic
             }
             if (isset($data['MonitoringValue'])) {
 
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG MonitoringValue ', __FILE__) . json_encode($data['MonitoringValue']));
                 $commands = array();
                 $commandsToRemove = array();
                 foreach ($data['MonitoringValue'] as $key => $value) {
@@ -2058,20 +2099,31 @@ class lgthinq2 extends eqLogic
             }
 
             if (isset($data['Monitoring'])) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG Monitoring ', __FILE__) . json_encode($data['Monitoring']));
                 if (isset($data['Monitoring']['type']) && $data['Monitoring']['type'] == 'JSON') {
                     if (isset($data['Monitoring']['protocol'])) {
                         $monit = array();
                         foreach ($data['Monitoring']['protocol'] as $protocol) {
                             $monit[$protocol['value']] = $protocol['path'];
                         }
-                        $this->setConfiguration('Monitoring', $monit)->save();
+                        $this->setConfiguration('Monitoring', $monit);
+                    }
+                } else if (isset($data['Monitoring']['type']) && $data['Monitoring']['type'] == 'BINARY(BYTE)') {
+                    if (isset($data['Monitoring']['protocol'])) {
+                        $monit = array();
+                        foreach ($data['Monitoring']['protocol'] as $protocol) {
+                            $monit[$protocol['value']] = array(
+                                'value' => $protocol['value'],
+                                'startByte' => $protocol['startByte'],
+                                'length' => $protocol['length']
+                            );
+                        }
+                        $this->setConfiguration('Monitoring', $monit);
                     }
                 }
+                $this->setConfiguration('MonitoringType', $data['Monitoring']['type'])->save();
             }
 
             if (isset($data['ControlWifi'])) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ControlWifi ', __FILE__) . json_encode($data['ControlWifi']));
                 $commands = array();
                 if (isset($data['ControlWifi']['type']) && $data['ControlWifi']['type'] == 'JSON' && isset($data['ControlWifi']['action'])) {
                     foreach ($data['ControlWifi']['action'] as $actionName => $actionConfig) {
@@ -2178,6 +2230,145 @@ class lgthinq2 extends eqLogic
                             )
                         );
                     }
+                } else if (isset($data['ControlWifi']['type']) && $data['ControlWifi']['type'] == 'BINARY(BYTE)' && isset($data['ControlWifi']['action'])) {
+                    foreach ($data['ControlWifi']['action'] as $actionName => $actionConfig) {
+                        $subType = 'other';
+                        $updateCmdToValue = null;
+                        preg_match_all('/\b\w+\b/', $actionConfig['data'], $matchesAll);
+                        $this->setConfiguration('paramDataList', $matchesAll[0])->save();
+                        if (preg_match_all('/{{(.*?)}}/', $actionConfig['data'], $matches)) {
+                            foreach ($matches[1] as $paramKey) {
+                                $listValue = null;
+                                if (!isset($data['Value'][$paramKey]) && isset($data['Value']['support.'.$paramKey])) {
+                                    $data['Value'][$paramKey] = $data['Value']['support.'.$paramKey];
+                                }
+                                if (isset($data['Value'][$paramKey])) {
+                                    if ($data['Value'][$paramKey]['type'] == 'String') {
+                                        $subType = 'message';
+                                        $updateCmdToValue = '#message#';
+                                        $actionConfig['value'] = str_replace('{{'.$paramKey.'}}', '#message#', $actionConfig['value']);
+                                    } elseif ($data['Value'][$paramKey]['type'] == 'Enum') {
+                                        $subType = 'select';
+                                        $updateCmdToValue = '#select#';
+                                        if (isset($data['Value'][$paramKey]['option'])) {
+                                            foreach ($data['Value'][$paramKey]['option'] as $optionKey => $optionValue) {
+                                                if (is_array($langPack) && isset($optionValue) && (strpos($optionValue, '@') === 0)) {
+                                                    if (isset($langPack[$optionValue])) {
+                                                        $optionValue = $langPack[$optionValue];
+                                                    }
+                                                }
+                                                $listValue .= str_replace('|','-', $optionKey) . '|' . $optionValue . ';';
+                                            }
+                                            $listValue = substr($listValue, 0, -1);
+                                        }
+                                        $actionConfig['value'] = str_replace('{{'.$paramKey.'}}', '#select#', $actionConfig['value']);
+
+                                    } elseif ($data['Value'][$paramKey]['type'] == 'Range') {
+                                        $subType = 'slider';
+                                        $updateCmdToValue = '#slider#';
+                                        $actionConfig['value'] = str_replace('{{'.$paramKey.'}}', '#slider#', $actionConfig['value']);
+                                    }
+                                }
+                                if ($actionConfig['cmdOpt'] == 'Get') {
+                                    $nameCKey = str_replace('Get', '', $actionName, $iCKey);
+                                    $commands[] = array(
+                                        'name' => $nameCKey . ' ' . $paramKey,
+                                        'type' => 'info',
+                                        'logicalId' => $actionName . $paramKey,
+                                        'subType' => 'string',
+                                        'configuration' => array(
+                                            'cmd' => $actionConfig['cmd'],
+                                            'cmdOpt' => $actionConfig['cmdOpt'],
+                                            'value' => $actionConfig['value'],
+                                            'encode' => $actionConfig['encode'],
+                                            'listValue' => $listValue,
+                                            'controlType' => $data['ControlWifi']['type']
+                                        )
+                                    );
+                                }
+                                $commands[] = array(
+                                    'name' => ($iCKey?$actionName.' '.config::genKey(2):$actionName) . ' ' . $paramKey,
+                                    'type' => 'action',
+                                    'logicalId' => $actionName . $paramKey,
+                                    'subType' => $subType,
+                                    'configuration' => array(
+                                        'cmd' => $actionConfig['cmd'],
+                                        'cmdOpt' => $actionConfig['cmdOpt'],
+                                        'value' => $actionConfig['value'],
+                                        'encode' => $actionConfig['encode'],
+                                        'listValue' => $listValue,
+                                        'updateLGCmdToValue' => $updateCmdToValue,
+                                        'controlType' => $data['ControlWifi']['type']
+                                    )
+                                );
+                            }
+                        } elseif (preg_match_all('/{(.*?)}/', $actionConfig['data'], $matches)) {
+                            foreach ($matches[1] as $paramKey) {
+                                $listValue = null;
+                                if (!isset($data['Value'][$paramKey]) && isset($data['Value']['support.'.$paramKey])) {
+                                    $data['Value'][$paramKey] = $data['Value']['support.'.$paramKey];
+                                }
+                                if (isset($data['Value'][$paramKey])) {
+                                    if ($data['Value'][$paramKey]['type'] == 'String') {
+                                        $subType = 'message';
+                                        $updateCmdToValue = '#message#';
+                                        $actionConfig['value'] = str_replace('{'.$paramKey.'}', '#message#', $actionConfig['value']);
+                                    } elseif ($data['Value'][$paramKey]['type'] == 'Enum') {
+                                        $subType = 'select';
+                                        $updateCmdToValue = '#select#';
+                                        if (isset($data['Value'][$paramKey]['option'])) {
+                                            foreach ($data['Value'][$paramKey]['option'] as $optionKey => $optionValue) {
+                                                if (is_array($langPack) && isset($optionValue) && (strpos($optionValue, '@') === 0)) {
+                                                    if (isset($langPack[$optionValue])) {
+                                                        $optionValue = $langPack[$optionValue];
+                                                    }
+                                                }
+                                                $listValue .= str_replace('|','-', $optionKey) . '|' . $optionValue . ';';
+                                            }
+                                            $listValue = substr($listValue, 0, -1);
+                                        }
+                                        $actionConfig['value'] = str_replace('{'.$paramKey.'}', '#select#', $actionConfig['value']);
+
+                                    } elseif ($data['Value'][$paramKey]['type'] == 'Range') {
+                                        $subType = 'slider';
+                                        $updateCmdToValue = '#slider#';
+                                        $actionConfig['value'] = str_replace('{'.$paramKey.'}', '#slider#', $actionConfig['value']);
+                                    }
+                                }
+                                if ($actionConfig['cmdOpt'] == 'Get') {
+                                    $nameCKey = str_replace('Get', '', $actionName, $iCKey);
+                                    $commands[] = array(
+                                        'name' => $nameCKey,
+                                        'type' => 'info',
+                                        'logicalId' => $actionName,
+                                        'subType' => 'string',
+                                        'configuration' => array(
+                                            'cmd' => $actionConfig['cmd'],
+                                            'cmdOpt' => $actionConfig['cmdOpt'],
+                                            'value' => $actionConfig['value'],
+                                            'encode' => $actionConfig['encode'],
+                                            'listValue' => $listValue,
+                                            'controlType' => $data['ControlWifi']['type']
+                                        )
+                                    );
+                                }
+                                $commands[] = array(
+                                    'name' => ($iCKey?$actionName.' '.config::genKey(2):$actionName),
+                                    'type' => 'action',
+                                    'logicalId' => $actionName,
+                                    'subType' => $subType,
+                                    'configuration' => array(
+                                        'cmd' => $actionConfig['cmd'],
+                                        'cmdOpt' => $actionConfig['cmdOpt'],
+                                        'value' => $actionConfig['value'],
+                                        'encode' => $actionConfig['encode'],
+                                        'updateLGCmdToValue' => $updateCmdToValue,
+                                        'controlType' => $data['ControlWifi']['type']
+                                    )
+                                );
+                            }
+                        }
+                    }
                 } else {
                     //log::add(__CLASS__, 'debug', 'ELSE CONTROLWIFI match value0 ');
                     foreach ($data['ControlWifi'] as $controlKey => $controlValue) {
@@ -2269,7 +2460,6 @@ class lgthinq2 extends eqLogic
                 }
             }
             if (isset($data['ControlDevice'])) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG ControlDevice ', __FILE__) . json_encode($data['ControlDevice']));
                 $commands = array();
                 foreach ($data['ControlDevice'] as $controlDeviceValue) {
                     //log::add(__CLASS__, 'debug', 'ControlDeviceControlDeviceControlDevice  $commands ' . json_encode($controlDeviceValue));
@@ -2400,7 +2590,6 @@ class lgthinq2 extends eqLogic
                 }
             }
             if ($cmdInfo->getConfiguration('originalType') == 'Array') {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG cmd info Array ', __FILE__) . json_encode($refStateValueArray));
                 $langPack = $this->getLangJson('langPackProductType', '', '0.0');
                 if (is_array($refStateValueArray)) {
                     $monitoring = $this->getConfiguration('Monitoring', '');
@@ -2470,7 +2659,6 @@ class lgthinq2 extends eqLogic
                 }
             }
             if (!is_object($cmd)) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG $_properties ', __FILE__) . is_object($cmd) . ' => ' . $_properties['logicalId']);
                 $cmd = new lgthinq2Cmd();
                 $cmd->setType($type);
                 $cmd->setEqLogic_id($this->getId());
@@ -2528,8 +2716,10 @@ class lgthinq2 extends eqLogic
     public function toHtml($_version = 'dashboard')
     {
         $deviceType = $this->getConfiguration('deviceType');
-        if ($this->getDisplay('widgetTmpl', 0) == 0 && !in_array($deviceType, array(201, 202, 221, 222))) {
-             //affichage widget jeedom
+        if ($this->getDisplay('widgetTmpl', 0) == 0) {
+            return parent::toHtml($_version);
+        }
+        if (!in_array($deviceType, array(201, 202, 221, 222))) {
             return parent::toHtml($_version);
         }
         $replace = $this->preToHtml($_version);
@@ -2562,7 +2752,7 @@ class lgthinq2 extends eqLogic
             $valueMapping = $cmd->getConfiguration('valueMapping', '');
             $refs = $cmd->getConfiguration('ref', '');
             $replace['#cmd_' . $cmd->getLogicalId() . '_id#'] = $cmd->getId();
-			$replace['#cmd_' . $cmd->getLogicalId() . '_name#'] = ($cmd->getDisplay('icon') != '') ? $cmd->getDisplay('icon') : $cmd->getName();
+            $replace['#cmd_' . $cmd->getLogicalId() . '_name#'] = ($cmd->getDisplay('icon') != '') ? $cmd->getDisplay('icon') : $cmd->getName();
             $replace['#cmd_' . $cmd->getLogicalId() . '_value#'] = $cmd->execCmd();
             $replace['#cmd_' . $cmd->getLogicalId() . '_icon#'] = $cmd->getDisplay('icon', '');
             $replace['#cmd_' . $cmd->getLogicalId() . '_display#'] = $cmd->getIsVisible() == 0?'hidden':'';
@@ -2599,6 +2789,7 @@ class lgthinq2 extends eqLogic
             }
             if ($refs != '') {
                 $replace['#cmd_' . $cmd->getLogicalId() . '_refInfo#'] = str_replace('\'', ' ',json_encode($refs));
+                //$replace['#cmd_' . $cmd->getLogicalId() . '_refInfo#'] = str_replace('\'', ' ',json_encode($refs));
                 $listOption = '';
                 $foundSelect = false;
                 foreach ($refs as $refId => $refValue) {
@@ -2628,7 +2819,7 @@ class lgthinq2 extends eqLogic
 
             $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_id#'] = $cmdAction->getId();
             $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_logicalid#'] = $cmdAction->getLogicalId();
-			$replace['#cmdAction_' . $cmdAction->getLogicalId() . '_name#'] = ($cmdAction->getDisplay('icon') != '') ? $cmdAction->getDisplay('icon') : $cmdAction->getName();
+            $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_name#'] = ($cmdAction->getDisplay('icon') != '') ? $cmdAction->getDisplay('icon') : $cmdAction->getName();
             $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_unite#'] = $cmdAction->getUnite();
             $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_collectDate#'] = $cmdAction->getCollectDate();
             $replace['#cmdAction_' . $cmdAction->getLogicalId() . '_valueDate#'] = $cmdAction->getValueDate();
@@ -2691,16 +2882,50 @@ class lgthinq2Cmd extends cmd
             $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', 'lgthinq2', lgthinq2::step6());
             log::add('lgthinq2', 'debug', __("Données à envoyer en thinq1 headers ", __FILE__) . json_encode($headers));
 
-            $data = array(
-                lgthinq2::DATA_ROOT => array(
-                    'cmd' => $this->getConfiguration('cmd'),
-                    'cmdOpt' => $this->getConfiguration('cmdOpt'),
-                    'deviceId' => $eqLogic->getLogicalId(),
-                    'value' => ($keyValue!=''?$keyValue:$value),
-                    'workId' => lgthinq2::setUUID(),
-                    'data' => ''
-                )
-            );
+            if ($this->getConfiguration('controlType') == 'BINARY(BYTE)') {
+                $paramDataList = $eqLogic->getConfiguration('paramDataList');
+                $monitoring = $eqLogic->getConfiguration('Monitoring');
+                $arrayData = array();
+                $i = 0;
+                foreach ($paramDataList as $keyToSend) {
+                    if (!is_numeric($keyToSend)) {
+                        $objCmd = $eqLogic->getCmd('info', $keyToSend);
+                        if (is_object($objCmd)) {
+                            $valMap = $objCmd->getConfiguration('valueMapping', '');
+                            if ($valMap != '') {
+                                $arrayData[] = intval(array_search($objCmd->execCmd(), $valMap));
+                            }
+                        } else {
+                            $arrayData[] = 255;
+                        }
+                    } else {
+                        $arrayData[] = intval($keyToSend)??255;
+                    }
+                }
+
+                $data = array(
+                    lgthinq2::DATA_ROOT => array(
+                        'cmd'      => $this->getConfiguration('cmd'),
+                        'cmdOpt'   => $this->getConfiguration('cmdOpt'),
+                        'data'     => lgthinq2::encodeMonitorBinary($arrayData),
+                        'deviceId' => $eqLogic->getLogicalId(),
+                        'format'   => 'B64',
+                        'value'    => $keyValue,
+                        'workId'   => lgthinq2::setUUID()
+                    )
+                );
+            } else {
+                $data = array(
+                    lgthinq2::DATA_ROOT => array(
+                        'cmd'      => $this->getConfiguration('cmd'),
+                        'cmdOpt'   => $this->getConfiguration('cmdOpt'),
+                        'deviceId' => $eqLogic->getLogicalId(),
+                        'value'    => ($keyValue!=''?$keyValue:$value),
+                        'workId'   => lgthinq2::setUUID(),
+                        'data'     => ''
+                    )
+                );
+            }
 
             $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiControl', json_encode($data, JSON_PRETTY_PRINT), $headers);
             if ($response) {
@@ -2718,11 +2943,18 @@ class lgthinq2Cmd extends cmd
                     return;
                 }
                 if (isset($arr[lgthinq2::DATA_ROOT]['returnData'])) {
-                    if ($arr[lgthinq2::DATA_ROOT]['format'] == 'B64') { // decode only base64
-                        $resValue = json_decode(base64_decode($arr[lgthinq2::DATA_ROOT]['returnData']), true);
+                    $returnUndecodedData = $arr[lgthinq2::DATA_ROOT]['returnData'];
+                    log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Requête réussie ', __FILE__) . json_encode($returnUndecodedData));
+                    if ($arr[lgthinq2::DATA_ROOT]['format'] == 'B64') {
+                        if ($eqLogic->getConfiguration('MonitoringType') == 'JSON') {
+                            $resValue = json_decode(base64_decode($returnUndecodedData), true);
+                        } else if ($eqLogic->getConfiguration('MonitoringType') == 'BINARY(BYTE)') {
+                            $resValue = lgthinq2::decodeMonitorBinary($returnUndecodedData, $eqLogic->getConfiguration('Monitoring'));
+                        }
                     } else {
-                        $resValue = $arr[lgthinq2::DATA_ROOT]['returnData']; // else put it on string info cmd
+                        $resValue = $returnUndecodedData; // else put it on string info cmd
                     }
+
                     if (is_array($resValue)) {
                         $resValue = json_encode($resValue); // to send on string infos cmd
                         foreach ($resValue as $resValueK => $resValueV) { // to update each key if cmd exists also
