@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.81';
+    public static $_pluginVersion = '0.82';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -940,7 +940,6 @@ class lgthinq2 extends eqLogic
         return $return;
     }
 
-
     /**
      * Lance le service lgthinq2d
      *
@@ -1017,6 +1016,16 @@ class lgthinq2 extends eqLogic
         }
     }
 
+    /**
+     * Traduit les valeurs du mapping de valeurs en utilisant un tableau de traduction.
+     *
+     * Cette fonction parcourt le tableau de mapping de valeurs fourni ($_arrayVM) et remplace les valeurs
+     * qui commencent par '@' par leur traduction correspondante, si elles existent dans le tableau de traduction ($_trans).
+     *
+     * @param array $_arrayVM Le tableau de mapping de valeurs à traduire.
+     * @param array $_trans Le tableau de traduction contenant les correspondances clé-valeur pour la traduction.
+     * @return array Le tableau de mapping de valeurs traduit.
+     */
     public static function translateValueMapping($_arrayVM, $_trans)
     {
         foreach ($_arrayVM as $key => $value) {
@@ -1024,6 +1033,11 @@ class lgthinq2 extends eqLogic
                 if (array_key_exists($value['label'], $_trans)) {
                     $label = $value['label'];
                     $_arrayVM[$key]['label'] = $_trans[$label];
+                }
+            } else if ($value != '' && (strpos($value, '@') === 0)) {
+                if (array_key_exists($value, $_trans)) {
+                    $label = $value;
+                    $_arrayVM[$key] = $_trans[$label];
                 }
             }
         }
@@ -1173,6 +1187,17 @@ class lgthinq2 extends eqLogic
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 
+    /**
+     * Décode les données binaires d'un moniteur en utilisant un protocole spécifié.
+     *
+     * Cette fonction décode les données binaires fournies ($_undecodeddata) en utilisant un protocole spécifié ($_protocol).
+     * Le protocole est défini comme un tableau associatif avec chaque élément contenant les informations nécessaires pour extraire une valeur spécifique des données binaires.
+     * La fonction parcourt les données binaires et applique les règles du protocole pour extraire chaque valeur, puis retourne un tableau associatif contenant les valeurs extraites.
+     *
+     * @param string $_undecodeddata Les données binaires à décoder.
+     * @param array $_protocol Le protocole de décodage spécifiant la structure des données binaires.
+     * @return array Le tableau associatif contenant les valeurs extraites à partir des données binaires.
+     */
     public static function decodeMonitorBinary($undecodeddata, $protocol) {
         $data = unpack('C*', base64_decode($undecodeddata), 1);
         $decoded = [];
@@ -1188,6 +1213,15 @@ class lgthinq2 extends eqLogic
         return $decoded;
     }
 
+    /**
+     * Encode les données fournies en données binaires.
+     *
+     * Cette fonction encode les données fournies ($_data) en données binaires et retourne la représentation en base64 des données binaires encodées.
+     * Les données fournies sont d'abord transformées en une liste d'octets (bytes) en utilisant la fonction pack de PHP, puis elles sont converties en une chaîne base64.
+     *
+     * @param array $_data Les données à encoder en données binaires.
+     * @return string La représentation en base64 des données binaires encodées.
+     */
     public static function encodeMonitorBinary($data) {
         return base64_encode(call_user_func_array('pack', array_merge(['c*'], $data)));
     }
@@ -1567,6 +1601,7 @@ class lgthinq2 extends eqLogic
             return;
         }
         $rti = json_decode($response, true);
+        $online = false;
         if (!$rti || !isset($rti[lgthinq2::DATA_ROOT]['returnCd'])) {
             $this->setConfiguration('workId', '')->save();
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Erreur de la requête ', __FILE__) . json_encode($devices));
@@ -1586,8 +1621,9 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' WorkList non existant ', __FILE__) . json_encode($rti));
             return;
         }
+        $workList = $rti[lgthinq2::DATA_ROOT]['workList'];
 
-        if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) || $rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0106') {
+        if (!isset($workList['returnCode']) || $workList['returnCode'] == '0106') {
             $nbDisconnects = (int)$this->getConfiguration('nbDisconnections', 0);
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' returnCode null ou 0106, $nbDisconnects ', __FILE__) . $nbDisconnects);
             if ($nbDisconnects >= 3) {
@@ -1599,27 +1635,38 @@ class lgthinq2 extends eqLogic
             }
         }
 
-        /*if (!isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) && isset($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'])) {
-            if (in_array($rti[lgthinq2::DATA_ROOT]['workList']['stateCode'], array('P','W','F','N')) && $_repeat == false) { // E? N?
+        /*if (!isset($workList['returnCode']) && isset($workList['stateCode'])) {
+            if (in_array($workList['stateCode'], array('P','W','F','N')) && $_repeat == false) { // E? N?
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' : returnCode non existant ' . json_encode($rti));
                 $this->setConfiguration('workId', '')->save();
                 $this->getDevicesStatus(true);
                 return;
             }
         }*/
-        if (isset($rti[lgthinq2::DATA_ROOT]['workList']['returnCode']) && $rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] != '0000') {
-            if ($rti[lgthinq2::DATA_ROOT]['workList']['returnCode'] == '0100' && $_repeat == false) {
+        if (isset($workList['returnCode']) && $workList['returnCode'] != '0000') {
+            if ($workList['returnCode'] == '0100' && $_repeat == false) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' returnCode non existant ', __FILE__) . json_encode($rti));
                 $this->setConfiguration('workId', '')->save();
                 $this->getDevicesStatus(true);
             }
             return;
         }
-        if (isset($rti[lgthinq2::DATA_ROOT]['workList']['returnData']) && $rti[lgthinq2::DATA_ROOT]['workList']['format'] == 'B64') {
-            $returnUndecodedData = $rti[lgthinq2::DATA_ROOT]['workList']['returnData'];
+        if (isset($workList['deviceState']) && $workList['deviceState'] == 'E') {
+            $online = $workList['deviceState'] == 'E' ? true : false;
+        }
+        $onlineCmd = $this->getCmd('info', 'online');
+        if (!is_object($onlineCmd)) {
+            $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getLogicalId() . '_modelJson');
+            $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, 'online');
+        }
+        if (is_object($onlineCmd)) {
+            $onlineCmd->event($online);
+        }
+        if (isset($workList['returnData']) && $workList['format'] == 'B64') {
+            $returnUndecodedData = $workList['returnData'];
             $this->setConfiguration('nbDisconnections', 0); // reset nb disconnections
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Requête réussie ', __FILE__) . json_encode($returnUndecodedData));
-            if ($rti[lgthinq2::DATA_ROOT]['workList']['format'] == 'B64') {
+            if ($workList['format'] == 'B64') {
                 if ($this->getConfiguration('MonitoringType') == 'JSON') {
                     return json_decode(base64_decode($returnUndecodedData), true);
                 } else if ($this->getConfiguration('MonitoringType') == 'BINARY(BYTE)') {
@@ -2362,6 +2409,7 @@ class lgthinq2 extends eqLogic
                                         'cmdOpt' => $actionConfig['cmdOpt'],
                                         'value' => $actionConfig['value'],
                                         'encode' => $actionConfig['encode'],
+                                        'listValue' => $listValue,
                                         'updateLGCmdToValue' => $updateCmdToValue,
                                         'controlType' => $data['ControlWifi']['type']
                                     )
@@ -2588,6 +2636,9 @@ class lgthinq2 extends eqLogic
                     //return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
                     $cmdInfo->event($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
                 }
+            }
+            if ($cmdInfo->getSubType() == 'binary') {
+                $refStateValueArray = lgthinq2Cmd::formatValueStringToBinary($refStateValueArray);
             }
             if ($cmdInfo->getConfiguration('originalType') == 'Array') {
                 $langPack = $this->getLangJson('langPackProductType', '', '0.0');
@@ -2838,6 +2889,18 @@ class lgthinq2Cmd extends cmd
 {
     public static $_widgetPossibility = array('custom' => true);
 
+    /**
+     * Exécute une action sur l'équipement associé à cette commande.
+     *
+     * Cette fonction exécute une action sur l'équipement associé à cette commande en fonction des options fournies ($_options).
+     * Elle vérifie d'abord le type de sous-commande (subtype) pour déterminer le type d'action à effectuer.
+     * Ensuite, elle traite les différentes actions possibles, telles que la mise à jour de la valeur d'un curseur (slider), d'une couleur (color), d'une sélection (select) ou l'affichage d'un message (message).
+     * La fonction prend également en charge l'envoi de données à l'équipement en fonction du type de plateforme (thinq1 ou thinq2) et du type de contrôle (BINARY(BYTE) ou autre).
+     * Elle gère les réponses et les erreurs renvoyées par l'équipement et met à jour les informations de la commande en conséquence.
+     *
+     * @param array $_options Les options à utiliser pour l'exécution de l'action sur l'équipement.
+     * @return bool Retourne true si l'action a été exécutée avec succès, sinon false.
+     */
     public function execute($_options = array())
     {
         $eqLogic = $this->getEqLogic();
@@ -3055,6 +3118,49 @@ class lgthinq2Cmd extends cmd
     }
 
     /**
+     * Convertit une valeur de chaîne en binaire.
+     *
+     * Cette fonction prend en entrée une valeur de chaîne ($_value) et la convertit en une valeur binaire (0 ou 1) en fonction de la correspondance avec des valeurs spécifiques.
+     * Elle prend en charge plusieurs valeurs prédéfinies et des correspondances de chaînes régulières pour convertir les valeurs en binaire.
+     * La fonction renvoie la valeur binaire résultante après conversion.
+     *
+     * @param string $_value La valeur de chaîne à convertir en binaire.
+     * @return int La valeur binaire résultante (0 ou 1) après conversion.
+     */
+    public function formatValueStringToBinary($_value)
+    {
+        switch ($_value) {
+
+            case '@F':
+            case '@NON':
+            case '@FAIL':
+            case '@AIR':
+            case 'FAIL':
+            case 'CLOSE':
+            case 'UNLOCK':
+            case '\uff26':
+                $_value = 0;
+                break;
+            case '@C':
+            case '@WATER':
+            case 'OK':
+            case 'OPEN':
+            case 'LOCK':
+            case '\u2103':
+                $_value = 1;
+                break;
+            default:
+                if (preg_match('/\bOFF\b/', $_value)) {
+                    $_value = 0;
+                } else if (preg_match('/\bON\b/', $_value)) {
+                    $_value = 1;
+                }
+                break;
+        }
+        return $_value;
+    }
+
+    /**
      * Génère le code HTML pour l'affichage de la commande.
      *
      * Cette fonction génère le code HTML pour l'affichage de la commande selon la version spécifiée.
@@ -3064,19 +3170,21 @@ class lgthinq2Cmd extends cmd
      */
     public function formatValueWidget($_value)
     {
-        $valueMap = $this->getConfiguration('valueMapping', '');
-        if ($valueMap != '') {
-            if (isset($valueMap[$_value])) {
-                if ($valueMap[$_value]['label'] != '') {
-                    return $valueMap[$_value]['label'];
-                } elseif ($valueMap[$_value]['title'] != '') {
-                    return $valueMap[$_value]['title'];
-                } elseif ($valueMap[$_value]['content'] != '') {
-                    return $valueMap[$_value]['content'];
-                } elseif ($valueMap[$_value]['comment'] != '') {
-                    return $valueMap[$_value]['comment'];
-                } elseif ($valueMap[$_value]['index'] != '') {
-                    return $valueMap[$_value]['index'];
+        if ($this->getSubType() != 'binary') {
+            $valueMap = $this->getConfiguration('valueMapping', '');
+            if ($valueMap != '') {
+                if (isset($valueMap[$_value])) {
+                    if ($valueMap[$_value]['label'] != '') {
+                        return $valueMap[$_value]['label'];
+                    } elseif ($valueMap[$_value]['title'] != '') {
+                        return $valueMap[$_value]['title'];
+                    } elseif ($valueMap[$_value]['content'] != '') {
+                        return $valueMap[$_value]['content'];
+                    } elseif ($valueMap[$_value]['comment'] != '') {
+                        return $valueMap[$_value]['comment'];
+                    } elseif ($valueMap[$_value]['index'] != '') {
+                        return $valueMap[$_value]['index'];
+                    }
                 }
             }
         }
