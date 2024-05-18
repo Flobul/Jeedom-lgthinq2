@@ -2329,7 +2329,8 @@ class lgthinq2 extends eqLogic
                                             'value' => $actionConfig['value'],
                                             'encode' => $actionConfig['encode'],
                                             'listValue' => $listValue,
-                                            'controlType' => $data['ControlWifi']['type']
+                                            'controlType' => $data['ControlWifi']['type'],
+                                            'paramKey' => $paramKey
                                         )
                                     );
                                 }
@@ -2345,7 +2346,8 @@ class lgthinq2 extends eqLogic
                                         'encode' => $actionConfig['encode'],
                                         'listValue' => $listValue,
                                         'updateLGCmdToValue' => $updateCmdToValue,
-                                        'controlType' => $data['ControlWifi']['type']
+                                        'controlType' => $data['ControlWifi']['type'],
+                                        'paramKey' => $paramKey
                                     )
                                 );
                             }
@@ -2840,7 +2842,6 @@ class lgthinq2 extends eqLogic
             }
             if ($refs != '') {
                 $replace['#cmd_' . $cmd->getLogicalId() . '_refInfo#'] = str_replace('\'', ' ',json_encode($refs));
-                //$replace['#cmd_' . $cmd->getLogicalId() . '_refInfo#'] = str_replace('\'', ' ',json_encode($refs));
                 $listOption = '';
                 $foundSelect = false;
                 foreach ($refs as $refId => $refValue) {
@@ -2939,8 +2940,6 @@ class lgthinq2Cmd extends cmd
         lgthinq2::getTokenIsExpired();
 
         if ($eqLogic->getConfiguration('platformType') == 'thinq1') {
-            log::add('lgthinq2', 'debug', __("Données à envoyer en thinq1 ", __FILE__));
-
             $headers = lgthinq2::defaultDevicesEmpHeaders();
             $headers[] = 'x-thinq-jsessionId: ' . config::byKey('jsessionId', 'lgthinq2', lgthinq2::step6());
             log::add('lgthinq2', 'debug', __("Données à envoyer en thinq1 headers ", __FILE__) . json_encode($headers));
@@ -2952,14 +2951,18 @@ class lgthinq2Cmd extends cmd
                 $i = 0;
                 foreach ($paramDataList as $keyToSend) {
                     if (!is_numeric($keyToSend)) {
-                        $objCmd = $eqLogic->getCmd('info', $keyToSend);
-                        if (is_object($objCmd)) {
-                            $valMap = $objCmd->getConfiguration('valueMapping', '');
-                            if ($valMap != '') {
-                                $arrayData[] = intval(array_search($objCmd->execCmd(), $valMap));
-                            }
+                        if ($keyToSend == $this->getConfiguration('paramKey')) {
+                            $arrayData[] = intval($value);
                         } else {
-                            $arrayData[] = 255;
+                            $objCmd = $eqLogic->getCmd('info', $keyToSend);
+                            if (is_object($objCmd)) {
+                                $valMap = $objCmd->getConfiguration('valueMapping', '');
+                                if ($valMap != '') {
+                                    $arrayData[] = intval(array_search($objCmd->execCmd(), $valMap));
+                                }
+                            } else {
+                                $arrayData[] = 255;
+                            }
                         }
                     } else {
                         $arrayData[] = intval($keyToSend)??255;
@@ -2977,6 +2980,7 @@ class lgthinq2Cmd extends cmd
                         'workId'   => lgthinq2::setUUID()
                     )
                 );
+                $data = json_encode($data, JSON_UNESCAPED_SLASHES);
             } else {
                 $data = array(
                     lgthinq2::DATA_ROOT => array(
@@ -2988,9 +2992,13 @@ class lgthinq2Cmd extends cmd
                         'data'     => ''
                     )
                 );
+                $data = json_encode($data, JSON_PRETTY_PRINT);
             }
+            log::add('lgthinq2', 'debug', __("Données à envoyer en thinq1 ", __FILE__) . $data);
 
-            $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiControl', json_encode($data, JSON_PRETTY_PRINT), $headers);
+
+            $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiControl', $data, $headers);
+            log::add('lgthinq2', 'debug', __FUNCTION__ . ' : Réponse récupérée ' . $response);
             if ($response) {
                 $arr = json_decode($response, true);
                 if (!$arr || !isset($arr[lgthinq2::DATA_ROOT])) {

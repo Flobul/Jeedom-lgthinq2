@@ -35,7 +35,7 @@ try {
         if (config::byKey('id', 'lgthinq2', '') == '' || config::byKey('password', 'lgthinq2', '') == '') {
             $result = false;
         } else {
-            if (init('deleteCmds') === true) {
+            if (boolval(init('deleteCmds')) == true) {
                 $eqLogic = lgthinq2::byId(init('id'));
                 if (!is_object($eqLogic)) {
                     throw new Exception(__('LGThinq2 eqLogic non trouvé : ', __FILE__) . init('id'));
