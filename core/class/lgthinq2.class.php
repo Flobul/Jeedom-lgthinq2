@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.83';
+    public static $_pluginVersion = '0.84';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -588,6 +588,40 @@ class lgthinq2 extends eqLogic
     }
 
     /**
+     * Vérifie si une chaîne est au format JSON valide.
+     *
+     * Cette fonction prend en entrée une chaîne de caractères ($string) et tente de la décoder en JSON à l'aide de la fonction json_decode().
+     * Elle retourne true si la chaîne est au format JSON valide (c'est-à-dire si aucune erreur n'est survenue lors du décodage), sinon elle retourne false.
+     *
+     * @param string $string La chaîne de caractères à vérifier.
+     * @return bool Retourne true si la chaîne est au format JSON valide, sinon false.
+     */
+    public static function isJson($string) {
+       json_decode($string);
+       return json_last_error() === JSON_ERROR_NONE;
+    }
+
+    /**
+     * Nettoie une chaîne de caractères pour la rendre conforme au format JSON.
+     *
+     * Cette fonction prend en entrée une chaîne de caractères ($string) et effectue plusieurs opérations pour la nettoyer et la rendre conforme au format JSON.
+     * Elle supprime d'abord les caractères d'ordre de marque (BOM) Unicode s'ils sont présents au début de la chaîne.
+     * Ensuite, elle décode les entités HTML spéciales en caractères UTF-8 et supprime les espaces vides au début et à la fin de la chaîne.
+     * La chaîne nettoyée est ensuite retournée en sortie de la fonction.
+     *
+     * @param string $string La chaîne de caractères à nettoyer.
+     * @return string La chaîne nettoyée conforme au format JSON.
+     */
+    public static function cleanJson($string) {
+        if (substr($string, 0, 3) == "\xef\xbb\xbf") {
+            $string = substr($string, 3);
+        }
+        $string = html_entity_decode($string, ENT_QUOTES, 'UTF-8');
+        $string = trim($string);
+        return $string;
+    }
+
+    /**
      * Étape 0 : Obtient les informations de la passerelle LG ThinQ.
      *
      * @return bool|string Retourne true en cas de succès, sinon retourne null.
@@ -1148,6 +1182,9 @@ class lgthinq2 extends eqLogic
         }
 
         if ($_deviceId == '' || $_deviceId != '') {
+            $translation = new lgthinq2_customLang();
+            $customLangFile = $translation->customlang;
+
             //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/SKY.json'),true); // developper only
             //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/ROM.json'),true); // developper only
             //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/PAC.json'),true); // developper only
@@ -1160,11 +1197,25 @@ class lgthinq2 extends eqLogic
                     $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType'));
                     $langProduct = $eqLogic->getLangJson('langPackProductType', $items['langPackProductTypeUri'], $items['langPackProductTypeVer']);
                     $langModel = $eqLogic->getLangJson('langPackModel', $items['langPackModelUri'], $items['langPackModelVer']);
+                    //regroup translation array configModel and configProduct
+                    if ($langModel && is_array($langModel)) {
+                        $langPack = array_replace_recursive($langProduct, $langModel);
+                    } else {
+                        $langPack = $langProduct;
+                    }
+                    //regroup translation array configFile and langPackFile
+                    $langPackCP = json_decode(file_get_contents(__DIR__ . '/../../data/langPack_CP.json'),true);
+                    if (is_array($langPackCP) && isset($langPackCP['pack'])) {
+                        $langPack = array_replace_recursive($langPack, $langPackCP['pack']);
+                    }
+                    //regroup translation array configLangPackFile and customFile
+                    $langPack = array_replace_recursive($langPack, $customLangFile);
+
                     if ($refState) {
-                        $eqLogic->createCmdFromModelAndLangFiles($items['modelJsonUri'], $items['modelJsonVer'], $items['snapshot'][$refState], $langProduct, $langModel, $refState);
+                        $eqLogic->createCmdFromModelAndLangFiles($items['modelJsonUri'], $items['modelJsonVer'], $items['snapshot'][$refState], $langPack, $refState);
                     } else {
                         // cas où les infos sont directement sans dossier
-                        $eqLogic->createCmdFromModelAndLangFiles($items['modelJsonUri'], $items['modelJsonVer'], $items['snapshot'], $langProduct, $langModel);
+                        $eqLogic->createCmdFromModelAndLangFiles($items['modelJsonUri'], $items['modelJsonVer'], $items['snapshot'], $langPack);
                     }
                 }
             }
@@ -1317,7 +1368,7 @@ class lgthinq2 extends eqLogic
             return;
         }
         $content = file_get_contents($filename);
-        if (!is_json($content)) {
+        if (!lgthinq2::isJson($content)) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration ' . $filename . ' est corrompu', __FILE__));
             return;
         }
@@ -1806,29 +1857,30 @@ class lgthinq2 extends eqLogic
     {
         $curVersion = $this->getConfiguration($_type . 'Ver', '');
         $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '_' . $_type . '.json';
-        if ($curVersion != '' && version_compare($curVersion, $_langFileVer, '>=')) {
+        if ($curVersion != '' && version_compare($curVersion, $_langFileVer, '>=') && is_file($file)) {
             $config = file_get_contents($file);
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier existe à la version ', __FILE__) . $curVersion);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier ',__FILE__) . $_type . __(' existe à la version ', __FILE__) . $curVersion);
         } else {
             if ($_langFileUri == '') {
                 return false;
             }
             $config = file_get_contents($_langFileUri);
+            $config = lgthinq2::cleanJson($config);
             file_put_contents($file, $config);
             $this->setConfiguration($_type . 'Ver', $_langFileVer)->save();
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier existe pas ', __FILE__) . $curVersion);
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier ',__FILE__) . $_type . __(' existe pas à la version ', __FILE__) . $curVersion);
         }
-        if (!is_json($config)) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de langue est corrompu', __FILE__));
+        if (!lgthinq2::isJson($config)) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier ',__FILE__) . $_type . __(' est corrompu', __FILE__));
             return false;
         }
         $data = json_decode($config, true);
         if (!is_array($data)) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de langue est invalide', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier ',__FILE__) . $_type . __(' est invalide', __FILE__));
             return false;
         }
         if (!isset($data['pack'])) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' "Pack" n\'existe pas dans fichier de langue', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __(' "Pack" n\'existe pas dans le fichier ',__FILE__) . $_type);
             return false;
         }
         //log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Fichier de langue', __FILE__) . json_encode($data['pack']));
@@ -1846,52 +1898,33 @@ class lgthinq2 extends eqLogic
      * @param mixed|null $refState État de référence.
      * @return false
      */
-    public function createCmdFromModelAndLangFiles($_modelJsonUri, $_modelJsonVer, $_refState, $_configProductLang, $_configModelLang, $refState = null)
+    public function createCmdFromModelAndLangFiles($_modelJsonUri, $_modelJsonVer, $_refState, $langPack, $refState = null)
     {
         if ($_modelJsonUri != '') {
             $curVersion = $this->getConfiguration('modelJsonVer', '0.0');
             $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '_modelJson.json';
-            if (version_compare($curVersion, $_modelJsonVer, '>=')) {
+            if (version_compare($curVersion, $_modelJsonVer, '>=') && is_file($file)) {
                 $config = file_get_contents($file);
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier modelJson existe à la version ', __FILE__) . $curVersion);
             } else {
                 $config = file_get_contents($_modelJsonUri);
+                $config = lgthinq2::cleanJson($config);
                 file_put_contents($file, $config);
                 $this->setConfiguration('modelJsonVer', $_modelJsonVer)->save();
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier modelJson existe pas ', __FILE__) . $curVersion);
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier modelJson n\'existait pas à la version ', __FILE__) . $curVersion);
             }
-            if (!is_json($config)) {
+            if (!lgthinq2::isJson($config)) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration est corrompu', __FILE__));
             }
             $data = json_decode($config, true);
             if (!is_array($data)) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Le fichier de configuration est invalide', __FILE__));
             }
-
-            //mkdir(__DIR__ . '/../../data/');
             //save translation model into json file
             //file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
 
-            //regroup translation array configModel and configProduct
-            if ($_configModelLang && is_array($_configModelLang)) {
-                $langPack = array_replace_recursive($_configProductLang, $_configModelLang);
-            } else {
-                $langPack = $_configProductLang;
-            }
-
-            //regroup translation array configFile and langPackFile
-            $langPackCP = json_decode(file_get_contents(__DIR__ . '/../../data/langPack_CP.json'),true);
-            if (is_array($langPackCP) && isset($langPackCP['pack'])) {
-                $langPack = array_replace_recursive($langPack, $langPackCP['pack']);
-            }
-
-            //regroup translation array configLangPackFile and customFile
-            $translation = new lgthinq2_customLang();
-            $customLangFile = $translation->customlang;
-            $langPack = array_replace_recursive($langPack, $customLangFile);
-            //$langPack = $this->getLangJson('langPackProductType', '', '0.0');
-
             if (isset($data['Value'])) {
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG Value ', __FILE__) . json_encode($data['Value']));
                 $commands = array();
                 foreach ($data['Value'] as $key => $value) {
                     if ($this->getConfiguration('platformType') == 'thinq2' && !isset($_refState[$key])) continue; // s'il n'y a pas de commande info dans refState
@@ -1963,10 +1996,8 @@ class lgthinq2 extends eqLogic
 
                     //name
                     $name = lgthinq2::getTranslatedNameFromConfig($key, $data);
-                    if (isset($_configProductLang[$name]) && $_configProductLang[$name] != '') {
-                        $name = $_configProductLang[$name];
-                    } elseif (isset($_configModelLang[$name]) && $_configModelLang[$name] != '') {
-                        $name = $_configModelLang[$name];
+                    if (isset($langPack[$name]) && $langPack[$name] != '') {
+                        $name = $langPack[$name];
                     } else {
                         $name = $key;
                     }
@@ -2006,6 +2037,7 @@ class lgthinq2 extends eqLogic
             }
             if (isset($data['MonitoringValue'])) {
 
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG MonitoringValue ', __FILE__) . json_encode($data['MonitoringValue']));
                 $commands = array();
                 $commandsToRemove = array();
                 foreach ($data['MonitoringValue'] as $key => $value) {
@@ -2053,10 +2085,8 @@ class lgthinq2 extends eqLogic
 
                     //name
                     $name = lgthinq2::getTranslatedNameFromConfig($key, $data);
-                    if (isset($_configProductLang[$name]) && $_configProductLang[$name] != '') {
-                        $name = $_configProductLang[$name];
-                    } elseif (isset($_configModelLang[$name]) && $_configModelLang[$name] != '') {
-                        $name = $_configModelLang[$name];
+                    if (isset($langPack[$name]) && $langPack[$name] != '') {
+                        $name = $langPack[$name];
                     } else {
                         $name = $key;
                     }
@@ -2073,8 +2103,7 @@ class lgthinq2 extends eqLogic
                                     'course'  => $courseValue['Course'],
                                     'type'    => $courseValue['courseType'],
                                     'value'   => $courseValue['courseValue'],
-                                    'name'    => array_key_exists($courseValue['name'], $langPack)?$langPack[$courseValue['name']]:$courseValue['name'],
-                                    //'name'    => (isset($_configProductLang[$courseValue['name']])?$_configProductLang[$courseValue['name']]:$courseValue['name']),
+                                    'name'    => isset($langPack[$courseValue['name']]) ? $langPack[$courseValue['name']] : $courseValue['name'],
                                     'default' => $newArray
                                 );
                             }
@@ -2995,7 +3024,6 @@ class lgthinq2Cmd extends cmd
                 $data = json_encode($data, JSON_PRETTY_PRINT);
             }
             log::add('lgthinq2', 'debug', __("Données à envoyer en thinq1 ", __FILE__) . $data);
-
 
             $response = lgthinq2::postData(lgthinq2::LGTHINQ1_SERV_DEVICES . 'rti/rtiControl', $data, $headers);
             log::add('lgthinq2', 'debug', __FUNCTION__ . ' : Réponse récupérée ' . $response);
