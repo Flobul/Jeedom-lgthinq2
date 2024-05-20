@@ -1534,16 +1534,18 @@ class lgthinq2 extends eqLogic
         if (isset($devices['result']['snapshot'])) {
             $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getLogicalId() . '_modelJson');
             $onlineCmd = $this->getCmd('info', 'online');
-            if (!is_object($onlineCmd)) {
+            /*if (!is_object($onlineCmd)) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('AAAAAAAA Commande existe pas ', __FILE__) . json_encode($devices));
                 $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, 'online');
-            }
+            }*/
             if (isset($devices['result']['snapshot']['timestamp'])) {
                 $timestamp = date('Y-m-d H:i:s', ($devices['result']['snapshot']['timestamp']/1000));
             }
-            if (is_object($onlineCmd)) {
-                $onlineCmd->event($devices['result']['online'], $timestamp);
+            /*if (is_object($onlineCmd)) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('AAAAAAAA Commande existe ', __FILE__) . $devices['result']['snapshot']['online']);
+                $onlineCmd->event($devices['result']['snapshot']['online'], $timestamp);
             //$this->checkAndUpdateCmd('online', $devices['result']['online'], $timestamp);
-            }
+            }*/
             $refState = lgthinq2::deviceTypeConstantsState($this->getConfiguration('deviceType'));
             if ($refState) {
                 $data = $devices['result']['snapshot'][$refState];
@@ -3165,35 +3167,19 @@ class lgthinq2Cmd extends cmd
      */
     public function formatValueStringToBinary($_value)
     {
-        switch ($_value) {
-
-            case '@F':
-            case '@NON':
-            case '@FAIL':
-            case '@AIR':
-            case 'FAIL':
-            case 'CLOSE':
-            case 'UNLOCK':
-            case '\uff26':
-                $_value = 0;
-                break;
-            case '@C':
-            case '@WATER':
-            case 'OK':
-            case 'OPEN':
-            case 'LOCK':
-            case '\u2103':
-                $_value = 1;
-                break;
-            default:
-                if (preg_match('/\bOFF\b/', $_value)) {
-                    $_value = 0;
-                } else if (preg_match('/\bON\b/', $_value)) {
-                    $_value = 1;
-                }
-                break;
+        if ($_value === true || $_value === 'true') {
+            return 1;
+        } elseif (in_array($_value, ['0', 0, false, 'false', '@F', '@NON', '@FAIL', '@AIR', 'FAIL', 'CLOSE', 'UNLOCK', '\uff26'])) {
+            return 0;
+        } elseif (in_array($_value, ['1', 'true', '@C', '@WATER', 'OK', 'OPEN', 'LOCK', '\u2103'])) {
+            return 1;
+        } elseif (preg_match('/\bOFF\b/', $_value)) {
+            return 0;
+        } elseif (preg_match('/\bON\b/', $_value)) {
+            return 1;
+        } else {
+            return $_value;
         }
-        return $_value;
     }
 
     /**
