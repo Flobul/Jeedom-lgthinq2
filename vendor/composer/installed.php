@@ -1,15 +1,24 @@
 <?php return array(
     'root' => array(
-        'name' => 'php-mqtt/client-examples',
+        'name' => 'jeedom/lgthinq2',
         'pretty_version' => '1.0.0+no-version-set',
         'version' => '1.0.0.0',
         'reference' => null,
-        'type' => 'project',
+        'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
+        'jeedom/lgthinq2' => array(
+            'pretty_version' => '1.0.0+no-version-set',
+            'version' => '1.0.0.0',
+            'reference' => null,
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'myclabs/php-enum' => array(
             'pretty_version' => '1.8.4',
             'version' => '1.8.4.0',
@@ -25,15 +34,6 @@
             'reference' => '92e348db89c8362947e2efb8df9ba819cea428f2',
             'type' => 'library',
             'install_path' => __DIR__ . '/../php-mqtt/client',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
-        'php-mqtt/client-examples' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
-            'reference' => null,
-            'type' => 'project',
-            'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
             'dev_requirement' => false,
         ),

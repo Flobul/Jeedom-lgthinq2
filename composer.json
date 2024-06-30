@@ -1,10 +1,20 @@
 {
-    "name": "php-mqtt/client-examples",
-    "description": "These are examples showcasing how to use php-mqtt/client.",
-    "type": "project",
+    "name": "jeedom/lgthinq2",
+    "description": "Plugin Jeedom pour la récupérer les informations et piloter ses appareils LG ThinQ",
+    "homepage" : "https://github.com/Flobul/Jeedom-LGThinq2",
+    "license" : "AGPL-3.0-or-later",
+    "authors" : [{
+            "name" : "Flobul",
+            "email" : "flobul.jeedom@gmail.com"
+        }
+    ],
     "require": {
+        "php": "^7.4|^8.0",
         "ext-json": "*",
-        "ext-pcntl": "*",
-        "php-mqtt/client":"^1.8"
+        "ext-pcntl": "*"
+    },
+    "config" : {
+        "optimize-autoloader": true,
+        "autoloader-suffix": "LGThinQ2"
     }
 }

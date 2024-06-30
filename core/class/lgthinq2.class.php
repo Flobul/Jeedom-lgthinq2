@@ -292,6 +292,38 @@ class lgthinq2 extends eqLogic
     }
 
     /**
+     * Vérifie la santé des connexions et des droits d'accès.
+     *
+     * @return array Résultat des tests de santé.
+     */
+    public static function health()
+    {
+		$return = array();
+		$cron = cron::byClassAndFunction(__CLASS__, 'update');
+		$running = false;
+		if (is_object($cron)) {
+			$running = $cron->getEnable(0);
+		}
+		$return[] = array(
+			'test' => __('Tâche de synchronisation', __FILE__),
+			'result' => (($running) ? __('OK', __FILE__) : __('NOK', __FILE__)) . ' (' . $cron->getCache('runtime') . 's)',
+			'advice' => ($running) ? '' : __('Allez sur la page du moteur des tâches et vérifiez lancer la tache lgthinq2::update', __FILE__),
+			'state' => $running
+		);
+        $token = config::byKey('token', __CLASS__);
+        $expires = config::byKey('expires_in', __CLASS__);
+        $calcExpiracy = (time() - $expires);
+        $isExpired = ($calcExpiracy > 0 ? __(' expiré depuis ', __FILE__) : __(' expire dans ', __FILE__)) . $calcExpiracy . ' ' . __('secondes', __FILE__);
+        $return[]= array(
+            'test' => __('Jeton d\'accès', __FILE__),
+            'result' => $result . ' ' . $isExpired ,
+            'advice' => $advice,
+            'state' => $state
+        );
+        return $return;
+    }
+
+    /**
      * Vérifie si une chaîne de caractères est un JSON valide.
      *
      * Cette fonction vérifie si une chaîne de caractères est un JSON valide.
