@@ -52,10 +52,19 @@ class lgthinq2_display extends eqLogic
         echo '        <div class="eqLogicThumbnailContainer">';
         foreach ($eqLogics as $eqLogic) {
             if ($eqLogic->getConfiguration('deviceType') != $_type) continue;
-            $additionalInfo = ($eqLogic->getIsVisible() == 1) ? '<i class="fas fa-eye" title="{{Équipement visible}}"></i>' : '<i class="fas fa-eye-slash" title="{{Équipement non visible}}"></i>';
+            $additionalInfo = ($eqLogic->getConfiguration('platformType') == 'thinq1') ? '<i class="fas jeedomapp-rond01" title="' . $eqLogic->getConfiguration('platformType') . '"></i>' : '<i class="fas jeedomapp-rond02" title="' . $eqLogic->getConfiguration('platformType') . '"></i>';
+            $additionalInfo .= ($eqLogic->getIsEnable() == 1) ? '<i class="far fa-check-square" title="{{Equipement activé}}"></i>' : '<i class="far fa-square" title="{{Equipement non activé}}"></i>';
+            $additionalInfo .= ($eqLogic->getIsVisible() == 1) ? '<i class="fas fa-eye" title="{{Équipement visible}}"></i>' : '<i class="fas fa-eye-slash" title="{{Équipement non visible}}"></i>';
 
             $opacity = ($eqLogic->getIsEnable()) ? '' : 'disableCard';
-            echo '            <div class="eqLogicDisplayCard cursor '.$opacity.'" data-eqLogic_id="' . $eqLogic->getId() . '">';
+            $onlineCmd = $eqLogic->getCmd('info', 'online');
+            $online = (is_object($onlineCmd)) ? 'Connecté : ' . $onlineCmd->execCmd() . '<br/>': '';
+            $title = 'Nom du type : ' . $eqLogic->getConfiguration('deviceCodeName') . '<br/>
+                       Plateforme : ' . $eqLogic->getConfiguration('platformType') . '<br/>
+                             Type : ' . $eqLogic->getConfiguration('deviceType') . '<br/>
+                             Code : ' . $eqLogic->getConfiguration('deviceCode') . '<br/>
+                                    ' . $online;
+            echo '            <div class="eqLogicDisplayCard cursor '.$opacity.'" data-eqLogic_id="' . $eqLogic->getId() . '" title="' . $title . '">';
             echo '                <img src="' . $eqLogic->getImage() . '"/>';
             echo '                <br>';
             echo '                <span class="name">' . $eqLogic->getHumanName(true, true) . '</span>';
