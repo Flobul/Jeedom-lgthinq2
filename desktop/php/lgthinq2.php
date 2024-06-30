@@ -28,14 +28,14 @@ $eqLogics = eqLogic::byType($plugin->getId());
 ?>
 <link rel="stylesheet" href="/plugins/lgthinq2/desktop/css/lgthinq2.css">
 
-<div class="row row-overflow">
+<div class="row row-overflow" id="div_lgthinq2">
   <div class="eqLogicThumbnailDisplay" style="border-left: solid 1px #EEE; padding-left: 25px;">
     <legend><i class="fa fa-cog"></i> {{Gestion}}</legend>
     <div class="eqLogicThumbnailContainer">
 
         <?php
           if ((config::byKey('access_token', 'lgthinq2', '') == '' || config::byKey('expires_in', 'lgthinq2', '') == '' ||
-              config::byKey('refresh_token', 'lgthinq2', '') == '' || config::byKey('jsessionId', 'lgthinq2', '') == '') && 
+              config::byKey('refresh_token', 'lgthinq2', '') == '' || config::byKey('jsessionId', 'lgthinq2', '') == '') &&
               (config::byKey('id', 'lgthinq2', '') != '' || config::byKey('password', 'lgthinq2', '') != '')) {
               lgthinq2_display::displayActionCard('{{Connexion}}', 'fa-fingerprint', 'id="bt_getCredentials"', 'eqLogicAction logoPrimaryGreenLGthinq2');
           }
@@ -146,7 +146,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
               </div>
           </form>
         </div>
-        
+
         <div class="col-sm-6">
           <form class="form-horizontal">
             <legend><i class="fas fa-wrench icon_yellow"></i> {{Configuration}}</legend>

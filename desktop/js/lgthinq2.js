@@ -14,14 +14,18 @@
  * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
  */
 
-$("#table_cmd").sortable({
-  axis: "y",
-  cursor: "move",
-  items: ".cmd",
-  placeholder: "ui-state-highlight",
-  tolerance: "intersect",
-  forcePlaceholderSize: true
-});
+/*var table = document.querySelector('#table_cmd .tablesorter tbody');
+new Sortable(table, {
+    animation: 150,
+    draggable: ".cmd",
+    handle: ".cmd",
+    onStart: function(evt) {
+        evt.item.classList.add('sortable-drag');
+    },
+    onEnd: function(evt) {
+        evt.item.classList.remove('sortable-drag');
+    }
+});*/
 
 function addCmdToTable(_cmd) {
   if (!isset(_cmd)) {
@@ -89,121 +93,162 @@ function addCmdToTable(_cmd) {
   tr += '<a class="btn btn-danger btn-xs cmdAction roundedRight" data-action="remove" title="{{Suppression de la commande}} ' + _cmd.type + '"><i class="fas fa-minus-circle"></i></a>';
   tr += '</tr>';
 
-  $('#table_cmd tbody').append(tr);
-  var tr = $('#table_cmd tbody tr').last();
+
+  let newRow = document.createElement('tr')
+  newRow.innerHTML = tr
+  newRow.addClass('cmd')
+  newRow.setAttribute('data-cmd_id', init(_cmd.id))
+  document.getElementById('table_cmd').querySelector('tbody').appendChild(newRow)
+
   jeedom.eqLogic.buildSelectCmd({
-    id: $('.eqLogicAttr[data-l1key=id]').value(),
-    filter: {
-      type: 'info'
-    },
-    error: function(error) {
-      $.fn.showAlert({
-        message: error.message,
-        level: 'danger'
-      });
-    },
-    success: function(result) {
-      tr.find('.cmdAttr[data-l1key=value]').append(result);
-      tr.find('.cmdAttr[data-l1key=configuration][data-l2key=updateLGCmdId]').append(result);
-      tr.setValues(_cmd, '.cmdAttr');
-      jeedom.cmd.changeType(tr, init(_cmd.subType));
-    }
+      id: document.querySelector('.eqLogicAttr[data-l1key="id"]').jeeValue(),
+      filter: { type: 'info' },
+      error: function(error) {
+          jeedomUtils.showAlert({ message: error.message, level: 'danger' })
+      },
+      success: function(result) {
+          newRow.querySelector('.cmdAttr[data-l1key="value"]').insertAdjacentHTML('beforeend', result)
+          newRow.querySelector('.cmdAttr[data-l1key="configuration"][data-l2key="updateLGCmdId"]')?.insertAdjacentHTML('beforeend', result)
+          newRow.setJeeValues(_cmd, '.cmdAttr')
+          jeedom.cmd.changeType(newRow, init(_cmd.subType))
+      }
   });
 }
 
-$('#bt_getCredentials').on('click', function() {
-    $.ajax({
-        type: "POST",
-        url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
-        data: {
-            action: "getCredentials"
-        },
-        dataType: 'json',
-        error: function(request, status, error) {
-            handleAjaxError(request, status, error);
-        },
-        success: function(data) {
-            if (data.state != 'ok') {
-                $.fn.showAlert({
-                    message: data.result,
-                    level: 'danger'
-                });
-                return;
+document.getElementById('div_lgthinq2').addEventListener('click', function(event) {
+    var _target = null
+    if (_target = event.target.closest('#bt_getCredentials')) {
+        domUtils.ajax({
+            type: "POST",
+            url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
+            data: {
+                action: "getCredentials"
+            },
+            dataType: 'json',
+            error: function(request, status, error) {
+                handleAjaxError(request, status, error);
+            },
+            success: function(data) {
+                if (data.state != 'ok') {
+                    jeedomUtils.showAlert({
+                        message: data.result,
+                        level: 'danger'
+                    });
+                    return;
+                }
             }
-        }
-    });
-});
-
-$('#bt_healthlgthinq2').on('click', function() {
-  $('#md_modal').dialog({
-    title: "{{Santé LG Thinq}}"
-  });
-  $('#md_modal').load('index.php?v=d&plugin=lgthinq2&modal=health').dialog('open');
-});
-
-$('#bt_documentationlgthinq2').off('click').on('click', function() {
-  window.open($(this).attr("data-location"), "_blank", null);
-});
-
-$('body').delegate('.cmdAttr[data-action=configureCommand]', 'click', function() {
-    $('#md_modal').dialog({
-        title: "{{Configuration de la commande}}"
-    });
-    $('#md_modal').load('index.php?v=d&plugin=lgthinq2&modal=command.configure&id=' + $(this).closest('.cmd').getValues('.cmdAttr')[0]['id']).dialog('open');
-});
-
-
-$('#bt_autoDetectModule').on('click', function() {
-  var dialog_title = '{{Recharger la configuration}}';
-  var dialog_message = '<form class="form-horizontal onsubmit="return false;"> ';
-  dialog_title = '<span class="col-sm-10" style="background-color: #939be5; padding: 2px 5px; color: white; margin: 10px 0; font-weight: bold;">{{Recharger la configuration}}</span>';
-  dialog_message += '<label class="control-label" > {{Sélectionner le mode de rechargement de la configuration.}} </label> ' +
-    '<div> <div class="radio"> <label > ' +
-    '<input type="radio" name="command" id="command-0" value="0" checked="checked">1) {{Garder les commandes actuelles et synchroniser.}} </label> ' +
-    '</div><div class="radio"> <label > ' +
-    '<input type="radio" name="command" id="command-1" value="1">2) {{Supprimer toutes les commandes et les recréer.}}</label> ' +
-    '</div> ' +
-    '</div><br>' +
-    '<label class="lbl lbl-warning" for="name">{{Attention au choix 2), toutes les commandes et leur historique sera supprimé.}}</label> ';
-  dialog_message += '</form>';
-  bootbox.dialog({
-    title: dialog_title,
-    message: dialog_message,
-    buttons: {
-      "{{Annuler}}": {
-        className: "btn-danger",
-        callback: function() {}
-      },
-      success: {
-        label: "{{Recharger}}",
-        className: "btn-success",
-        callback: function() {
-          if ($("input[name='command']:checked").val() == "1") {
-            bootbox.confirm('{{Êtes-vous sûr de vouloir récréer toutes les commandes ? Cela va supprimer les commandes existantes.}}', function(result) {
-              if (result) {
-                synchronize($('.eqLogicAttr[data-l1key=id]').value(), true);
-              }
-            });
-          } else {
-            synchronize($('.eqLogicAttr[data-l1key=id]').value(), false);
-          }
-        }
-      },
+        });
     }
-  });
+    if (_target = event.target.closest('#bt_healthlgthinq2')) {
+        jeeDialog.dialog({
+            title: '{{Santé LG Thinq}}',
+            contentUrl: 'index.php?v=d&plugin=lgthinq2&modal=health'
+        });
+    }
+    if (_target = event.target.closest('#bt_synchronizelgthinq2')) {
+        synchronize(false, false);
+    }
+    if (_target = event.target.closest('#bt_documentationlgthinq2')) {
+        window.open(_target.getAttribute('data-location'), '_blank');
+    }
+    if (_target = event.target.closest('.cmdAttr[data-action=configureCommand]')) {
+        jeeDialog.dialog({
+            title: "{{Configuration de la commande}}",
+            contentUrl: 'index.php?v=d&plugin=lgthinq2&modal=command.configure&id=' + _target.closest('.cmd').dataset.cmd_id
+        });
+    }
+    if (_target = event.target.closest('#bt_autoDetectModule')) {
+        var dialog_title = '{{Recharger la configuration}}';
+        var dialog_message = '<form class="form-horizontal onsubmit="return false;"> ';
+        dialog_message += '<label class="control-label" > {{Sélectionner le mode de rechargement de la configuration.}} </label> ' +
+            '<div> <div class="radio"> <label > ' +
+            '<input type="radio" name="command" id="command-0" value="0" checked="checked"> {{Sans recréer les commandes mais en créant les manquantes}} </label> ' +
+            '</div><div class="radio"> <label > ' +
+            '<input type="radio" name="command" id="command-1" value="1"> {{En recréant les commandes}}</label> ' +
+            '</div> ' +
+            '</div><br>' +
+            '<label class="lbl lbl-warning" for="name">{{Attention, "en recréant les commandes" va supprimer les commandes existantes.}}</label> ';
+        dialog_message += '</form>';
+        var eqLogicId = document.querySelector('.eqLogicAttr[data-l1key=id]').value;
+        var eqLogicDisplayCard = document.querySelector('.eqLogicDisplayCard[data-eqLogic_id="' + eqLogicId + '"]');
+        jeeDialog.dialog({
+            id: 'bbReloadConfigLG',
+            title: dialog_title,
+            message: dialog_message,
+            width: '450px',
+            buttons: {
+                "{{Annuler}}": {
+                  className: "btn-danger",
+                  callback: function() {}
+                },
+                success: {
+                    label: "{{Recharger}}",
+                    className: "btn-success",
+                    callback: function() {
+                        if (document.querySelector("input[name='command']:checked").value === "1") {
+                            jeeDialog.confirm('{{Êtes-vous sûr de vouloir récréer toutes les commandes ? Cela va supprimer les commandes existantes.}}', function(result) {
+                                if (result) {
+                                    synchronize(document.querySelector('.eqLogicAttr[data-l1key=id]').value, true);
+                                }
+                            });
+                        } else {
+                            synchronize(document.querySelector('.eqLogicAttr[data-l1key=id]').value, false);
+                        }
+                    }
+                }
+            },
+            onClose: function() {
+              jeeDialog.get('#bbReloadConfigLG').destroy()
+            }
+        });
+    }
+    if (_target = event.target.closest('.eqLogicAction[data-action=delete]')) {
+        var what = _target.dataset.action2;
+        if (what == 'appareils') var text = '{{Cette action supprimera les}} ' + what + ' {{retirés de LGThinq.}}';
+        else if (what == 'all') var text = '{{Cette action supprimera tous les appareils.}}';
+        jeeDialog.confirm(text, function(result) {
+            if (result) {
+                domUtils.ajax({
+                    type: "POST",
+                    dataType: 'json',
+                    async: false,
+                    data: {
+                        action: "deleteEquipments",
+                        what: what
+                    },
+                    error: function(request, status, error) {
+                        handleAjaxError(request, status, error);
+                    },
+                    success: function(data) {
+                        if (data.state != 'ok') {
+                            jeedomUtils.showAlert({
+                                message: data.result,
+                                level: 'danger'
+                            });
+                            return;
+                        }
+                        jeedomUtils.showAlert({
+                            message: '{{Suppression réussie}} : ' + what,
+                            level: 'success'
+                        });
+                        location.reload();
+                    }
+                });
+            }
+        });
+    }
 });
 
-$('#bt_synchronizelgthinq2').on('click', function() {
-  synchronize(false, false);
-});
+
 
 function synchronize(_id = false, _deleteCmds = false) {
-  $.fn.showAlert({
+  jeedomUtils.showAlert({
     message: '{{Synchronisation en cours}}',
     level: 'warning'
   });
-  $('#bt_synchronizelgthinq2 > i.fas').addClass('fa-spin');
-  $.ajax({
+
+  document.querySelector('#bt_synchronizelgthinq2 > i.fas').classList.add('fa-spin');
+  domUtils.ajax({
     type: "POST",
     url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
     data: {
@@ -217,25 +262,25 @@ function synchronize(_id = false, _deleteCmds = false) {
       handleAjaxError(request, status, error);
     },
     success: function(data) {
-      $('#bt_synchronizeSmartthings > i.fas').removeClass('fa-spin');
+      document.querySelector('#bt_synchronizelgthinq2 > i.fas').classList.remove('fa-spin');
       if (data.state != 'ok') {
-        $.fn.showAlert({
+        jeedomUtils.showAlert({
           message: data.result,
           level: 'danger'
         });
         return;
       } else if (data.result == false) {
-        $.fn.showAlert({
+        jeedomUtils.showAlert({
           message: '{{Veuillez renseigner un identifiant et un mot de passe de connexion.}}',
           level: 'danger'
         });
         return;
       } else {
-        $.fn.showAlert({
+        jeedomUtils.showAlert({
           message: '{{Synchronisation terminée}}',
           level: 'success'
         });
-        $('#bt_synchronizeSmartthings > i.fas').removeClass('fa-spin');
+        document.querySelector('#bt_synchronizelgthinq2 > i.fas').classList.remove('fa-spin');
         window.location.reload();
       }
     }
@@ -243,8 +288,8 @@ function synchronize(_id = false, _deleteCmds = false) {
 }
 
 function printEqLogic(_eqLogic) {
-  $('#nbTotalCmds').html('<span class="label label-info">'+_eqLogic.cmd.length+'</span>')
-  $.ajax({
+  document.getElementById('nbTotalCmds').innerHTML = '<span class="label label-info">' + _eqLogic.cmd.length + '</span>';
+  domUtils.ajax({
     type: "POST",
     url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
     data: {
@@ -257,51 +302,15 @@ function printEqLogic(_eqLogic) {
     },
     success: function(data) {
       if (data.state != 'ok') {
-        $.fn.showAlert({
+        jeedomUtils.showAlert({
           message: data.result,
           level: 'danger'
         });
         return;
       }
       if (data.result != '') {
-        $('#img_device').attr("src", data.result);
+         document.getElementById('img_device').setAttribute("src", data.result);
       }
     }
   })
 }
-
-$('.eqLogicAction[data-action=delete]').on('click', function(e) {
-
-  var what = e.currentTarget.dataset.action2;
-  var text = '{{Cette action supprimera tous les appareils.}}';
-  bootbox.confirm(text, function(result) {
-    if (result) {
-      $.ajax({
-        type: "POST",
-        url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
-        data: {
-          action: "deleteEquipments",
-          what: what
-        },
-        dataType: 'json',
-        error: function(request, status, error) {
-          handleAjaxError(request, status, error);
-        },
-        success: function(data) {
-          if (data.state != 'ok') {
-            $.fn.showAlert({
-              message: data.result,
-              level: 'danger'
-            });
-            return;
-          }
-          $.fn.showAlert({
-            message: '{{Suppression réussie}} : ' + what,
-            level: 'success'
-          });
-          location.reload();
-        }
-      });
-    }
-  });
-});

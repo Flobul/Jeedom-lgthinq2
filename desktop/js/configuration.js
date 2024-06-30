@@ -17,16 +17,16 @@
 document.getElementById('bt_getCredentialsPlugin').addEventListener('click', function() {
     var idInput = document.querySelector('.configKey[data-l1key="id"]');
     var passwordInput = document.querySelector('.configKey[data-l1key="password"]');
-    
+
     if (idInput.value === '' || passwordInput.value === '') {
-        $.fn.showAlert({
+        jeedomUtils.showAlert({
             message: '{{Veuillez entrer un identifiant et un mot de passe de connexion.}}',
             level: 'danger'
         });
         return;
     }
-  
-    $.ajax({
+
+    domUtils.ajax({
         type: "POST",
         url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
         data: {
@@ -39,13 +39,13 @@ document.getElementById('bt_getCredentialsPlugin').addEventListener('click', fun
         },
         success: function(data) {
             if (data.state != 'ok') {
-                $.fn.showAlert({
+                jeedomUtils.showAlert({
                     message: data.result,
                     level: 'danger'
                 });
                 return;
             }
-            $.fn.showAlert({
+            jeedomUtils.showAlert({
                 message: '{{Connexion réalisée avec succès.}}',
                 level: 'success'
             });
@@ -57,7 +57,7 @@ document.getElementById('bt_getCredentialsPlugin').addEventListener('click', fun
 document.getElementById('div_plugin_configuration').addEventListener('change', function () {
     var expiresInput = document.querySelector('.configKey[data-l1key="expires_in"]');
     var currentTime = Math.floor(Date.now() / 1000);
-    
+
     if (expiresInput && expiresInput.value != '') {
         var expiresValue = parseInt(expiresInput.value);
 
