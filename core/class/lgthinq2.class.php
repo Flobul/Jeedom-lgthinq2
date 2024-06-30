@@ -354,6 +354,9 @@ class lgthinq2 extends eqLogic
             CURLOPT_HTTPHEADER => $headers
         ));
         $response = curl_exec($curl);
+        if ($response === false) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Erreur de requête : ', __FILE__) . curl_error($curl));
+        }
         curl_close($curl);
         return $response;
     }
