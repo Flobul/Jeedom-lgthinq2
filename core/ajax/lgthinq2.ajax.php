@@ -35,7 +35,7 @@ try {
         if (config::byKey('id', 'lgthinq2', '') == '' || config::byKey('password', 'lgthinq2', '') == '') {
             $result = false;
         } else {
-            if (boolval(init('deleteCmds')) == true) {
+            if (init('deleteCmds') === 'true') {
                 $eqLogic = lgthinq2::byId(init('id'));
                 if (!is_object($eqLogic)) {
                     throw new Exception(__('LGThinq2 eqLogic non trouvé : ', __FILE__) . init('id'));
@@ -52,7 +52,7 @@ try {
     }
 
     if (init('action') == 'deleteEquipments') {
-       if (init('what') == 'all' || init('what') == 'appareils') {
+        if (init('what') == 'all' || init('what') == 'appareils') {
             $eqLogics = eqLogic::byType('lgthinq2');
             if (init('what') == 'appareils') {
 
