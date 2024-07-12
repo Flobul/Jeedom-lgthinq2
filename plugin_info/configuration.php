@@ -168,6 +168,14 @@
                   </select>
               </div>
           </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label"><strong> {{Autoriser le plugin à valider les conditions}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{Autoriser le plugin à renouveller l'acceptation des conditions.}}"></i></sup>
+          </label>
+          <div class="input-group col-lg-2">
+              <input type="checkbox" disabled class="configKey form-control" data-l1key="authorize_terms">
+          </div>
+        </div>
 
       <div class="form-group">
 		<legend>
@@ -191,7 +199,7 @@
               </span>
           </div>
         </div>
-          
+
         <div class="form-group">
           <label class="col-sm-2 control-label"><strong> {{Connexion}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Connexion}}"></i></sup>
@@ -245,7 +253,7 @@
               </span>
           </div>
         </div>
-        
+
         <div class="form-group">
           <label class="col-sm-2 control-label"><strong> {{LGE members URL}}</strong>
               <sup><i class="fas fa-question-circle"></i></sup>
@@ -272,7 +280,7 @@
               <input type="text" disabled class="configKey form-control" data-l1key="LGACC_SPX_URL"></input>
           </div>
         </div>
-        
+
       </div>
       </div>
    </fieldset>

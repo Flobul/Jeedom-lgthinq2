@@ -70,6 +70,9 @@ try {
     if (!$cliRes || !isset($cliRes['resultCode']) || $cliRes['resultCode'] == '0102') {
         lgthinq2::login();
     }
+    if ((!$cliRes || !isset($cliRes['resultCode']) || $cliRes['resultCode'] == '0110') && config::byKey('authorize_terms', 'lgthinq2', false) == true) {
+        lgthinq2::terms();
+    }
 
     // GET PRIVATE CLIENT CERTIFICATE
     $csr = str_replace(array("-----BEGIN CERTIFICATE REQUEST-----","-----END CERTIFICATE REQUEST-----"), '', str_ireplace(array("\r","\n",'\r','\n'),'',$azuRes['csr']));

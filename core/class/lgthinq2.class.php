@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.85';
+    public static $_pluginVersion = '0.86';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -985,6 +985,99 @@ class lgthinq2 extends eqLogic
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Jeton de session ', __FILE__) . $jsession);
 
         config::save('jsessionId', $jsession, __CLASS__);
+    }
+
+    public static function terms()
+    {
+        try {
+            $showTermUrl = "/common/showTerms?callback_url=lgaccount.lgsmartthinq:/updateTerms&country=FR&language=fr-FR&division=ha:T20&terms_display_type=3&svc_list=SVC202";
+            $empSpxUri = config::byKey('LGACC_SPX_URL', __CLASS__);
+            $accessToken = config::byKey('access_token', __CLASS__);
+
+            // Étape 1 : Obtenir le HTML des termes à partir de l'URL.
+            $headers = array(
+                'X-Login-Session: ' . $accessToken,
+            );
+
+            $showTermHtml = lgthinq2::postData($empSpxUri . '/' . $showTermUrl, '', $headers);
+            if (!$showTermHtml) {
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Échec lors de la récupération du HTML des termes.', __FILE__));
+                return false;
+            }
+
+            // Extraction de la signature et du timestamp.
+            if (preg_match('/signature\s+:\s+"([^"]+)"/', $showTermHtml, $signatureMatch) &&
+                preg_match('/tStamp\s+:\s+"([^"]+)"/', $showTermHtml, $tStampMatch)) {
+                $signature = $signatureMatch[1];
+                $tStamp = $tStampMatch[1];
+            } else {
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' Impossible d\'extraire la signature ou le timestamp.', __FILE__));
+                return false;
+            }
+
+            // Configuration des headers pour les requêtes suivantes.
+            $headers = array(
+                'Accept: application/json',
+                'X-Application-Key: ' . lgthinq2::APPLICATION_KEY,
+                'X-Client-App-Key: ' . lgthinq2::APPKEY,
+                'X-Lge-Svccode: SVC709',
+                'X-Device-Type: M01',
+                'X-Device-Platform: ADR',
+                'X-Device-Language-Type: IETF',
+                'X-Device-Publish-Flag: Y',
+                'X-Device-Country: ' . lgthinq2::getLanguage('uppercase'),
+                'X-Device-Language: ' . str_replace('_', '-', config::byKey('language', __CLASS__, 'fr_FR')),
+                'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
+                'X-Login-Session: ' . $accessToken,
+                'X-Signature: ' . $signature,
+                'X-Timestamp: ' . $tStamp,
+            );
+
+            // Étape 2 : Obtenir les termes du compte.
+            $accountTermUrl = "/emp/v2.0/account/user/terms?opt_term_cond=001&term_data=SVC202&itg_terms_use_flag=Y&dummy_terms_use_flag=Y";
+            $accountTermsResponse = lgthinq2::postData($empSpxUri . '/' . $accountTermUrl, '', $headers);
+            if (!$accountTermsResponse) {
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __('Échec lors de la récupération des termes du compte.', __FILE__));
+                return false;
+            }
+            $accountTerms = json_decode($accountTermsResponse, true)['account']['terms'];
+
+            // Étape 3 : Obtenir les informations sur les termes.
+            $termInfoUrl = "/emp/v2.0/info/terms?opt_term_cond=001&only_service_terms_flag=&itg_terms_use_flag=Y&term_data=SVC202";
+            $infoTermsResponse = lgthinq2::postData($empSpxUri . '/' . $termInfoUrl, '', $headers);
+            if (!$infoTermsResponse) {
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __('Échec lors de la récupération des informations sur les termes.', __FILE__));
+                return false;
+            }
+            $infoTerms = json_decode($infoTermsResponse, true)['info']['terms'];
+
+            // Étape 4 : Vérifier les termes qui nécessitent un nouvel accord.
+            $newTermAgreeNeeded = array_filter($infoTerms, function($term) use ($accountTerms) {
+                return !in_array($term['termsID'], $accountTerms);
+            });
+
+            // Étape 5 : Si des termes nécessitent un accord, les accepter.
+            if (!empty($newTermAgreeNeeded)) {
+                $newTermsData = array(
+                    'termsList' => json_encode(array_map(function($term) {
+                        return array('termsID' => $term['termsID'], 'agreement' => 'Y');
+                    }, $newTermAgreeNeeded)),
+                );
+                $acceptTermsUrl = "emp/v2.0/account/user/terms";
+                $acceptTermsResponse = lgthinq2::postData($empSpxUri . '/' . $acceptTermsUrl, http_build_query($newTermsData), $headers);
+                if (!$acceptTermsResponse) {
+                    log::add(__CLASS__, 'debug', __FUNCTION__ . __('Échec lors de l\'acceptation des nouveaux termes.', __FILE__));
+                    return false;
+                }
+                log::add(__CLASS__, 'debug', __FUNCTION__ . __('Nouveaux termes acceptés.', __FILE__));
+            }
+
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Tous les termes sont à jour.', __FILE__));
+            return true;
+        } catch (Exception $e) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . __('Erreur : ', __FILE__) . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -3216,6 +3309,7 @@ class lgthinq2Cmd extends cmd
             return $_value;
         }
     }
+
 
     /**
      * Génère le code HTML pour l'affichage de la commande.
