@@ -173,7 +173,7 @@
               <sup><i class="fas fa-question-circle" title="{{Autoriser le plugin à renouveller l'acceptation des conditions.}}"></i></sup>
           </label>
           <div class="input-group col-lg-2">
-              <input type="checkbox" disabled class="configKey form-control" data-l1key="authorize_terms">
+              <input type="checkbox" class="configKey form-control" data-l1key="authorize_terms">
           </div>
         </div>
 
