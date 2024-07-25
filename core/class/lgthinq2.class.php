@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.86';
+    public static $_pluginVersion = '0.87';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -312,13 +312,13 @@ class lgthinq2 extends eqLogic
 		);
         $token = config::byKey('token', __CLASS__);
         $expires = config::byKey('expires_in', __CLASS__);
-        $calcExpiracy = (time() - $expires);
-        $isExpired = ($calcExpiracy > 0 ? __(' expiré depuis ', __FILE__) : __(' expire dans ', __FILE__)) . $calcExpiracy . ' ' . __('secondes', __FILE__);
-        $return[]= array(
+        $calcExpiracy = ($expires - time());
+        $isExpired = ($calcExpiracy < 0 ? __('expiré depuis ', __FILE__) : __('expire dans ', __FILE__)) . $calcExpiracy . ' ' . __('secondes', __FILE__);
+        $return[] = array(
             'test' => __('Jeton d\'accès', __FILE__),
-            'result' => $result . ' ' . $isExpired ,
-            'advice' => $advice,
-            'state' => $state
+            'result' => ($calcExpiracy < 0 ? __('NOK', __FILE__) : __('OK', __FILE__)) . ' : ' . $isExpired,
+            'advice' => ($calcExpiracy < 0 ? __('Choisissez un intervalle de rafraichissement, ou redémarrez le démon. Cela va mettre à jour le jeton', __FILE__) : ''),
+            'state' => ($calcExpiracy < 0)
         );
         return $return;
     }
@@ -1623,6 +1623,7 @@ class lgthinq2 extends eqLogic
         $curl = curl_init();
         $headers = lgthinq2::defaultDevicesHeaders();
         //$response = file_get_contents(dirname(__FILE__) . '/../../data/SKY_'.$this->getLogicalId().'.json'); // developper only
+        //$response = file_get_contents(dirname(__FILE__) . '/../../data/POC_'.$this->getLogicalId().'.json'); // developper only
 
         curl_setopt_array($curl, array(
             CURLOPT_URL => lgthinq2::LGTHINQ2_SERV_DEVICES . $this->getLogicalId(),
@@ -1655,7 +1656,6 @@ class lgthinq2 extends eqLogic
 
         $modelJson = false;
         //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/FAY_'.$this->getLogicalId().'.json'),true); // developper only
-        //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/PAC.json'),true); // developper only
         //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/POC_'.$this->getLogicalId().'.json'),true); // developper only
         //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/SKY_'.$this->getLogicalId().'.json'),true); // developper only
 

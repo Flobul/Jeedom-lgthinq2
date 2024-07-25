@@ -177,22 +177,29 @@ document.getElementById('div_lgthinq2').addEventListener('click', function(event
             message: dialog_message,
             width: '450px',
             buttons: {
-                "{{Annuler}}": {
-                  className: "btn-danger",
-                  callback: function() {}
+                cancel: {
+                    label: '{{Annuler}}',
+                    className: "danger",
+                    callback: {
+                        click: function(event) {
+                            jeeDialog.get('#bbReloadConfigLG').close();
+                        }
+                    }
                 },
-                success: {
+                confirm: {
                     label: "{{Recharger}}",
-                    className: "btn-success",
-                    callback: function() {
-                        if (document.querySelector("input[name='command']:checked").value === "1") {
-                            jeeDialog.confirm('{{Êtes-vous sûr de vouloir récréer toutes les commandes ? Cela va supprimer les commandes existantes.}}', function(result) {
-                                if (result) {
-                                    synchronize(document.querySelector('.eqLogicAttr[data-l1key=id]').value, true);
-                                }
-                            });
-                        } else {
-                            synchronize(document.querySelector('.eqLogicAttr[data-l1key=id]').value, false);
+                    className: "success",
+                    callback: {
+                        click: function(event) {
+                            if (document.querySelector("input[name='command']:checked").value === "1") {
+                                jeeDialog.confirm('{{Êtes-vous sûr de vouloir récréer toutes les commandes ? Cela va supprimer les commandes existantes.}}', function(result) {
+                                    if (result) {
+                                        synchronize(document.querySelector('.eqLogicAttr[data-l1key=id]').value, true);
+                                    }
+                                });
+                            } else {
+                                synchronize(document.querySelector('.eqLogicAttr[data-l1key=id]').value, false);
+                            }
                         }
                     }
                 }
@@ -238,8 +245,6 @@ document.getElementById('div_lgthinq2').addEventListener('click', function(event
         });
     }
 });
-
-
 
 function synchronize(_id = false, _deleteCmds = false) {
   jeedomUtils.showAlert({
