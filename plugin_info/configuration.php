@@ -97,7 +97,7 @@
                       <option value="*/15 * * * *">{{Toutes les 15 minutes}}</option>
                       <option value="*/30 * * * *">{{Toutes les 30 minutes}}</option>
                       <option value="*/45 * * * *">{{Toutes les 45 minutes}}</option>
-                      <option value="">{{Jamais}}</option>
+                      <option value="never">{{Jamais}}</option>
                   </select>
               </div>
           </div>
@@ -211,7 +211,7 @@
 
         <div class="form-group">
           <label class="col-sm-2 control-label"><strong> {{Jeton d'accès}}</strong>
-              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+              <sup><i class="fas fa-question-circle" title="{{Jeton servant à accéder à l'API.}}"></i></sup>
           </label>
           <div class="input-group col-sm-8">
               <input type="text" disabled class="inputPassword configKey form-control" data-l1key="access_token">
@@ -223,7 +223,7 @@
 
         <div class="form-group">
           <label class="col-sm-2 control-label"><strong> {{Expiration du jeton (en secondes)}}</strong>
-              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+              <sup><i class="fas fa-question-circle" title="{{Temps restant avant expiration du jeton.}}"></i></sup>
           </label>
           <div class="col-sm-2">
               <input type="text" disabled class="configKey form-control" data-l1key="expires_in"></input>
@@ -232,7 +232,7 @@
 
         <div class="form-group">
           <label class="col-sm-2 control-label"><strong> {{Jeton de rafraîchissement}}</strong>
-              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+              <sup><i class="fas fa-question-circle" title="{{Jeton servant à demander le renouvellement du jeton d'accès.}}"></i></sup>
           </label>
           <div class="input-group col-sm-8">
               <input type="text" disabled class="inputPassword configKey form-control" data-l1key="refresh_token"></input>
@@ -244,7 +244,7 @@
 
         <div class="form-group">
           <label class="col-sm-2 control-label"><strong> {{Identifiant de Jsession}}</strong>
-              <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
+              <sup><i class="fas fa-question-circle" title="{{Identifiant de session servant pour passer en moniteur les appareils en thinq1.}}"></i></sup>
           </label>
           <div class="input-group col-sm-6">
               <input type="text" disabled class="inputPassword configKey form-control" data-l1key="jsessionId"></input>
