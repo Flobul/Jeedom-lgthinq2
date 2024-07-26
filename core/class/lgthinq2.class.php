@@ -296,32 +296,32 @@ class lgthinq2 extends eqLogic
      *
      * @return array Résultat des tests de santé.
      */
-    public static function health()
-    {
-		$return = array();
-		$cron = cron::byClassAndFunction(__CLASS__, 'update');
-		$running = false;
-		if (is_object($cron)) {
-			$running = $cron->getEnable(0);
-		}
-		$return[] = array(
-			'test' => __('Tâche de synchronisation', __FILE__),
-			'result' => (($running) ? __('OK', __FILE__) : __('NOK', __FILE__)) . ' (' . $cron->getCache('runtime') . 's)',
-			'advice' => ($running) ? '' : __('Allez sur la page du moteur des tâches et vérifiez lancer la tache lgthinq2::update', __FILE__),
-			'state' => $running
-		);
-        $token = config::byKey('token', __CLASS__);
-        $expires = config::byKey('expires_in', __CLASS__);
-        $calcExpiracy = ($expires - time());
-        $isExpired = ($calcExpiracy < 0 ? __('expiré depuis ', __FILE__) : __('expire dans ', __FILE__)) . $calcExpiracy . ' ' . __('secondes', __FILE__);
-        $return[] = array(
-            'test' => __('Jeton d\'accès', __FILE__),
-            'result' => ($calcExpiracy < 0 ? __('NOK', __FILE__) : __('OK', __FILE__)) . ' : ' . $isExpired,
-            'advice' => ($calcExpiracy < 0 ? __('Choisissez un intervalle de rafraichissement, ou redémarrez le démon. Cela va mettre à jour le jeton', __FILE__) : ''),
-            'state' => ($calcExpiracy < 0)
-        );
-        return $return;
-    }
+     public static function health()
+     {
+         $return = array();
+         $cron = cron::byClassAndFunction(__CLASS__, 'update');
+         $running = false;
+         if (is_object($cron)) {
+             $running = $cron->getEnable(0);
+         }
+         $return[] = array(
+             'test' => __('Tâche de synchronisation', __FILE__),
+             'result' => (($running) ? __('OK', __FILE__) : __('NOK', __FILE__)) . ' (' . $cron->getCache('runtime') . 's)',
+             'advice' => ($running) ? '' : __('Allez sur la page du moteur des tâches et vérifiez lancer la tache lgthinq2::update', __FILE__),
+             'state' => $running
+         );
+         $token = config::byKey('token', __CLASS__);
+         $expires = config::byKey('expires_in', __CLASS__);
+         $calcExpiracy = ($expires - time());
+         $isExpired = ($calcExpiracy < 0 ? __('expiré depuis ', __FILE__) : __('expire dans ', __FILE__)) . abs($calcExpiracy) . ' ' . __('secondes', __FILE__);
+         $return[] = array(
+             'test' => __('Jeton d\'accès', __FILE__),
+             'result' => ($calcExpiracy > 0 ? __('OK', __FILE__) : __('NOK', __FILE__)) . ' : ' . $isExpired,
+             'advice' => ($calcExpiracy > 0 ? '' : __('Choisissez un intervalle de rafraichissement, ou redémarrez le démon. Cela va mettre à jour le jeton', __FILE__)),
+             'state' => ($calcExpiracy > 0)
+         );
+         return $return;
+     }
 
     /**
      * Vérifie si une chaîne de caractères est un JSON valide.
@@ -1412,8 +1412,8 @@ class lgthinq2 extends eqLogic
     public static function update()
     {
         log::add(__CLASS__, 'debug', __FUNCTION__ . __(' début', __FILE__));
-        $autorefresh = config::byKey('autorefresh', __CLASS__, '');
-        if ($autorefresh != '') {
+        $autorefresh = config::byKey('autorefresh', __CLASS__, 'never');
+        if ($autorefresh != 'never') {
             try {
                 $c = new Cron\CronExpression($autorefresh, new Cron\FieldFactory);
                 if ($c->isDue()) {
