@@ -183,7 +183,7 @@
 		</legend>
 
         <div class="form-group">
-          <label class="col-sm-2 control-label"><strong> {{Identifiant}}</strong>
+          <label class="col-sm-3 control-label"><strong> {{Identifiant}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Entrez l'identifiant.}}"></i></sup>
           </label>
           <div class="col-sm-4">
@@ -199,9 +199,9 @@
               </span>
           </div>
         </div>
-
+          
         <div class="form-group">
-          <label class="col-sm-2 control-label"><strong> {{Connexion}}</strong>
+          <label class="col-sm-3 control-label"><strong> {{Connexion}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Connexion}}"></i></sup>
           </label>
           <div class="col-sm-2">
@@ -210,7 +210,7 @@
         </div>
 
         <div class="form-group">
-          <label class="col-sm-2 control-label"><strong> {{Jeton d'accès}}</strong>
+          <label class="col-sm-3 control-label"><strong> {{Jeton d'accès}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Jeton servant à accéder à l'API.}}"></i></sup>
           </label>
           <div class="input-group col-sm-8">
@@ -222,7 +222,7 @@
         </div>
 
         <div class="form-group">
-          <label class="col-sm-2 control-label"><strong> {{Expiration du jeton (en secondes)}}</strong>
+          <label class="col-sm-3 control-label"><strong> {{Expiration du jeton (en secondes)}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Temps restant avant expiration du jeton.}}"></i></sup>
           </label>
           <div class="col-sm-2">
@@ -231,8 +231,8 @@
         </div>
 
         <div class="form-group">
-          <label class="col-sm-2 control-label"><strong> {{Jeton de rafraîchissement}}</strong>
-              <sup><i class="fas fa-question-circle" title="{{Jeton servant à demander le renouvellement du jeton d'accès.}}"></i></sup>
+          <label class="col-sm-3 control-label"><strong> {{Jeton de rafraîchissement}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{Jeton servant à demander le renouvellement du jeton d'accès sans avoir besoin de refaire toute la séquence d'authentification.}}"></i></sup>
           </label>
           <div class="input-group col-sm-8">
               <input type="text" disabled class="inputPassword configKey form-control" data-l1key="refresh_token"></input>
@@ -243,7 +243,7 @@
         </div>
 
         <div class="form-group">
-          <label class="col-sm-2 control-label"><strong> {{Identifiant de Jsession}}</strong>
+          <label class="col-sm-3 control-label"><strong> {{Identifiant de Jsession}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Identifiant de session servant pour passer en moniteur les appareils en thinq1.}}"></i></sup>
           </label>
           <div class="input-group col-sm-6">
@@ -255,8 +255,53 @@
         </div>
 
         <div class="form-group">
-          <label class="col-sm-2 control-label"><strong> {{LGE members URL}}</strong>
+          <label class="col-sm-3 control-label"><strong> {{Identifiant client}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{Identifiant client généré par le plugin. Une identifiant = 1 appareil mobile.}}"></i></sup>
+          </label>
+          <div class="input-group col-sm-6">
+              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="cliend_id"></input>
+              <span class="input-group-btn">
+                  <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
+              </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="col-sm-3 control-label"><strong> {{Identifiant de session de connexion}}</strong>
               <sup><i class="fas fa-question-circle"></i></sup>
+          </label>
+          <div class="input-group col-sm-6">
+              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="loginSessionID"></input>
+              <span class="input-group-btn">
+                  <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
+              </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="col-sm-3 control-label"><strong> {{Numéro utilisateur}}</strong>
+              <sup><i class="fas fa-question-circle"></i></sup>
+          </label>
+          <div class="input-group col-sm-6">
+              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="user_number"></input>
+              <span class="input-group-btn">
+                  <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
+              </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="col-sm-3 control-label"><strong> {{LG Account SPX URL}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{URL permettant d'obtenir le mot de passe crypté pour la suite de la connexion.}}"></i></sup>
+          </label>
+          <div class="input-group col-sm-6">
+              <input type="text" disabled class="configKey form-control" data-l1key="LGACC_SPX_URL"></input>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="col-sm-3 control-label"><strong> {{LGE members URL}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{URL permettant d'obtenir la redirect_uri nécessaire pour la connexion.}}"></i></sup>
           </label>
           <div class="input-group col-sm-6">
               <input type="text" disabled class="configKey form-control" data-l1key="LGE_MEMBERS_URL"></input>
@@ -264,23 +309,13 @@
         </div>
 
         <div class="form-group">
-          <label class="col-sm-2 control-label"><strong> {{LGE Emp terms URL}}</strong>
-              <sup><i class="fas fa-question-circle"></i></sup>
+          <label class="col-sm-3 control-label"><strong> {{LGE Emp terms URL}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{URL permettant d'obtenir le loginSessionID.}}"></i></sup>
           </label>
           <div class="input-group col-sm-6">
               <input type="text" disabled class="configKey form-control" data-l1key="LG_EMPTERMS_URL"></input>
           </div>
         </div>
-
-        <div class="form-group">
-          <label class="col-sm-2 control-label"><strong> {{LG Account SPX URL}}</strong>
-              <sup><i class="fas fa-question-circle"></i></sup>
-          </label>
-          <div class="input-group col-sm-6">
-              <input type="text" disabled class="configKey form-control" data-l1key="LGACC_SPX_URL"></input>
-          </div>
-        </div>
-
       </div>
       </div>
    </fieldset>

@@ -14,19 +14,6 @@
  * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*var table = document.querySelector('#table_cmd .tablesorter tbody');
-new Sortable(table, {
-    animation: 150,
-    draggable: ".cmd",
-    handle: ".cmd",
-    onStart: function(evt) {
-        evt.item.classList.add('sortable-drag');
-    },
-    onEnd: function(evt) {
-        evt.item.classList.remove('sortable-drag');
-    }
-});*/
-
 function addCmdToTable(_cmd) {
   if (!isset(_cmd)) {
     var _cmd = {
@@ -64,7 +51,7 @@ function addCmdToTable(_cmd) {
   tr += '<div style="margin-top:7px;">'
   tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min}}" title="{{Min}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">'
   tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max}}" title="{{Max}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">'
-  tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="unite" placeholder="Unité" title="{{Unité}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">'
+  tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="unite" placeholder="{{Unité}}" title="{{Unité}}" style="width:30%;max-width:80px;display:inline-block;margin-right:2px;">'
   tr += '</div>'
   tr += '</td>'
 
@@ -92,7 +79,6 @@ function addCmdToTable(_cmd) {
   }
   tr += '<a class="btn btn-danger btn-xs cmdAction roundedRight" data-action="remove" title="{{Suppression de la commande}} ' + _cmd.type + '"><i class="fas fa-minus-circle"></i></a>';
   tr += '</tr>';
-
 
   let newRow = document.createElement('tr')
   newRow.innerHTML = tr
@@ -143,6 +129,12 @@ document.getElementById('div_lgthinq2').addEventListener('click', function(event
         jeeDialog.dialog({
             title: '{{Santé LG Thinq}}',
             contentUrl: 'index.php?v=d&plugin=lgthinq2&modal=health'
+        });
+    }
+    if (_target = event.target.closest('#bt_historylgthinq2')) {
+        jeeDialog.dialog({
+            title: '{{Notifications LG Thinq}}',
+            contentUrl: 'index.php?v=d&plugin=lgthinq2&modal=history'
         });
     }
     if (_target = event.target.closest('#bt_synchronizelgthinq2')) {
@@ -306,6 +298,7 @@ function printEqLogic(_eqLogic) {
       handleAjaxError(request, status, error);
     },
     success: function(data) {
+      console.log(data)
       if (data.state != 'ok') {
         jeedomUtils.showAlert({
           message: data.result,

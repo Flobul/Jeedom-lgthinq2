@@ -35,13 +35,14 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
         <?php
           if ((config::byKey('access_token', 'lgthinq2', '') == '' || config::byKey('expires_in', 'lgthinq2', '') == '' ||
-              config::byKey('refresh_token', 'lgthinq2', '') == '' || config::byKey('jsessionId', 'lgthinq2', '') == '') &&
+              config::byKey('refresh_token', 'lgthinq2', '') == '' || config::byKey('jsessionId', 'lgthinq2', '') == '') && 
               (config::byKey('id', 'lgthinq2', '') != '' || config::byKey('password', 'lgthinq2', '') != '')) {
               lgthinq2_display::displayActionCard('{{Connexion}}', 'fa-fingerprint', 'id="bt_getCredentials"', 'eqLogicAction logoPrimaryGreenLGthinq2');
           }
           lgthinq2_display::displayActionCard('{{Synchronisation}}', 'fa-sync', 'id="bt_synchronizelgthinq2"', 'eqLogicAction logoPrimaryLGthinq2');
           lgthinq2_display::displayActionCard('{{Configuration}}', 'fa-wrench', 'data-action="gotoPluginConf"', 'logoSecondary');
           lgthinq2_display::displayActionCard('{{Santé}}', 'fa-medkit', 'id="bt_healthlgthinq2"', 'logoSecondary');
+          //lgthinq2_display::displayActionCard('{{Notifications}}', 'far fa-newspaper', 'id="bt_historylgthinq2"', 'logoSecondary');
           lgthinq2_display::displayActionCard('{{Documentation}}', 'fa-book-reader', 'id="bt_documentationlgthinq2" data-location="' . $plugin->getDocumentation() . '"', 'logoSecondary');
           lgthinq2_display::displayActionCard('{{Suppression de tous les appareils}}', 'fa-trash-alt', 'data-action="delete" data-action2="all"', 'logoTrashLG');
         ?>
@@ -146,7 +147,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
               </div>
           </form>
         </div>
-
+        
         <div class="col-sm-6">
           <form class="form-horizontal">
             <legend><i class="fas fa-wrench icon_yellow"></i> {{Configuration}}</legend>

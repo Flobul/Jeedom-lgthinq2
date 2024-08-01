@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.88';
+    public static $_pluginVersion = '0.89';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -500,11 +500,11 @@ class lgthinq2 extends eqLogic
      */
     public static function getClientId()
     {
-         if (config::byKey('cliend_id', __CLASS__, '') == '') {
-             log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Création du client_id ', __FILE__));
-             config::save('cliend_id', bin2hex(random_bytes(32)), __CLASS__);
-         }
-         return config::byKey('cliend_id', __CLASS__);
+        if (config::byKey('cliend_id', __CLASS__, '') == '') {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Création du client_id ', __FILE__));
+            config::save('cliend_id', bin2hex(random_bytes(32)), __CLASS__);
+        }
+        return config::byKey('cliend_id', __CLASS__);
     }
 
     /**
@@ -622,7 +622,7 @@ class lgthinq2 extends eqLogic
         return array(
             'Accept: application/json',
             'Accept-Encoding: gzip, deflate, br',
-            'Accept-Language: ' . lgthinq2::getLanguage('hyphen') . ';q=1',
+            'Accept-Language: ' . lgthinq2::getLanguage('hyphen') . ';q=1.0',
             'Content-Type: application/json;charset=UTF-8',
             'User-Agent: ' . lgthinq2::USER_AGENT,
             'x-api-key: ' . lgthinq2::XAPIKEY,
@@ -2383,7 +2383,7 @@ class lgthinq2 extends eqLogic
             //file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
 
             if (isset($data['Value'])) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG Value ', __FILE__) . json_encode($data['Value']));
+                log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('DEBUGGGG Value ', __FILE__) . json_encode($data['Value']));
                 $commands = array();
                 foreach ($data['Value'] as $key => $value) {
                     if ($this->getConfiguration('platformType') == 'thinq2' && !isset($_refState[$key])) continue; // s'il n'y a pas de commande info dans refState
@@ -2496,7 +2496,7 @@ class lgthinq2 extends eqLogic
             }
             if (isset($data['MonitoringValue'])) {
 
-                log::add(__CLASS__, 'debug', __FUNCTION__ . __(' DEBUGGGG MonitoringValue ', __FILE__) . json_encode($data['MonitoringValue']));
+                log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('DEBUGGGG MonitoringValue ', __FILE__) . json_encode($data['MonitoringValue']));
                 $commands = array();
                 $commandsToRemove = array();
                 foreach ($data['MonitoringValue'] as $key => $value) {
@@ -3224,12 +3224,15 @@ class lgthinq2 extends eqLogic
      */
     public function getImage()
     {
-        $file = 'plugins/lgthinq2/core/config/img/' . $this->getConfiguration('deviceType') . '.png';
+        $file = 'plugins/lgthinq2/core/config/img/' . $this->getConfiguration('deviceCode') . '.webp';
         if (is_file(dirname(__FILE__) . '/../../../../' . $file)) {
             return $file;
-        } else {
-            return 'plugins/lgthinq2/plugin_info/config/img/' . $this->getConfiguration('thumbnail', '../../../plugin_info/lgthinq2_icon.png');
         }
+        $file1 = 'plugins/lgthinq2/core/config/img/' . $this->getConfiguration('deviceType') . '.png';
+        if (is_file(dirname(__FILE__) . '/../../../../' . $file1)) {
+            return $file1;
+        }
+        return 'plugins/lgthinq2/plugin_info/config/img/' . $this->getConfiguration('thumbnail', '../../../plugin_info/lgthinq2_icon.png');
     }
 
     /**

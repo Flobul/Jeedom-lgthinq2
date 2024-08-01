@@ -12,7 +12,7 @@ $fileCertClient = dirname(__FILE__) . '/../../../data/certificatePem.pem';
 $fileCertClientKey = dirname(__FILE__) . '/../../../data/pass.pem';
 
 try {
-
+  
     // GET LG MQTT SERVER
     $headers = lgthinq2::defaultGwHeaders();
     $curlMqtt = curl_init();
@@ -73,7 +73,7 @@ try {
     if ((!$cliRes || !isset($cliRes['resultCode']) || $cliRes['resultCode'] == '0110') && config::byKey('authorize_terms', 'lgthinq2', false) == true) {
         lgthinq2::terms();
     }
-
+  
     // GET PRIVATE CLIENT CERTIFICATE
     $csr = str_replace(array("-----BEGIN CERTIFICATE REQUEST-----","-----END CERTIFICATE REQUEST-----"), '', str_ireplace(array("\r","\n",'\r','\n'),'',$azuRes['csr']));
     //log::add('lgthinq2', 'debug', __('DÉMON MQTT : ', __FILE__) . __('CSR ', __FILE__) . $csr);
@@ -154,7 +154,7 @@ try {
     }
 
     $mqtt->loop(true, true, 60);
-
+      
     $mqtt->disconnect();
 
 } catch (\PhpMqtt\Client\MqttClientException $e) {

@@ -39,7 +39,7 @@
         <select class="selectCmd options" data-logicalId="dryLevel">#cmd_dryLevel_valueMapping#</select>
       </div>
     </div>
-
+    
     <div class="cmd cmd-widget reportModeHidden #cmd_ecoHybrid_display#" data-type="action" data-subtype="select" data-template="default" data-cmd_id="#cmd_ecoHybrid_id#">
       <div class="title #cmd_ecoHybrid_nameDisplay#">
         <div class="cmdName">#cmd_ecoHybrid_name#</div>
@@ -57,7 +57,7 @@
         <select class="selectCmd options" data-logicalId="antiCrease">#cmd_antiCrease_valueMapping#</select>
       </div>
     </div>
-
+    
     <div class="cmd cmd-widget reportModeHidden #cmd_remoteStart_display#" data-type="action" data-subtype="select" data-template="default" data-cmd_id="#cmd_remoteStart_id#">
       <div class="title #cmd_remoteStart_nameDisplay#">
         <div class="cmdName">#cmd_remoteStart_name#</div>
@@ -66,7 +66,7 @@
         <select class="selectCmd options" data-logicalId="remoteStart">#cmd_remoteStart_valueMapping#</select>
       </div>
     </div>
-
+    
     <div class="cmd cmd-widget reportModeHidden #cmd_timeSetting_display#" data-type="action" data-subtype="message" data-template="default" data-cmd_id="#cmd_timeSetting_id#">
       <div class="title #cmd_timeSetting_nameDisplay#">
         <div class="cmdName">#cmd_timeSetting_name#</div>
@@ -75,7 +75,7 @@
         <input type="number" class="inputCmd options" data-logicalId="timeSetting" min="#cmd_timeSetting_min#" max="#cmd_timeSetting_max#" value="#cmd_timeSetting_value#">
       </div>
     </div>
-
+    
     <div class="cmd cmd-widget reportModeHidden #cmd_moreLessTime_display#" data-type="action" data-subtype="message" data-template="default" data-cmd_id="#cmd_moreLessTime_id#">
       <div class="title #cmd_moreLessTime_nameDisplay#">
         <div class="cmdName">#cmd_moreLessTime_name#</div>
@@ -103,7 +103,7 @@
       </div>
     </div>
     #cmd#
-
+    
     <div class="content">
       <a class="btn btn-sm btn-default execute tooltips" data-logicalid="#cmdAction_WMDownload_logicalid#" data-cmd_id="#cmdAction_WMDownload_id#">#cmdAction_WMDownload_name#</a>
       <a class="btn btn-sm btn-default execute tooltips" data-logicalid="#cmdAction_WMStart_logicalid#" data-cmd_id="#cmdAction_WMStart_id#">#cmdAction_WMStart_name#</a>
@@ -117,7 +117,7 @@
     <script>
       var smartCourseRef#id# = '#cmd_smartCourseDryer24inchBase_refInfo#' != '#' + 'cmd_smartCourseDryer24inchBase_refInfo#' ? JSON.parse('#cmd_smartCourseDryer24inchBase_refInfo#') : undefined;
       var courseRef#id# = '#cmd_courseDryer24inchBase_refInfo#' != '#' + 'cmd_courseDryer24inchBase_refInfo#' ? JSON.parse('#cmd_courseDryer24inchBase_refInfo#') : undefined;
-
+      
       if ('#cmd_courseDryer24inchBase_id#' != '#' + 'cmd_courseDryer24inchBase_id#') {
           document.querySelector('.eqLogic[data-eqLogic_uid=#uid#] .cmd[data-cmd_id="#cmd_courseDryer24inchBase_id#"] .selectCmd')?.addEventListener('change', function() {
               var courseValue = this.value;
@@ -188,7 +188,7 @@
               }
           })
       }
-
+      
       if ('#panelLink#' == '') {
           document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .panelLink')?.remove()
       }
@@ -199,7 +199,7 @@
       } else {
           document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"] .refresh')?.remove()
       }
-
+      
       document.querySelectorAll('.eqLogic[data-eqLogic_uid="#uid#"] .cmds .cmd').forEach(_cmd => {
           var attrId = _cmd.getAttribute('data-cmd_id');
           if (isNaN(attrId) && /^#.*#$/.test(attrId)) {

@@ -2,45 +2,60 @@
     font-size: 38px !important;
     color: #6B6B6B;
 }
-
 .fas.fa-question-circle.tooltips.tooltipstered {
     color: var(--al-info-color) !important;
 }
-
 .eqLogicDisplayCard.cursor:hover {
     opacity:.65 !important;
 }
-
+.eqLogicDisplayCard .displayPlatformType {
+    position: absolute;
+    margin-top: 15px;
+    margin-left: 20px;
+    background-color: palevioletred !important;
+    padding: 4px;
+    border-radius: 8px;
+    font-size: 0.6em;
+}
+.eqLogicDisplayCard .displayPlatformType.blackThinq {
+    color: black;
+}
+.eqLogicDisplayCard .displayPlatformType.whiteThinq {
+    color: white;
+}
+.eqLogicDisplayCard.displayAsTable .displayPlatformType {
+    display: none;
+}
 .eqLogicDisplayCard.cursor .status-circle {
-    font-size:1em !important;
-    position:absolute;
-    margin-top:35px;
-    margin-left:55px;
+    font-size: 1em !important;
+    position: absolute;
+    margin-top: 13px;
+    margin-left: 85px;
+}
+.eqLogicDisplayCard.displayAsTable .status-circle {
+    margin-top: 4px;
+    font-size: 12px !important;
+    margin-left: 20px !important;
 }
 
 .eqLogicThumbnailDisplay .panel-title {
     background: #A50034;
     border-radius: 10px;
 }
-
 .logoPrimaryLGthinq2 {
     color: #A50034;
 }
-
 .logoPrimaryGreenLGthinq2 {
     color: var(--al-success-color) !important;
 }
-
 .logoPrimaryLG .fas {
     background: -webkit-gradient(linear, left bottom, left top, from(rgb(0,139,158,1)), to(rgb(99,237,194,1)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
-
 .logoTrashLG[data-action2=all] {
     color: var(--al-danger-color);
 }
-
 #accordionlgthinq2 {
     color: #FFFFFF !important;
 }

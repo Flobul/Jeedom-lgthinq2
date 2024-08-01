@@ -93,7 +93,7 @@ class lgthinq2_customLang
             "@AC_MAIN_WIND_STRENGTH_HIGH_LEFT_W|AC_MAIN_WIND_STRENGTH_MID_RIGHT_W"    => __("Haut-gauche moyen-droite", __FILE__),
             "@AC_MAIN_WIND_STRENGTH_HIGH_LEFT_W|AC_MAIN_WIND_STRENGTH_HIGH_RIGHT_W"   => __("Haut-gauche haut-droite", __FILE__),
             "@AC_MAIN_WIND_STRENGTH_AUTO_LEFT_W|AC_MAIN_WIND_STRENGTH_AUTO_RIGHT_W"   => __("Automatique-gauche automatique-droite", __FILE__),
-            "@AC_MAIN_WIND_STRENGTH_POWER_LEFT_W|AC_MAIN_WIND_STRENGTH_POWER_RIGHT_W" => __("Puissant-gauche puissant-droite", __FILE__),
+            "@AC_MAIN_WIND_STRENGTH_POWER_LEFT_W|AC_MAIN_WIND_STRENGTH_POWER_RIGHT_W" => __("Puissant-gauche puissant-droite", __FILE__)
         ];
     }
 }
