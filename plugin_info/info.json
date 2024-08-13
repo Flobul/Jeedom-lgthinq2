@@ -12,7 +12,7 @@
     "utilization": "Après avoir entré l'identifiant et le mot de passe dans la page de configuration, cliquez sur Connexion pour récupérer le jeton d'authentification puis lancez une synchronisation.</br>Toutes les commandes viendront au fur et à mesure.",
     "licence": "AGPL",
     "author": "DomoFlo1",
-    "require": "4.2",
+    "require": "4.4",
     "category": "devicecommunication",
     "hasDependency": true,
     "hasOwnDeamon": true,
