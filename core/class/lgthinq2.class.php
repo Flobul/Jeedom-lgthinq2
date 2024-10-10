@@ -1826,12 +1826,12 @@ class lgthinq2 extends eqLogic
         }
         $content = file_get_contents($filename);
         if (!lgthinq2::isJson($content)) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Le fichier de configuration ' . $filename . ' est corrompu', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Le fichier de configuration ', __FILE__) . $filename . __(' est corrompu', __FILE__));
             return;
         }
         $data = json_decode($content, true);
         if (!is_array($data)/* || !isset($data['commands'])*/) {
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Le fichier de configuration ' . $filename . ' est invalide', __FILE__));
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Le fichier de configuration ', __FILE__) . $filename . __(' est invalide', __FILE__));
             return;
         }
         return $data;
@@ -2380,7 +2380,7 @@ class lgthinq2 extends eqLogic
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Le fichier de configuration est invalide', __FILE__));
             }
             //save translation model into json file
-            //file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
+            file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
 
             if (isset($data['Value'])) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('DEBUGGGG Value ', __FILE__) . json_encode($data['Value']));
