@@ -3119,12 +3119,14 @@ class lgthinq2 extends eqLogic
                 if (isset($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray])) {
                     //return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
                     $cmdInfo->event($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
+                    return;
                 }
             } elseif ($cmdInfo->getUnite() == '°F') {
                 $tkv = $cmdInfo->getConfiguration('targetKey')['tempUnit']['FAHRENHEIT'];
                 if (isset($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray])) {
                     //return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
                     $cmdInfo->event($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
+                    return;
                 }
             }
             if ($cmdInfo->getSubType() == 'binary') {
