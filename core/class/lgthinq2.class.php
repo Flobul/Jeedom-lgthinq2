@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.89';
+    public static $_pluginVersion = '0.90';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -2380,12 +2380,21 @@ class lgthinq2 extends eqLogic
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Le fichier de configuration est invalide', __FILE__));
             }
             //save translation model into json file
-            file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
+            //file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
 
             if (isset($data['Value'])) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('DEBUGGGG Value ', __FILE__) . json_encode($data['Value']));
                 $commands = array();
                 foreach ($data['Value'] as $key => $value) {
+                    if (isset($data['Monitoring']['type']) && $data['Monitoring']['type'] == "THINQ2") {
+                        if (!isset($_refState[$key])) {
+                            foreach ($data['Monitoring']['protocol'] as $protoKey => $protoValue) {
+                                if ($protoValue == $key) {
+                                    $key = $protoKey;
+                                }
+                            }
+                        }
+                    }
                     if ($this->getConfiguration('platformType') == 'thinq2' && !isset($_refState[$key])) continue; // s'il n'y a pas de commande info dans refState
                     $minValue = null;
                     $maxValue = null;
