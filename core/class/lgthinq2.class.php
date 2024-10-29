@@ -1258,7 +1258,7 @@ class lgthinq2 extends eqLogic
                     $label = $value['label'];
                     $_arrayVM[$key]['label'] = $_trans[$label];
                 }
-            } else if ($value != '' && (strpos($value, '@') === 0)) {
+            } else if (!is_array($value) && $value != '' && (strpos($value, '@') === 0)) {
                 if (array_key_exists($value, $_trans)) {
                     $label = $value;
                     $_arrayVM[$key] = $_trans[$label];
@@ -3119,14 +3119,12 @@ class lgthinq2 extends eqLogic
                 if (isset($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray])) {
                     //return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
                     $cmdInfo->event($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
-                    return;
                 }
             } elseif ($cmdInfo->getUnite() == '°F') {
                 $tkv = $cmdInfo->getConfiguration('targetKey')['tempUnit']['FAHRENHEIT'];
                 if (isset($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray])) {
                     //return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
                     $cmdInfo->event($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
-                    return;
                 }
             }
             if ($cmdInfo->getSubType() == 'binary') {
@@ -3632,19 +3630,25 @@ class lgthinq2Cmd extends cmd
      * @param string $_value La valeur de chaîne à convertir en binaire.
      * @return int La valeur binaire résultante (0 ou 1) après conversion.
      */
-    public function formatValueStringToBinary($_value)
+    public static function formatValueStringToBinary($_value)
     {
         if ($_value === true || $_value === 'true') {
+            log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 1 : ', __FILE__) . $_value);
             return 1;
         } elseif (in_array($_value, ['0', 0, false, 'false', '@F', '@NON', '@FAIL', '@AIR', 'FAIL', 'CLOSE', 'UNLOCK', '\uff26'])) {
+            log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 0 : ', __FILE__) . $_value);
             return 0;
         } elseif (in_array($_value, ['1', 'true', '@C', '@WATER', 'OK', 'OPEN', 'LOCK', '\u2103'])) {
+            log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 1 : ', __FILE__) . $_value);
             return 1;
         } elseif (preg_match('/\bOFF\b/', $_value)) {
+            log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour OFF : ', __FILE__) . $_value);
             return 0;
         } elseif (preg_match('/\bON\b/', $_value)) {
+            log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour ON : ', __FILE__) . $_value);
             return 1;
         } else {
+            log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour else : ', __FILE__) . $_value);
             return $_value;
         }
     }
@@ -3664,15 +3668,15 @@ class lgthinq2Cmd extends cmd
             $valueMap = $this->getConfiguration('valueMapping', '');
             if ($valueMap != '') {
                 if (isset($valueMap[$_value])) {
-                    if ($valueMap[$_value]['label'] != '') {
+                    if (isset($valueMap[$_value]['label']) && $valueMap[$_value]['label'] != '') {
                         return $valueMap[$_value]['label'];
-                    } elseif ($valueMap[$_value]['title'] != '') {
+                    } elseif (isset($valueMap[$_value]['title']) && $valueMap[$_value]['title'] != '') {
                         return $valueMap[$_value]['title'];
-                    } elseif ($valueMap[$_value]['content'] != '') {
+                    } elseif (isset($valueMap[$_value]['content']) && $valueMap[$_value]['content'] != '') {
                         return $valueMap[$_value]['content'];
-                    } elseif ($valueMap[$_value]['comment'] != '') {
+                    } elseif (isset($valueMap[$_value]['comment']) && $valueMap[$_value]['comment'] != '') {
                         return $valueMap[$_value]['comment'];
-                    } elseif ($valueMap[$_value]['index'] != '') {
+                    } elseif (isset($valueMap[$_value]['index']) && $valueMap[$_value]['index'] != '') {
                         return $valueMap[$_value]['index'];
                     }
                 }
