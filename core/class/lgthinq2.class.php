@@ -3641,13 +3641,8 @@ class lgthinq2Cmd extends cmd
      */
     public static function formatValueStringToBinary($_value)
     {
+        $_value = trim($_value);
         if ($_value === true || $_value === 'true') {
-            log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 1 : ', __FILE__) . $_value);
-            return 1;
-        } elseif (in_array($_value, ['0', 0, false, 'false', '@F', '@NON', '@FAIL', '@AIR', 'FAIL', 'CLOSE', 'UNLOCK', '\uff26', 'OFF'])) {
-            log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 0 : ', __FILE__) . $_value);
-            return 0;
-        } elseif (in_array($_value, ['1', 'true', '@C', '@WATER', 'OK', 'OPEN', 'LOCK', '\u2103', 'ON'])) {
             log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 1 : ', __FILE__) . $_value);
             return 1;
         } elseif (preg_match('/\bOFF\b/', $_value)) {
@@ -3656,12 +3651,17 @@ class lgthinq2Cmd extends cmd
         } elseif (preg_match('/\bON\b/', $_value)) {
             log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour ON : ', __FILE__) . $_value);
             return 1;
+        } elseif (in_array($_value, ['1', 'true', '@C', '@WATER', 'OK', 'OPEN', 'LOCK', '\u2103', 'ON'])) {
+            log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 1 : ', __FILE__) . $_value);
+            return 1;
+        } elseif (in_array($_value, ['0', 0, false, 'false', '@F', '@NON', '@FAIL', '@AIR', 'FAIL', 'CLOSE', 'UNLOCK', '\uff26', 'OFF'])) {
+            log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 0 : ', __FILE__) . $_value);
+            return 0;
         } else {
             log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour else : ', __FILE__) . $_value);
             return $_value;
         }
     }
-
 
     /**
      * Génère le code HTML pour l'affichage de la commande.
