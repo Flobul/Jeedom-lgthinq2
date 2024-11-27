@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.90';
+    public static $_pluginVersion = '0.91';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -1388,18 +1388,20 @@ class lgthinq2 extends eqLogic
                     $langProduct = $eqLogic->getLangJson('langPackProductType', $items['langPackProductTypeUri'], $items['langPackProductTypeVer']);
                     $langModel = $eqLogic->getLangJson('langPackModel', $items['langPackModelUri'], $items['langPackModelVer']);
                     //regroup translation array configModel and configProduct
-                    if ($langModel && is_array($langModel)) {
+                    if ($langProduct && is_array($langProduct) && $langModel && is_array($langModel)) {
                         $langPack = array_replace_recursive($langProduct, $langModel);
                     } else {
                         $langPack = $langProduct;
                     }
                     //regroup translation array configFile and langPackFile
                     $langPackCP = json_decode(file_get_contents(__DIR__ . '/../../data/langPack_CP.json'),true);
-                    if (is_array($langPackCP) && isset($langPackCP['pack'])) {
+                    if ($langPack && is_array($langPack) && $langPackCP && is_array($langPackCP) && isset($langPackCP['pack'])) {
                         $langPack = array_replace_recursive($langPack, $langPackCP['pack']);
                     }
                     //regroup translation array configLangPackFile and customFile
-                    $langPack = array_replace_recursive($langPack, $customLangFile);
+                    if ($langPack && is_array($langPack) && $customLangFile && is_array($customLangFile)) {
+                        $langPack = array_replace_recursive($langPack, $customLangFile);
+                    }
 
                     if ($refState) {
                         $eqLogic->createCmdFromModelAndLangFiles($items['modelJsonUri'], $items['modelJsonVer'], $items['snapshot'][$refState], $langPack, $refState);
@@ -3662,6 +3664,7 @@ class lgthinq2Cmd extends cmd
             return $_value;
         }
     }
+
 
     /**
      * Génère le code HTML pour l'affichage de la commande.
