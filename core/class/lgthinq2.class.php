@@ -1371,7 +1371,7 @@ class lgthinq2 extends eqLogic
             lgthinq2::getDevices($_deviceId, true);
         }
 
-        if ($_deviceId == '' || $_deviceId != '') {
+        if ($_deviceId != '' && isset($devices['result']) && $devices['result'] != '') {
             $translation = new lgthinq2_customLang();
             $customLangFile = $translation->customlang;
 
@@ -1380,8 +1380,9 @@ class lgthinq2 extends eqLogic
             //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/PAC.json'),true); // developper only
             //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/POC.json'),true); // developper only
 
+            if (!isset($devices['result']['item'])) return;
             foreach ($devices['result']['item'] as $items) {
-                if ($_deviceId != '' && $_deviceId != $items['deviceId']) continue;
+                if ($_deviceId != $items['deviceId']) continue;
                 $eqLogic = lgthinq2::createEquipement($items, $items['platformType']);
                 if (is_object($eqLogic) && isset($items['modelJsonUri'])) {
                     $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType'));
