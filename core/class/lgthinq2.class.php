@@ -746,7 +746,7 @@ class lgthinq2 extends eqLogic
             return;
         }
         log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Étape 0 ', __FILE__) . json_encode($gatewayRes));
-        log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Étape 0 a result ', __FILE__) . parse_url($gatewayRes['result']['empFrontBaseUri2'], PHP_URL_HOST));
+        log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Étape 0 a result ', __FILE__) . parse_url($gatewayRes['result']['uris']['empFrontBaseUri2'], PHP_URL_HOST));
 
         config::save('LGE_MEMBERS_URL', 'https://' . parse_url($gatewayRes['result']['uris']['empFrontBaseUri2'], PHP_URL_HOST), __CLASS__);
         config::save('LG_EMPTERMS_URL', $gatewayRes['result']['empTermsUri'], __CLASS__);
