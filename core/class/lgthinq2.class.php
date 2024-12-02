@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.91';
+    public static $_pluginVersion = '0.94';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -2139,13 +2139,14 @@ class lgthinq2 extends eqLogic
         if (!isset($workList['returnCode']) || $workList['returnCode'] == '0106') {
             $nbDisconnects = (int)$this->getConfiguration('nbDisconnections', 0);
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('returnCode null ou 0106, $nbDisconnects ', __FILE__) . $nbDisconnects);
-            if ($nbDisconnects >= 3) {
+            if ($nbDisconnects >= 1) {
                 $this->setConfiguration('workId', '');
                 $this->setConfiguration('nbDisconnections', 0)->save();
                 $this->getDevicesStatus(true);
             } else {
                 $this->setConfiguration('nbDisconnections', $nbDisconnects + 1)->save();
             }
+            return;
         }
 
         /*if (!isset($workList['returnCode']) && isset($workList['stateCode'])) {
@@ -2164,7 +2165,7 @@ class lgthinq2 extends eqLogic
             }
             return;
         }
-        if (isset($workList['deviceState']) && $workList['deviceState'] == 'E') {
+        if (isset($workList['deviceState'])) {
             $online = $workList['deviceState'] == 'E' ? true : false;
         }
         $onlineCmd = $this->getCmd('info', 'online');
@@ -2177,7 +2178,9 @@ class lgthinq2 extends eqLogic
         }
         if (isset($workList['returnData']) && $workList['format'] == 'B64') {
             $returnUndecodedData = $workList['returnData'];
-            $this->setConfiguration('nbDisconnections', 0); // reset nb disconnections
+            if ($this->getConfiguration('nbDisconnections', 0) > 0) {
+                $this->setConfiguration('nbDisconnections', 0)->save(); // reset nb disconnections
+            }
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Requête réussie ', __FILE__) . json_encode($returnUndecodedData));
             if ($workList['format'] == 'B64') {
                 if ($this->getConfiguration('MonitoringType') == 'JSON') {
@@ -2951,7 +2954,6 @@ class lgthinq2 extends eqLogic
                                                     }
                                                     $listValue = substr($listValue, 0, -1);
                                                 }
-
                                             } elseif ($data['MonitoringValue'][$matches[1]]['dataType'] == 'range') {
                                                 $subType = 'slider';
                                                 $updateCmdToValue = '#slider#';
