@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.94';
+    public static $_pluginVersion = '0.95';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -1371,7 +1371,7 @@ class lgthinq2 extends eqLogic
             lgthinq2::getDevices($_deviceId, true);
         }
 
-        if ($_deviceId != '' && isset($devices['result']) && $devices['result'] != '') {
+        if ($devices['result'] && is_array($devices['result'])) {
             $translation = new lgthinq2_customLang();
             $customLangFile = $translation->customlang;
 
@@ -1382,7 +1382,7 @@ class lgthinq2 extends eqLogic
 
             if (!isset($devices['result']['item'])) return;
             foreach ($devices['result']['item'] as $items) {
-                if ($_deviceId != $items['deviceId']) continue;
+                if ($_deviceId != '' && $_deviceId != $items['deviceId']) continue;
                 $eqLogic = lgthinq2::createEquipement($items, $items['platformType']);
                 if (is_object($eqLogic) && isset($items['modelJsonUri'])) {
                     $refState = lgthinq2::deviceTypeConstantsState($eqLogic->getConfiguration('deviceType'));
