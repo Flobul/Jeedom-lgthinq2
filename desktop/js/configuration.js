@@ -17,7 +17,7 @@
 document.getElementById('bt_getCredentialsPlugin').addEventListener('click', function() {
     var idInput = document.querySelector('.configKey[data-l1key="id"]');
     var passwordInput = document.querySelector('.configKey[data-l1key="password"]');
-    
+
     if (idInput.value === '' || passwordInput.value === '') {
         jeedomUtils.showAlert({
             message: '{{Veuillez entrer un identifiant et un mot de passe de connexion.}}',
@@ -25,7 +25,7 @@ document.getElementById('bt_getCredentialsPlugin').addEventListener('click', fun
         });
         return;
     }
-  
+
     domUtils.ajax({
         type: "POST",
         url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
@@ -54,10 +54,39 @@ document.getElementById('bt_getCredentialsPlugin').addEventListener('click', fun
     });
 });
 
+document.getElementById('bt_validTermsPlugin').addEventListener('click', function() {
+
+    domUtils.ajax({
+        type: "POST",
+        url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
+        data: {
+            action: "validTerms"
+        },
+        dataType: 'json',
+        async: true,
+        error: function(request, status, error) {
+            handleAjaxError(request, status, error);
+        },
+        success: function(data) {
+            if (data.state != 'ok') {
+                jeedomUtils.showAlert({
+                    message: data.result,
+                    level: 'danger'
+                });
+                return;
+            }
+            jeedomUtils.showAlert({
+                message: '{{Conditions validées avec succès.}}',
+                level: 'success'
+            });
+        }
+    });
+});
+
 document.getElementById('div_plugin_configuration').addEventListener('change', function () {
     var expiresInput = document.querySelector('.configKey[data-l1key="expires_in"]');
     var currentTime = Math.floor(Date.now() / 1000);
-    
+
     if (expiresInput && expiresInput.value != '') {
         var expiresValue = parseInt(expiresInput.value);
 
