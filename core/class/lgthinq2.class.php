@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.95';
+    public static $_pluginVersion = '0.96';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -419,6 +419,38 @@ class lgthinq2 extends eqLogic
             return substr($_haystack, strlen($_needle));
         }
         return false;
+    }
+
+    /**
+     * Effectue une requête GET vers une URL donnée avec les données et les en-têtes spécifiés.
+     *
+     * Cette méthode prend en paramètres l'URL cible, les données à envoyer et les en-têtes HTTP à inclure dans la requête.
+     * Elle effectue une requête GET vers l'URL avec les paramètres spécifiés et renvoie la réponse obtenue.
+     *
+     * @param string $url L'URL cible de la requête GET.
+     * @param array|string $data Les données à envoyer dans la requête GET, sous forme de tableau associatif ou de chaîne de requête.
+     * @param array $headers Les en-têtes HTTP à inclure dans la requête GET, sous forme de tableau.
+     * @return string|false La réponse de la requête GET, ou false en cas d'échec.
+     */
+    public static function getData($url, $headers)
+    {
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_HTTPHEADER => $headers
+        ));
+        $response = curl_exec($curl);
+        if ($response === false) {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Erreur de requête : ', __FILE__) . curl_error($curl));
+        }
+        curl_close($curl);
+        return $response;
     }
 
     /**
@@ -1054,6 +1086,8 @@ class lgthinq2 extends eqLogic
         try {
             $showTermUrl = "/common/showTerms?callback_url=lgaccount.lgsmartthinq:/updateTerms&country=FR&language=fr-FR&division=ha:T20&terms_display_type=3&svc_list=SVC202";
             $empSpxUri = config::byKey('LGACC_SPX_URL', __CLASS__);
+            $empTermsUri = config::byKey('LG_EMPTERMS_URL', __CLASS__);
+
             $accessToken = config::byKey('access_token', __CLASS__);
 
             // Étape 1 : Obtenir le HTML des termes à partir de l'URL.
@@ -1079,25 +1113,30 @@ class lgthinq2 extends eqLogic
 
             // Configuration des headers pour les requêtes suivantes.
             $headers = array(
-                'Accept: application/json',
-                'X-Application-Key: ' . lgthinq2::APPLICATION_KEY,
-                'X-Client-App-Key: ' . lgthinq2::APPKEY,
-                'X-Lge-Svccode: SVC709',
-                'X-Device-Type: M01',
-                'X-Device-Platform: ADR',
-                'X-Device-Language-Type: IETF',
-                'X-Device-Publish-Flag: Y',
-                'X-Device-Country: ' . lgthinq2::getLanguage('uppercase'),
-                'X-Device-Language: ' . str_replace('_', '-', config::byKey('language', __CLASS__, 'fr_FR')),
-                'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
-                'X-Login-Session: ' . $accessToken,
-                'X-Signature: ' . $signature,
-                'X-Timestamp: ' . $tStamp,
+                'referer: https://fr.m.lgaccount.com/',
+                'x-login-session: ' . $accessToken,
+                'x-timestamp: ' . $tStamp,
+                'x-device-language: ' . str_replace('_', '-', config::byKey('language', __CLASS__, 'fr_FR')),
+                'x-device-type: M01',
+                'x-device-publish-flag: Y',
+                'origin: https://fr.m.lgaccount.com',
+                'x-device-country: ' . lgthinq2::getLanguage('uppercase'),
+                'x-signature: ' . $signature,
+                'x-device-platform: ADR',
+                'x-application-key: ' . lgthinq2::APPLICATION_KEY,
+                'x-lge-svccode: SVC709',
+                'accept-language: '.str_replace('_', '-', config::byKey('language', __CLASS__, 'fr_FR')).','.lgthinq2::getLanguage('lowercase').';q=0.9',
+                'accept: application/json',
+                'content-type: application/x-www-form-urlencoded;charset=UTF-8',
+                'access-control-allow-origin: *',
+                'x-device-language-type: IETF',
+                'accept-encoding: gzip, deflate, br'
+                //'X-Client-App-Key: ' . lgthinq2::APPKEY,
             );
 
             // Étape 2 : Obtenir les termes du compte.
             $accountTermUrl = "/emp/v2.0/account/user/terms?opt_term_cond=001&term_data=SVC202&itg_terms_use_flag=Y&dummy_terms_use_flag=Y";
-            $accountTermsResponse = lgthinq2::postData($empSpxUri . '/' . $accountTermUrl, '', $headers);
+            $accountTermsResponse = lgthinq2::getData($empTermsUri . $accountTermUrl, $headers);
             if (!$accountTermsResponse) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Échec lors de la récupération des termes du compte.', __FILE__));
                 return false;
@@ -1106,7 +1145,7 @@ class lgthinq2 extends eqLogic
 
             // Étape 3 : Obtenir les informations sur les termes.
             $termInfoUrl = "/emp/v2.0/info/terms?opt_term_cond=001&only_service_terms_flag=&itg_terms_use_flag=Y&term_data=SVC202";
-            $infoTermsResponse = lgthinq2::postData($empSpxUri . '/' . $termInfoUrl, '', $headers);
+            $infoTermsResponse = lgthinq2::getData($empTermsUri . $termInfoUrl, $headers);
             if (!$infoTermsResponse) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Échec lors de la récupération des informations sur les termes.', __FILE__));
                 return false;
@@ -1121,12 +1160,18 @@ class lgthinq2 extends eqLogic
             // Étape 5 : Si des termes nécessitent un accord, les accepter.
             if (!empty($newTermAgreeNeeded)) {
                 $newTermsData = array(
-                    'termsList' => json_encode(array_map(function($term) {
-                        return array('termsID' => $term['termsID'], 'agreement' => 'Y');
-                    }, $newTermAgreeNeeded)),
+                    'terms' => implode(',', array_map(function ($term) {
+                        return $term['termsType'] . ':' . $term['termsID'] . ':' . $term['defaultLang'];
+                    }, $newTermAgreeNeeded))
                 );
-                $acceptTermsUrl = "emp/v2.0/account/user/terms";
-                $acceptTermsResponse = lgthinq2::postData($empSpxUri . '/' . $acceptTermsUrl, http_build_query($newTermsData), $headers);
+
+                $acceptTermsUrl = '/emp/v2.0/account/user/terms';
+
+                $acceptTermsResponse = lgthinq2::postData($empTermsUri . $acceptTermsUrl, http_build_query($newTermsData), $headers);
+                //$acceptTermsUrl = "/lgacc/front/v1/common/insertUserTerms";
+                log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Nouveaux termes $newTermsData.', __FILE__) .  http_build_query($newTermsData));
+                //$acceptTermsResponse = lgthinq2::postData(config::byKey('LGE_MEMBERS_URL', __CLASS__) . $acceptTermsUrl, http_build_query($newTermsData), $headers);
+                log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Nouveaux termes $acceptTermsResponse.', __FILE__) . $acceptTermsResponse);
                 if (!$acceptTermsResponse) {
                     log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Échec lors de l\'acceptation des nouveaux termes.', __FILE__));
                     return false;
