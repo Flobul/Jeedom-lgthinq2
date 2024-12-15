@@ -31,6 +31,11 @@ try {
         ajax::success($result);
     }
 
+    if (init('action') == 'validTerms') {
+        $result = lgthinq2::terms();
+        ajax::success($result);
+    }
+
     if (init('action') == 'synchronize') {
         if (config::byKey('id', 'lgthinq2', '') == '' || config::byKey('password', 'lgthinq2', '') == '') {
             $result = false;

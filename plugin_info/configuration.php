@@ -177,6 +177,16 @@
           </div>
         </div>
 
+        <div class="form-group">
+          <label class="col-lg-4 control-label"><strong> {{Accepter les conditions LG}}</strong>
+              <sup><i class="fas fa-question-circle" title="{{Accepter les conditions LG}}"></i></sup>
+          </label>
+          <div class="col-lg-2">
+             <a id="bt_validTermsPlugin" class="btn btn-success"><i class="icon kiko-check-circle"></i> {{Accepter}}</a>
+          </div>
+
+        </div>
+
       <div class="form-group">
 		<legend>
 		    <i class="fas fa-user-cog"></i> {{Authentification}}
@@ -199,7 +209,7 @@
               </span>
           </div>
         </div>
-          
+
         <div class="form-group">
           <label class="col-sm-3 control-label"><strong> {{Connexion}}</strong>
               <sup><i class="fas fa-question-circle" title="{{Connexion}}"></i></sup>
