@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.96';
+    public static $_pluginVersion = '0.97';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -3695,10 +3695,10 @@ class lgthinq2Cmd extends cmd
         if ($_value === true || $_value === 'true') {
             log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 1 : ', __FILE__) . $_value);
             return 1;
-        } elseif (preg_match('/\bOFF\b/', $_value)) {
+        } elseif (preg_match("/\_OFF[$|_]/", $_value)) {
             log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour OFF : ', __FILE__) . $_value);
             return 0;
-        } elseif (preg_match('/\bON\b/', $_value)) {
+        } elseif (preg_match('/\_ON[$|_]/', $_value)) {
             log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour ON : ', __FILE__) . $_value);
             return 1;
         } elseif (in_array($_value, ['1', 'true', '@C', '@WATER', 'OK', 'OPEN', 'LOCK', '\u2103', 'ON'])) {
