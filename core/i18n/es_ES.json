@@ -135,6 +135,8 @@
         "NOK": "No está bien",
         "Nombre d'ouverture de porte": "Número de aperturas de puertas",
         "Nombre de programmes par jour": "Número de programas diarios",
+        "Nouveaux termes $acceptTermsResponse.": "Nuevos términos $acceptTermsResponse.",
+        "Nouveaux termes $newTermsData.": "Nuevos términos $newTermsData.",
         "Nouveaux termes acceptés.": "Nuevas condiciones aceptadas.",
         "OK": "Bueno",
         "Pas de refresh_token, demande de login": "No refresh_token, login requested",
@@ -300,6 +302,7 @@
         "Équipement visible": "Equipos visibles"
     },
     "plugins\/lgthinq2\/desktop\/js\/configuration.js": {
+        "Conditions validées avec succès.": "Condiciones validadas con éxito.",
         "Connexion réalisée avec succès.": "Conexión completada con éxito.",
         "Expiré": "Caducado",
         "Veuillez entrer un identifiant et un mot de passe de connexion.": "Introduzca un nombre de usuario y una contraseña."
@@ -427,6 +430,8 @@
         "Équipement": "Equipamiento"
     },
     "plugins\/lgthinq2\/plugin_info\/configuration.php": {
+        "Accepter": "Acepta",
+        "Accepter les conditions LG": "Acepta las condiciones de LG",
         "Authentification": "Autenticación",
         "Autoriser le plugin à renouveller l'acceptation des conditions.": "Permitir que el plugin renueve la aceptación de las condiciones.",
         "Autoriser le plugin à valider les conditions": "Permitir que el plugin valide condiciones",
