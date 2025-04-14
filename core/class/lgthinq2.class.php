@@ -3258,8 +3258,11 @@ class lgthinq2 extends eqLogic
             $type = (!isset($_properties['type'])?(!$_cmdInfo?'info':'action'):$_properties['type']);
             $cmd = $this->getCmd($type, $_properties['logicalId']);
             foreach ($this->getCmd() as $aCmd) {
-                if ($aCmd->getName() == $_properties['name'] && $aCmd->getLogicalId() != $_properties['logicalId']) {
-                    $_properties['name'] .= config::genKey(2);
+                if ($aCmd->getName() == $_properties['name'] //si le nom est le même
+                    && $aCmd->getLogicalId() != $_properties['logicalId']) { // mais le logicalId différent
+                    $_properties['name'] .= config::genKey(2);   // on ajoute un nombre aléatoire au nom
+                } else if ($_properties['name'] == 'N/A' && $aCmd->getLogicalId() != $_properties['logicalId']) { // si nom == NA
+                    $_properties['name'] = $_properties['logicalId'];   // on utilise en nom le logicalId
                 }
             }
             if (!is_object($cmd)) {
