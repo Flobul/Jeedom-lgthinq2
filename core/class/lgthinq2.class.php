@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.98';
+    public static $_pluginVersion = '0.99';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -1408,6 +1408,7 @@ class lgthinq2 extends eqLogic
             return;
         }
         $devices = json_decode($response, true);
+            //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/MAG.json'),true); // developper only
         if (!$devices || !isset($devices['resultCode'])) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Erreur de la requête ', __FILE__) . json_encode($devices));
             return;
@@ -1424,6 +1425,7 @@ class lgthinq2 extends eqLogic
             //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/ROM.json'),true); // developper only
             //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/PAC.json'),true); // developper only
             //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/POC.json'),true); // developper only
+            //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/MAG.json'),true); // developper only
 
             if (!isset($devices['result']['item'])) return;
             foreach ($devices['result']['item'] as $items) {
@@ -2001,6 +2003,7 @@ class lgthinq2 extends eqLogic
         $headers = lgthinq2::defaultDevicesHeaders();
         //$response = file_get_contents(dirname(__FILE__) . '/../../data/SKY_'.$this->getLogicalId().'.json'); // developper only
         //$response = file_get_contents(dirname(__FILE__) . '/../../data/POC_'.$this->getLogicalId().'.json'); // developper only
+        //$response = file_get_contents(dirname(__FILE__) . '/../../data/MAG_'.$this->getLogicalId().'.json'); // developper only
 
         curl_setopt_array($curl, array(
             CURLOPT_URL => lgthinq2::LGTHINQ2_SERV_URL . 'service/devices/' . $this->getLogicalId(),
@@ -2035,6 +2038,7 @@ class lgthinq2 extends eqLogic
         //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/FAY_'.$this->getLogicalId().'.json'),true); // developper only
         //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/POC_'.$this->getLogicalId().'.json'),true); // developper only
         //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/SKY_'.$this->getLogicalId().'.json'),true); // developper only
+        //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/MAG_'.$this->getLogicalId().'.json'),true); // developper only
 
         if (isset($devices['result']['snapshot'])) {
             $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getLogicalId() . '_modelJson');
@@ -2725,13 +2729,13 @@ class lgthinq2 extends eqLogic
                         $listValue = null;
                         $subType = 'other';
                         $updateCmdToValue = null;
-                        if (preg_match('/{{(.*?)}}/', $actionConfig['value'], $matches)) {
-                            //log::add(__CLASS__, 'debug', 'CONTROLWIFI match value0 ' . $matches[1]);
+                        /*if (preg_match('/{{(.*?)}}/', $actionConfig['value'], $matches)) {
+                            log::add(__CLASS__, 'debug', 'CONTROLWIFI match value0 ' . $matches[1]);
                             if (!isset($data['Value'][$matches[1]]) && isset($data['Value']['support.'.$matches[1]])) {
                                 $data['Value'][$matches[1]] = $data['Value']['support.'.$matches[1]];
                             }
                             if (isset($data['Value'][$matches[1]])) {
-                                //log::add(__CLASS__, 'debug', 'CONTROLWIFI match value1 ' . $matches[1]);
+                                log::add(__CLASS__, 'debug', 'CONTROLWIFI match value1 ' . $matches[1]);
                                 if ($data['Value'][$matches[1]]['type'] == 'String') {
                                     $subType = 'message';
                                     $updateCmdToValue = '#message#';
@@ -2757,14 +2761,91 @@ class lgthinq2 extends eqLogic
                                     $updateCmdToValue = '#slider#';
                                     $actionConfig['value'] = str_replace('{{'.$matches[1].'}}', '#slider#', $actionConfig['value']);
                                 }
-                                //log::add(__CLASS__, 'debug', 'CONTROLWIFI match value3 ' . $matches[1]);
+                                log::add(__CLASS__, 'debug', 'CONTROLWIFI match value3 ' . $matches[1]);
                             }
+                        }*/
+                        if (preg_match_all('/{{(.*?)}}/', $actionConfig['value'], $matches)) {
+                            foreach ($matches[1] as $paramKey) {
+                                log::add(__CLASS__, 'debug', 'CONTROLWIFI match actionName ' .$actionName . " key : " . $paramKey);
+                                $listValue = null;
+                                $updateCmdId = null;
+                                if (!isset($data['Value'][$paramKey]) && isset($data['Value']['support.'.$paramKey])) {
+                                    $data['Value'][$paramKey] = $data['Value']['support.'.$paramKey];
+                                }
+                                if (isset($data['Value'][$paramKey])) {
+                                    log::add(__CLASS__, 'debug', 'CONTROLWIFI match value1 ' . $paramKey);
+
+                                    if ($data['Value'][$paramKey]['type'] == 'String') {
+                                        $subType = 'message';
+                                        $updateCmdToValue = '#message#';
+                                        $updateCmdId = is_object($this->getCmd('info', $paramKey)) ? $this->getCmd('info', $paramKey)->getId() : null;
+                                    } elseif ($data['Value'][$paramKey]['type'] == 'Enum') {
+                                        $subType = 'select';
+                                        $updateCmdToValue = '#select#';
+                                        if (isset($data['Value'][$paramKey]['option'])) {
+                                            foreach ($data['Value'][$paramKey]['option'] as $optionKey => $optionValue) {
+                                                if (is_array($langPack) && isset($optionValue) && (strpos($optionValue, '@') === 0)) {
+                                                    if (isset($langPack[$optionValue])) {
+                                                        $optionValue = $langPack[$optionValue];
+                                                    }
+                                                }
+                                                $listValue .= str_replace('|','-', $optionKey) . '|' . $optionValue . ';';
+                                            }
+                                            $listValue = substr($listValue, 0, -1);
+                                        }
+                                        $updateCmdId = is_object($this->getCmd('info', $paramKey)) ? $this->getCmd('info', $paramKey)->getId() : null;
+                                    } elseif ($data['Value'][$paramKey]['type'] == 'Range') {
+                                        $subType = 'slider';
+                                        $updateCmdToValue = '#slider#';
+                                        $updateCmdId = is_object($this->getCmd('info', $paramKey)) ? $this->getCmd('info', $paramKey)->getId() : null;
+                                    }
+                                    $configurationString = str_replace('{{'.$paramKey.'}}', $updateCmdToValue, $actionConfig['value']);
+                                    $configurationString = str_replace(array('{{','}}'), '#', $configurationString);
+                                }
+                                if ($actionConfig['cmdOpt'] == 'Get') {
+                                    $nameCKey = str_replace('Get', '', $actionName, $iCKey);
+                                    $commands[] = array(
+                                        'name' => $nameCKey . ' ' . $paramKey,
+                                        'type' => 'info',
+                                        'logicalId' => $actionName . $paramKey,
+                                        'subType' => 'string',
+                                        'configuration' => array(
+                                            'cmd' => $actionConfig['cmd'],
+                                            'cmdOpt' => $actionConfig['cmdOpt'],
+                                            'value' => $configurationString,
+                                            'encode' => $actionConfig['encode'],
+                                            'listValue' => $listValue,
+                                            'controlType' => $data['ControlWifi']['type'],
+                                            'paramKey' => $paramKey
+                                        )
+                                    );
+                                }
+                                $commands[] = array(
+                                    'name' => ($iCKey?$actionName.' '.config::genKey(2):$actionName) . ' ' . $paramKey,
+                                    'type' => 'action',
+                                    'logicalId' => $actionName . $paramKey,
+                                    'subType' => $subType,
+                                    'configuration' => array(
+                                        'cmd' => $actionConfig['cmd'],
+                                        'cmdOpt' => $actionConfig['cmdOpt'],
+                                        'value' => $configurationString,
+                                        'encode' => $actionConfig['encode'],
+                                        'listValue' => $listValue,
+                                        'updateLGCmdId' => $updateCmdId,
+                                        'updateLGCmdToValue' => $updateCmdToValue,
+                                        'controlType' => $data['ControlWifi']['type'],
+                                        'paramKey' => $paramKey
+                                    ),
+                                    'value' => $updateCmdId
+                                );
+                            }
+
                         } elseif (preg_match('/{(.*?)}/', $actionConfig['value'], $matches)) {
                             if (!isset($data['Value'][$matches[1]]) && isset($data['Value']['support.'.$matches[1]])) {
                                 $data['Value'][$matches[1]] = $data['Value']['support.'.$matches[1]];
                             }
                             if (isset($data['Value'][$matches[1]])) {
-                                //log::add(__CLASS__, 'debug', 'CONTROLWIFI match value1 ' . $matches[1]);
+                                log::add(__CLASS__, 'debug', 'CONTROLWIFI match value1 ' . $matches[1]);
                                 if ($data['Value'][$matches[1]]['type'] == 'String') {
                                     $subType = 'message';
                                     $updateCmdToValue = '#message#';
@@ -2792,46 +2873,46 @@ class lgthinq2 extends eqLogic
                                 }
                                 //log::add(__CLASS__, 'debug', 'CONTROLWIFI match value3 ' . $matches[1]);
                             }
-                        }
-
-                        if ($actionConfig['cmdOpt'] == 'Get') {
-                            $nameCKey = str_replace('Get', '', $actionName, $iCKey);
+                            if ($actionConfig['cmdOpt'] == 'Get') {
+                                $nameCKey = str_replace('Get', '', $actionName, $iCKey);
+                                $commands[] = array(
+                                    'name' => $nameCKey,
+                                    'type' => 'info',
+                                    'logicalId' => $actionName,
+                                    'subType' => 'string',
+                                    'configuration' => array(
+                                        'cmd' => $actionConfig['cmd'],
+                                        'cmdOpt' => $actionConfig['cmdOpt'],
+                                        'value' => $actionConfig['value'],
+                                        'encode' => $actionConfig['encode'],
+                                        'listValue' => $listValue
+                                    )
+                                );
+                            }
                             $commands[] = array(
-                                'name' => $nameCKey,
-                                'type' => 'info',
+                                'name' => ($iCKey?$actionName.' '.config::genKey(2):$actionName),
+                                'type' => 'action',
                                 'logicalId' => $actionName,
-                                'subType' => 'string',
+                                'subType' => $subType,
                                 'configuration' => array(
                                     'cmd' => $actionConfig['cmd'],
                                     'cmdOpt' => $actionConfig['cmdOpt'],
                                     'value' => $actionConfig['value'],
                                     'encode' => $actionConfig['encode'],
-                                    'listValue' => $listValue
+                                    'listValue' => $listValue,
+                                    'updateLGCmdToValue' => $updateCmdToValue
                                 )
                             );
                         }
-                        $commands[] = array(
-                            'name' => ($iCKey?$actionName.' '.config::genKey(2):$actionName),
-                            'type' => 'action',
-                            'logicalId' => $actionName,
-                            'subType' => $subType,
-                            'configuration' => array(
-                                'cmd' => $actionConfig['cmd'],
-                                'cmdOpt' => $actionConfig['cmdOpt'],
-                                'value' => $actionConfig['value'],
-                                'encode' => $actionConfig['encode'],
-                                'listValue' => $listValue,
-                                'updateLGCmdToValue' => $updateCmdToValue
-                            )
-                        );
                     }
                 } else if (isset($data['ControlWifi']['type']) && $data['ControlWifi']['type'] == 'BINARY(BYTE)' && isset($data['ControlWifi']['action'])) {
                     foreach ($data['ControlWifi']['action'] as $actionName => $actionConfig) {
                         $subType = 'other';
                         $updateCmdToValue = null;
-                        preg_match_all('/\b\w+\b/', $actionConfig['data'], $matchesAll);
+                        $actionConfigValue = isset($actionConfig['data']) ? $actionConfig['data'] : $actionConfig['value'];
+                        preg_match_all('/\b\w+\b/', $actionConfigValue, $matchesAll);
                         $this->setConfiguration('paramDataList', $matchesAll[0])->save();
-                        if (preg_match_all('/{{(.*?)}}/', $actionConfig['data'], $matches)) {
+                        if (preg_match_all('/{{(.*?)}}/', $actionConfigValue, $matches)) {
                             foreach ($matches[1] as $paramKey) {
                                 $listValue = null;
                                 if (!isset($data['Value'][$paramKey]) && isset($data['Value']['support.'.$paramKey])) {
@@ -2899,7 +2980,7 @@ class lgthinq2 extends eqLogic
                                     )
                                 );
                             }
-                        } elseif (preg_match_all('/{(.*?)}/', $actionConfig['data'], $matches)) {
+                        } elseif (preg_match_all('/{(.*?)}/', $actionConfigValue, $matches)) {
                             foreach ($matches[1] as $paramKey) {
                                 $listValue = null;
                                 if (!isset($data['Value'][$paramKey]) && isset($data['Value']['support.'.$paramKey])) {
@@ -3348,9 +3429,11 @@ class lgthinq2 extends eqLogic
         }
 
         $refList = array();
-        foreach ($course->getConfiguration('ref') as $refKey => $refVal) {
-            if (isset($refVal['default'])) {
-                $refList = array_merge($refList, array_keys($refVal['default']));
+        if ($course->getConfiguration('ref', '') != '') {
+            foreach ($course->getConfiguration('ref') as $refKey => $refVal) {
+                if (isset($refVal['default'])) {
+                    $refList = array_merge($refList, array_keys($refVal['default']));
+                }
             }
         }
         $refList = array_values(array_unique($refList));
@@ -3470,6 +3553,7 @@ class lgthinq2Cmd extends cmd
             return;
         }
         $resValue = '';
+        $configurationValue = $this->getConfiguration('value', '');
 
         switch ($this->getSubType()) {
             case 'slider':
@@ -3489,8 +3573,27 @@ class lgthinq2Cmd extends cmd
                 }
                 break;
         }
+        $result = [];
+        if ($configurationValue != '') {
+            $result = [];
+            if (preg_match_all('/#(.*?)#/', $configurationValue, $matches)) {
+            log::add('lgthinq2', 'debug', __("MATCHESSSS ", __FILE__) . json_encode($matches));
+                foreach ($matches[0] as $value) {
+                    $objCmd = null;
+                    if ($value !== '#select#') {
+                        $objCmd = $eqLogic->getCmd('info', str_replace('#','',$value));
+                        if (is_object($objCmd)) {
+                            $valMap = $objCmd->getConfiguration('valueMapping', '');
+                            if ($valMap != '') {
+                                $replace[$value] = intval(array_search($objCmd->execCmd(), $valMap));
+                            }
+                        }
+                    }
+                }
+            }
+        }
         $value = str_replace(array_keys($replace),$replace,$this->getConfiguration('updateLGCmdToValue', ''));
-        $keyValue = str_replace(array_keys($replace),$replace,$this->getConfiguration('value', ''));
+        $keyValue = str_replace(array_keys($replace),$replace,$configurationValue);
         if (lgthinq2::isValidJson($keyValue)) {
             $keyValue = json_decode($keyValue, true);
         }
