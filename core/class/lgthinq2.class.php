@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '0.99';
+    public static $_pluginVersion = '1.00';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -3268,9 +3268,9 @@ class lgthinq2 extends eqLogic
                 }
             }
             if ($cmdInfo->getSubType() == 'binary') {
-            log::add(__CLASS__, 'info', __FUNCTION__ . ' ' . __('commande mise à jour before : ', __FILE__) . $refStateId . __(' à la valeur : ', __FILE__) . gettype($refStateValueArray));
-                $refStateValueArray = lgthinq2Cmd::formatValueStringToBinary($refStateValueArray);
-            log::add(__CLASS__, 'info', __FUNCTION__ . ' ' . __('commande mise à jour after : ', __FILE__) . $refStateId . __(' à la valeur : ', __FILE__) . $refStateValueArray);
+                log::add(__CLASS__, 'info', __FUNCTION__ . ' ' . __('commande mise à jour before : ', __FILE__) . $refStateId . __(' à la valeur : ', __FILE__) . $refStateValueArray . ' et type ' . gettype($refStateValueArray));
+                $refStateValueArray = lgthinq2Cmd::getStringToBinaryValues($refStateValueArray);
+                log::add(__CLASS__, 'info', __FUNCTION__ . ' ' . __('commande mise à jour after : ', __FILE__) . $refStateId . __(' à la valeur : ', __FILE__) . $refStateValueArray);
             }
             if ($cmdInfo->getConfiguration('originalType') == 'Array') {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('DEBUGGGG cmd info Array ', __FILE__) . json_encode($refStateValueArray));
@@ -3429,7 +3429,7 @@ class lgthinq2 extends eqLogic
         }
 
         $refList = array();
-        if ($course->getConfiguration('ref', '') != '') {
+        if (is_object($course) && $course->getConfiguration('ref', '') != '') {
             foreach ($course->getConfiguration('ref') as $refKey => $refVal) {
                 if (isset($refVal['default'])) {
                     $refList = array_merge($refList, array_keys($refVal['default']));
@@ -3437,8 +3437,8 @@ class lgthinq2 extends eqLogic
             }
         }
         $refList = array_values(array_unique($refList));
-        $refList[] = $course->getLogicalId();
-        $refList[] = $smartCourse->getLogicalId();
+        if (is_object($course))  $refList[] = $course->getLogicalId();
+        if (is_object($smartCourse))  $refList[] = $smartCourse->getLogicalId();
 
         $cmd_html = '';
         foreach ($this->getCmd('info', null) as $cmd) {
@@ -3763,23 +3763,33 @@ class lgthinq2Cmd extends cmd
                 $value = $this->getConfiguration('updateLGCmdToValue');
                 switch ($this->getSubType()) {
                     case 'slider':
-                        $value = str_replace('#slider#', $options['slider'], $value);
+                        $value = str_replace('#slider#', $_options['slider'], $value);
                         break;
                     case 'color':
-                        $value = str_replace('#color#', $options['color'], $value);
+                        $value = str_replace('#color#', $_options['color'], $value);
                         break;
                     case 'select':
-                        $value = str_replace('#select#', $options['select'], $value);
+                        $value = str_replace('#select#', $_options['select'], $value);
+                        if ($cmd->getSubType() == 'binary') {
+                            if ($cmd->getConfiguration('valueMapping', '')) {
+                                if (isset($cmd->getConfiguration('valueMapping')[$value])) {
+                                    $value = $cmd->getConfiguration('valueMapping')[$value];
+                                }
+                            }
+                        }
                         break;
                     case 'message':
-                        $value = str_replace('#message#', $options['message'], $value);
+                        $value = str_replace('#message#', $_options['message'], $value);
                         break;
                     case 'other':
                         $value = $resValue;
                         break;
                 }
-                log::add('lgthinq2', 'debug', __FUNCTION__ . ' ' . __('Réponse décodée ', __FILE__) . $resValue . __(' transmise dans ', __FILE__) . $cmd->getName());
-                $cmd->event($value);
+
+                log::add('lgthinq2', 'debug', __FUNCTION__ . ' ' . __('Réponse décodée ', __FILE__) . $value . __(' transmise dans ', __FILE__) . $cmd->getName());
+                $eqLogic->checkValueAndUpdateCmd($cmd->getLogicalId(), $value, null);
+
+                //$cmd->event($value);
             }
         }
         return true;
@@ -3795,7 +3805,7 @@ class lgthinq2Cmd extends cmd
      * @param string $_value La valeur de chaîne à convertir en binaire.
      * @return int La valeur binaire résultante (0 ou 1) après conversion.
      */
-    public static function formatValueStringToBinary($_value)
+    public static function getStringToBinaryValues($_value)
     {
         $_value = trim($_value);
         if ($_value === true || $_value === 'true') {
@@ -3807,10 +3817,10 @@ class lgthinq2Cmd extends cmd
         } elseif (preg_match('/\_ON($|_)/', $_value)) {
             log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour ON : ', __FILE__) . $_value);
             return 1;
-        } elseif (in_array($_value, ['1', 'true', '@C', '@WATER', 'OK', 'OPEN', 'LOCK', '\u2103', 'ON'])) {
+        } elseif (in_array($_value, ['1', 'true', '@C', '@WATER', 'OK', 'OPEN', 'LOCK', '\u2103', 'ON', 'Activ\u00e9', 'Activé'])) {
             log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 1 : ', __FILE__) . $_value);
             return 1;
-        } elseif (in_array($_value, ['0', 0, false, 'false', '@F', '@NON', '@FAIL', '@AIR', 'FAIL', 'CLOSE', 'UNLOCK', '\uff26', 'OFF'])) {
+        } elseif (in_array($_value, ['0', 0, false, 'false', '@F', '@NON', '@FAIL', '@AIR', 'FAIL', 'CLOSE', 'UNLOCK', '\uff26', 'OFF', 'D\u00e9sactiv\u00e9', 'Désactivé'])) {
             log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 0 : ', __FILE__) . $_value);
             return 0;
         } else {
@@ -3819,6 +3829,287 @@ class lgthinq2Cmd extends cmd
         }
     }
 
+    /**
+     * Récupère les valeurs possibles pour une valeur binaire.
+     *
+     * @param int $_binary La valeur binaire (0 ou 1)
+     * @return array Les valeurs possibles correspondantes
+     */
+    public static function getBinaryToStringValues($_binary)
+    {
+        $_binary = intval($_binary);
+
+        if ($_binary === 1) {
+            return [
+                '_ON',
+                '_ON_',
+                '1',
+                'true',
+                '@C',
+                '@WATER',
+                'OK',
+                'OPEN',
+                'LOCK',
+                '\u2103',
+                'ON',
+                'Activ\u00e9',
+                'Activé'
+            ];
+        }
+
+        if ($_binary === 0) {
+            return [
+                '_OFF',
+                '_OFF_',
+                '0',
+                'false',
+                '@F',
+                '@NON',
+                '@FAIL',
+                '@AIR',
+                'FAIL',
+                'CLOSE',
+                'UNLOCK',
+                '\uff26',
+                'OFF',
+                'D\u00e9sactiv\u00e9',
+                'Désactivé'
+            ];
+        }
+
+        return [];
+    }
+
+
+	public function toHtml($_version = 'dashboard', $_options = '') {
+		$_version = jeedom::versionAlias($_version);
+		$html = '';
+		$replace = array(
+			'#id#' => $this->getId(),
+			'#name#' => $this->getName(),
+			'#name_display#' => ($this->getDisplay('icon') != '') ? $this->getDisplay('icon') : $this->getName(),
+			'#history#' => '',
+			'#hide_history#' => 'hidden',
+			'#unite#' => $this->getUnite(),
+			'#raw_unite#' => $this->getUnite(),
+			'#minValue#' => $this->getConfiguration('minValue', 0),
+			'#maxValue#' => $this->getConfiguration('maxValue', 100),
+			'#logicalId#' => $this->getLogicalId(),
+			'#uid#' => 'cmd' . $this->getId() . eqLogic::UIDDELIMITER . mt_rand() . eqLogic::UIDDELIMITER,
+			'#version#' => $_version,
+			'#eqLogic_id#' => $this->getEqLogic_id(),
+			'#generic_type#' => $this->getGeneric_type(),
+			'#hide_name#' => '',
+			'#value_history#' => ''
+		);
+		if ($this->getConfiguration('listValue', '') != '') {
+			$listOption = '';
+			$elements = explode(';', $this->getConfiguration('listValue', ''));
+			$foundSelect = false;
+			foreach ($elements as $element) {
+				$coupleArray = explode('|', $element);
+				$cmdValue = $this->getCmdValue();
+				if (is_object($cmdValue) && $cmdValue->getType() == 'info') {
+                    $keySelected = intval($this->getConfiguration('listValueSelected', 0));
+                    log::add('lgthinq2', 'debug', 'INDAPLUGIN1 ' . $this->getName() . ' = > ' . $keySeclected);
+                    log::add('lgthinq2', 'debug', 'INDAPLUGIN2 ' . $this->getName() . ' = > ' . $cmdValue->execCmd());
+                    log::add('lgthinq2', 'debug', 'INDAPLUGIN3 ' . $this->getName() . ' = > ' . $coupleArray[$keySeclected]);
+                    $valueCmdValue = $cmdValue->execCmd();
+                    if ($cmdValue->getSubType() == 'binary') {
+                        $valueMap = $cmdValue->getConfiguration('valueMapping', array());
+                        $_arrayValue = lgthinq2Cmd::getBinaryToStringValues($valueCmdValue);
+                        if (in_array($valueCmdValue, $_arrayValue)) {
+                            foreach ($valueMap as $keyV => $valV) {
+                                if (in_array($valV,$_arrayValue)) {
+                                    $valueCmdValue = $keyV;
+                                }
+                            }
+                        }
+                    }
+					if ($valueCmdValue == $coupleArray[$keySelected]) {
+						$listOption .= '<option value="' . $coupleArray[0] . '" selected>' . $coupleArray[1] . '</option>';
+						$foundSelect = true;
+					} else {
+						$listOption .= '<option value="' . $coupleArray[0] . '">' . $coupleArray[1] . '</option>';
+					}
+				} else {
+					if (isset($coupleArray[1])) {
+						$listOption .= '<option value="' . $coupleArray[0] . '">' . $coupleArray[1] . '</option>';
+					} else {
+						$listOption .= '<option value="' . $coupleArray[0] . '">' . $coupleArray[0] . '</option>';
+					}
+				}
+			}
+			if (!$foundSelect) {
+				$listOption = '<option value="">Aucun</option>' . $listOption;
+			}
+			$replace['#listValue#'] = $listOption;
+		}
+		if ($this->getDisplay('showNameOn' . $_version, 1) == 0) {
+			$replace['#hide_name#'] = 'hidden';
+		}
+		if ($this->getDisplay('showIconAndName' . $_version, 0) == 1) {
+			$replace['#name_display#'] = $this->getDisplay('icon') . ' ' . $this->getName();
+		}
+		$widget = $this->getWidgetTemplateCode($_version);
+		$template = $widget['template'];
+		$isCorewidget = $widget['isCoreWidget'];
+		if ($_version == 'scenario' && $isCorewidget) {
+			$widget['widgetName'] = 'cmd.' . $this->getType() . '.' . $this->getSubType() . '.default';
+		}
+
+		if ($_options != '') {
+			$options = jeedom::toHumanReadable($_options);
+			$options = is_json($options, $options);
+			if (is_array($options)) {
+				foreach ($options as $key => $value) {
+					$replace['#' . $key . '#'] = $value;
+				}
+			}
+		}
+		if ($this->getType() == 'info') {
+			$replace['#value#'] = '';
+			$replace['#tendance#'] = '';
+			$replace['#value#'] = $this->execCmd();
+			if ($this->getSubType() == 'binary' && $this->getDisplay('invertBinary') == 1) {
+				$replace['#value#'] = ($replace['#value#'] == 1) ? 0 : 1;
+			}
+			if ($this->getSubType() == 'numeric' && trim($replace['#value#']) === '') {
+				$replace['#value#'] = 0;
+			}
+			if ($this->getSubType() == 'numeric' && trim($replace['#unite#']) != '') {
+				if ($this->getConfiguration('historizeRound') !== '' && is_numeric($this->getConfiguration('historizeRound')) && $this->getConfiguration('historizeRound') >= 0) {
+					$round = $this->getConfiguration('historizeRound');
+				} else {
+					$round = 99;
+				}
+				$valueInfo = self::autoValueArray($replace['#value#'], $round, $replace['#unite#']);
+				$replace['#state#'] = $valueInfo[0];
+				$replace['#unite#'] = $valueInfo[1];
+			}
+			if (!isset($replace['#state#'])) {
+				$replace['#state#'] = $replace['#value#'];
+			}
+			if ($this->getSubType() == 'string') {
+				$replace['#value#'] = str_replace("\n", '<br/>', addslashes($replace['#value#']));
+			}
+			if (method_exists($this, 'formatValueWidget')) {
+				$replace['#state#'] = $this->formatValueWidget($replace['#state#']);
+			}
+
+			$replace['#state#'] = str_replace(array("\'", "'", "\n"), array("'", "\'", '<br/>'), $replace['#state#']);
+			$replace['#collectDate#'] = $this->getCollectDate();
+			$replace['#valueDate#'] = $this->getValueDate();
+			$replace['#alertLevel#'] = $this->getCache('alertLevel', 'none');
+			if ($this->getIsHistorized() == 1) {
+				$replace['#history#'] = 'history cursor';
+				if (config::byKey('displayStatsWidget') == 1 && strpos($template, '#hide_history#') !== false && $this->getDisplay('showStatsOn' . $_version, 1) == 1) {
+					$startHist = date('Y-m-d H:i:s', strtotime(date('Y-m-d H:i:s') . ' -' . config::byKey('historyCalculPeriod') . ' hour'));
+					$replace['#hide_history#'] = '';
+					$historyStatistique = $this->getStatistique($startHist, date('Y-m-d H:i:s'));
+					if ($historyStatistique['avg'] == 0 && $historyStatistique['min'] == 0 && $historyStatistique['max'] == 0) {
+						$replace['#averageHistoryValue#'] = round(intval($replace['#state#']), 1);
+						$replace['#minHistoryValue#'] = round(intval($replace['#state#']), 1);
+						$replace['#maxHistoryValue#'] = round(intval($replace['#state#']), 1);
+					} else {
+						$replace['#averageHistoryValue#'] = round(intval($historyStatistique['avg']), 1);
+						$replace['#minHistoryValue#'] = round(intval($historyStatistique['min']), 1);
+						$replace['#maxHistoryValue#'] = round(intval($historyStatistique['max']), 1);
+					}
+					$startHist = date('Y-m-d H:i:s', strtotime(date('Y-m-d H:i:s') . ' -' . config::byKey('historyCalculTendance') . ' hour'));
+					$tendance = $this->getTendance($startHist, date('Y-m-d H:i:s'));
+					if ($tendance > config::byKey('historyCalculTendanceThresholddMax')) {
+						$replace['#tendance#'] = 'fas fa-arrow-up';
+					} else if ($tendance < config::byKey('historyCalculTendanceThresholddMin')) {
+						$replace['#tendance#'] = 'fas fa-arrow-down';
+					} else {
+						$replace['#tendance#'] = 'fas fa-minus';
+					}
+				}
+			}
+			$parameters = $this->getDisplay('parameters');
+			if (is_array($parameters)) {
+				foreach ($parameters as $key => $value) {
+					$replace['#' . $key . '#'] = $value;
+				}
+			}
+		}
+
+		if ($this->getType() == 'action') {
+			$cmdValue = $this->getCmdValue();
+			if (is_object($cmdValue) && $cmdValue->getType() == 'info') {
+				$replace['#value_id#'] = $cmdValue->getId();
+				$replace['#state#'] = $cmdValue->execCmd();
+				$replace['#valueName#'] = $cmdValue->getName();
+				$replace['#unite#'] = $cmdValue->getUnite();
+				$replace['#collectDate#'] = $cmdValue->getCollectDate();
+				$replace['#valueDate#'] = $cmdValue->getValueDate();
+				$replace['#value_history#'] = ($cmdValue->getIsHistorized() == 1) ? 'history cursor' : '';
+				$replace['#alertLevel#'] = $cmdValue->getCache('alertLevel', 'none');
+				if (trim($replace['#state#']) === '' && ($cmdValue->getSubtype() == 'binary' || $cmdValue->getSubtype() == 'numeric')) {
+					$replace['#state#'] = 0;
+				}
+				if ($cmdValue->getSubType() == 'binary' && $cmdValue->getDisplay('invertBinary') == 1) {
+					$replace['#state#'] = ($replace['#state#'] == 1) ? 0 : 1;
+				}
+			} else {
+				$replace['#state#'] = ($this->getLastValue() !== null) ? $this->getLastValue() : '';
+				$replace['#valueName#'] = $this->getName();
+				$replace['#unite#'] = $this->getUnite();
+			}
+			$replace['#state#'] = str_replace(array("\'", "'"), array("'", "\'"), $replace['#state#']);
+
+			$html .= template_replace($replace, $template);
+			if (trim($html) == '') {
+				return $html;
+			}
+
+			$replace['#title_placeholder#'] = $this->getDisplay('title_placeholder', __('Titre', __FILE__));
+			$replace['#message_placeholder#'] = $this->getDisplay('message_placeholder', __('Message', __FILE__));
+			$replace['#message_cmd_type#'] = $this->getDisplay('message_cmd_type', 'info');
+			$replace['#message_cmd_subtype#'] = $this->getDisplay('message_cmd_subtype', '');
+			$replace['#message_disable#'] = $this->getDisplay('message_disable', 0);
+			$replace['#title_disable#'] = $this->getDisplay('title_disable', 0);
+			$replace['#title_color#'] = $this->getDisplay('title_color', 0);
+			$replace['#title_possibility_list#'] = str_replace("'", "\'", $this->getDisplay('title_possibility_list', ''));
+			$replace['#slider_placeholder#'] = $this->getDisplay('slider_placeholder', __('Valeur', __FILE__));
+			$replace['#other_tooltips#'] = ($replace['#name#'] != $this->getName()) ? $this->getName() : '';
+
+			$parameters = $this->getDisplay('parameters');
+			if (is_array($parameters)) {
+				foreach ($parameters as $key => $value) {
+					$replace['#' . $key . '#'] = $value;
+				}
+			}
+
+			if (!isset($replace['#title#'])) {
+				$replace['#title#'] = '';
+			} else {
+				$replace['#title#'] = htmlspecialchars($replace['#title#']);
+			}
+			if (!isset($replace['#message#'])) {
+				$replace['#message#'] = '';
+			}
+			if (!isset($replace['#slider#'])) {
+				$replace['#slider#'] = '';
+			}
+			if (!isset($replace['#color#'])) {
+				$replace['#color#'] = '';
+			}
+		}
+
+		$template = template_replace($replace, $template);
+		if ($isCorewidget && $_version == 'scenario') {
+			return translate::exec($template, 'core/template/scenario/' . $widget['widgetName'] . '.html');
+		}
+		if ($isCorewidget) {
+			return translate::exec($template, 'core/template/widgets.html');
+		}
+		if (isset($widget['widgetName'])) {
+			return translate::exec($template, $widget['widgetName']);
+		}
+		return $template;
+	}
 
     /**
      * Génère le code HTML pour l'affichage de la commande.
