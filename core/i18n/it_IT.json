@@ -360,6 +360,7 @@
         "Sauvegarder": "Sauvegarder",
         "Sous-type": "Sotto-tipo",
         "Sous-type originel": "Sottotipo originale",
+        "Sélection par index de valeur": "Selezione per indice di valore",
         "Valeur par défaut": "Valore predefinito",
         "Valeurs possibles": "Valeurs possibles",
         "cmd": "cmd",
@@ -382,11 +383,6 @@
         "RSSI": "CISO",
         "Statut": "Stato",
         "Type": "Tipo"
-    },
-    "plugins\/lgthinq2\/desktop\/modal\/history.php": {
-        "401 - Accès non autorisé": "401 - Accesso non autorizzato",
-        "Messages Push LGThinq": "Messaggi Push LGThinq",
-        "Rafraîchir": "Aggiorna"
     },
     "plugins\/lgthinq2\/desktop\/php\/lgthinq2.php": {
         "401 - Accès non autorisé": "401 - Accesso non autorizzato",
