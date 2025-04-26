@@ -126,6 +126,12 @@ sendVarToJS('cmdInfo', $cmdInfo);
                                 ?>
                             </div>
                           </div>
+                          <div class="form-group">
+                            <label class="col-xs-3 control-label">{{Sélection par index de valeur}}</label>
+                            <div class="col-xs-9">
+                              <input type="checkbox" class="cmdAttr" data-l1key="configuration" data-l2key="listValueSelected" />
+                            </div>
+                          </div>
                       <?php } else { ?>
                           <div class="form-group">
                             <label class="col-xs-3 control-label">{{dataValue}}</label>
@@ -145,90 +151,109 @@ sendVarToJS('cmdInfo', $cmdInfo);
 </div>
 
 <script>
-$(function() {
-  console.log(cmdInfo)
-  //modal title:
-  var title = '{{Configuration commande}}'
-  title += ' : ' + cmdInfo.eqLogicName
-  title += ' <span class="cmdName">[' + cmdInfo.name + '] <em>(' + cmdInfo.type + ')</em></span>'
-  $('#div_displayCmdConfigure').parents('.ui-dialog').find('.ui-dialog-title').html(title)
-  if ($('#eqLogicConfigureTab').length) {
-    $('#cmdConfigureTab').parents('.ui-dialog').css('top', "50px")
-  }
-})
-                
-$('.coupleArray').on('change', function () {
-	var listValue = "";
-	let nbValue = $('.coupleArray').length / 2;
-	for (let pas = 0; pas < nbValue; pas++) {
-      listValue += $('#coupleArray'+pas)[0].value+'|'+$('#coupleKey'+pas)[0].value+';';
-	}
-	$('#changeListValue').empty().value(listValue.substring(0, listValue.length - 1))
-	modifyWithoutSave = false;
+  (function() {
+    console.log(cmdInfo);
+    let title = '{{Configuration commande}}';
+    title += ' : ' + cmdInfo.eqLogicName;
+    title += ' <span class="cmdName">[' + cmdInfo.name + '] <em>(' + cmdInfo.type + ')</em></span>';
+
+    const parentDialog = document.querySelector('#div_displayCmdConfigure').closest('.ui-dialog');
+    if (parentDialog) {
+        parentDialog.querySelector('.ui-dialog-title').innerHTML = title;
+    }
+
+    if (document.getElementById('eqLogicConfigureTab')) {
+        document.querySelector('#cmdConfigureTab').closest('.ui-dialog').style.top = "50px";
+    }
 });
 
-$('#div_displayCmdConfigure').setValues(cmdInfo, '.cmdAttr');
+document.querySelectorAll('.coupleArray').forEach(element => {
+    element.addEventListener('change', function() {
+        let listValue = "";
+        const nbValue = document.querySelectorAll('.coupleArray').length / 2;
 
-$('.bt_testEnum').off('click').on('click',function() {
-    var elbutton = $(this);
-	$.ajax({ // fonction permettant de faire de l'ajax
-		type: "POST", // methode de transmission des données au fichier php
-		url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php", // url du fichier php
-		data: {
-			action: "testEnum",
-			data_key: cmdInfo.configuration.key,
-            data_value: elbutton.parent().find('.data_value').value(),
-            path: cmdInfo.configuration.path,
-            eqLogic_id: cmdInfo.eqLogic_id
-		},
-		dataType: 'json',
-		error: function (request, status, error) {
-			handleAjaxError(request, status, error);
-		},
-		success: function (data) {
-			if (data.state != 'ok') {
-				$.fn.showAlert({message: data.result, level: 'danger'});
-				return;
-			}
-            elbutton.next('#resultTestEnum').html(data)
-		}
-	});
+        for (let pas = 0; pas < nbValue; pas++) {
+            const arrayValue = document.getElementById('coupleArray' + pas).value;
+            const keyValue = document.getElementById('coupleKey' + pas).value;
+            listValue += arrayValue + '|' + keyValue + ';';
+        }
+
+        const changeListValue = document.getElementById('changeListValue');
+        changeListValue.value = listValue.slice(0, -1);
+        modifyWithoutSave = false;
+    });
 });
 
-  $('#bt_cmdConfigureSave').on('click', function(event) {
-      var cmd = $('#div_displayCmdConfigure').getValues('.cmdAttr')[0];
-      cmdInfo.configuration = {}
-      cmdInfo.logicalId = cmd.logicalId;
-      if (cmdInfo.type == 'info') {
-          cmdInfo.configuration.default = cmd.configuration.default;
-          cmdInfo.configuration.originalType = cmd.configuration.originalType;
-      } else {
-          cmdInfo.configuration.ctrlKey = cmd.configuration.ctrlKey;
-          cmdInfo.configuration.cmd = cmd.configuration.cmd;
-          cmdInfo.configuration.dataKey = cmd.configuration.dataKey;
-          cmdInfo.configuration.dataValue = cmd.configuration.dataValue;
-          if (cmdInfo.configuration.listValue && cmdInfo.configuration.listValue != '') {
-              cmdInfo.configuration.listValue = cmd.configuration.listValue;
-          }
-          if (cmd.configuration.dataSetList && cmd.configuration.dataSetList != '') {
-              cmdInfo.configuration.dataSetList = cmd.configuration.dataSetList;
-          }
-      }
-      jeedom.cmd.save({
-          cmd: cmdInfo,
-          error: function(error) {
-              $('#md_displayCmdConfigure').showAlert({
-                  message: error.message,
-                  level: 'danger'
-              })
-          },
-          success: function(data) {
-              modifyWithoutSave = false
-              $('#md_displayCmdConfigure').showAlert({
-                  message: '{{Sauvegarde réussie}}',
-                  level: 'success'
-              })
-          }
-      })
-  })
+document.getElementById('div_displayCmdConfigure').setJeeValues(cmdInfo, '.cmdAttr');
+
+document.querySelectorAll('.bt_testEnum').forEach(button => {
+    button.addEventListener('click', function() {
+        const dataValue = this.parentElement.querySelector('.data_value').value;
+
+        domUtils.ajax({
+            type: "POST",
+            url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
+            data: {
+                action: "testEnum",
+                data_key: cmdInfo.configuration.key,
+                data_value: dataValue,
+                path: cmdInfo.configuration.path,
+                eqLogic_id: cmdInfo.eqLogic_id
+            },
+            dataType: 'json',
+            error: function(request, status, error) {
+                handleAjaxError(request, status, error);
+            },
+            success: function(data) {
+                if (data.state !== 'ok') {
+                    jeedomUtils.showAlert({message: data.result, level: 'danger'});
+                    return;
+                }
+                button.nextElementSibling.innerHTML = data;
+            }
+        });
+    });
+});
+
+// Sauvegarde
+document.getElementById('bt_cmdConfigureSave').addEventListener('click', function() {
+    var cmd = document.getElementById('div_displayCmdConfigure').getJeeValues('.cmdAttr')[0]
+    cmdInfo.configuration = {};
+    cmdInfo.logicalId = cmd.logicalId;
+
+    if (cmdInfo.type === 'info') {
+        cmdInfo.configuration.default = cmd.configuration.default;
+        cmdInfo.configuration.originalType = cmd.configuration.originalType;
+    } else {
+        cmdInfo.configuration.ctrlKey = cmd.configuration.ctrlKey;
+        cmdInfo.configuration.cmd = cmd.configuration.cmd;
+        cmdInfo.configuration.dataKey = cmd.configuration.dataKey;
+        cmdInfo.configuration.dataValue = cmd.configuration.dataValue;
+
+        if (cmdInfo.configuration.listValue && cmdInfo.configuration.listValue !== '') {
+            cmdInfo.configuration.listValue = cmd.configuration.listValue;
+        }
+        if (cmd.configuration.dataSetList && cmd.configuration.dataSetList !== '') {
+            cmdInfo.configuration.dataSetList = cmd.configuration.dataSetList;
+        }
+    }
+
+    jeedom.cmd.save({
+        cmd: cmdInfo,
+        error: function(error) {
+            jeedomUtils.showAlert({
+                message: error.message,
+                level: 'danger'
+            }, '#md_displayCmdConfigure');
+        },
+        success: function(data) {
+            modifyWithoutSave = false;
+            jeedomUtils.showAlert({
+                message: '{{Sauvegarde réussie}}',
+                level: 'success'
+            }, '#md_displayCmdConfigure');
+        }
+    });
+});
+
 </script>
