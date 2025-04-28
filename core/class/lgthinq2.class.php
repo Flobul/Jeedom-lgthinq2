@@ -3793,10 +3793,10 @@ class lgthinq2Cmd extends cmd
         } elseif (preg_match('/\_ON($|_)/', $_value)) {
             log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour ON : ', __FILE__) . $_value);
             return 1;
-        } elseif (in_array($_value, ['1', 'true', '@C', '@WATER', 'OK', 'OPEN', 'LOCK', '\u2103', 'ON', 'Activ\u00e9', 'Activé'])) {
+        } elseif (in_array($_value, ['1', 'true', '@C', '@WATER', 'OK', 'OPEN', 'LOCK', '\u2103', 'ON', 'Activ\u00e9', 'Activé', '℃'])) {
             log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 1 : ', __FILE__) . $_value);
             return 1;
-        } elseif (in_array($_value, ['0', 0, false, 'false', '@F', '@NON', '@FAIL', '@AIR', 'FAIL', 'CLOSE', 'UNLOCK', '\uff26', 'OFF', 'D\u00e9sactiv\u00e9', 'Désactivé'])) {
+        } elseif (in_array($_value, ['0', 0, false, 'false', '@F', '@NON', '@FAIL', '@AIR', 'FAIL', 'CLOSE', 'UNLOCK', '\uff26', 'OFF', 'D\u00e9sactiv\u00e9', 'Désactivé', '℉'])) {
             log::add('lgthinq2', 'info', __FUNCTION__ . ' ' . __('commande mise à jour 0 : ', __FILE__) . $_value);
             return 0;
         } else {
@@ -3829,7 +3829,8 @@ class lgthinq2Cmd extends cmd
                 '\u2103',
                 'ON',
                 'Activ\u00e9',
-                'Activé'
+                'Activé',
+                '℃'
             ];
         }
 
@@ -3849,7 +3850,8 @@ class lgthinq2Cmd extends cmd
                 '\uff26',
                 'OFF',
                 'D\u00e9sactiv\u00e9',
-                'Désactivé'
+                'Désactivé',
+                '℉'
             ];
         }
 
@@ -3887,9 +3889,6 @@ class lgthinq2Cmd extends cmd
 				$cmdValue = $this->getCmdValue();
 				if (is_object($cmdValue) && $cmdValue->getType() == 'info') {
                     $keySelected = intval($this->getConfiguration('listValueSelected', 0));
-                    log::add('lgthinq2', 'debug', 'INDAPLUGIN1 ' . $this->getName() . ' = > ' . $keySeclected);
-                    log::add('lgthinq2', 'debug', 'INDAPLUGIN2 ' . $this->getName() . ' = > ' . $cmdValue->execCmd());
-                    log::add('lgthinq2', 'debug', 'INDAPLUGIN3 ' . $this->getName() . ' = > ' . $coupleArray[$keySeclected]);
                     $valueCmdValue = $cmdValue->execCmd();
                     if ($cmdValue->getSubType() == 'binary') {
                         $valueMap = $cmdValue->getConfiguration('valueMapping', array());
