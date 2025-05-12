@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '1.01';
+    public static $_pluginVersion = '1.02';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -1710,6 +1710,9 @@ class lgthinq2 extends eqLogic
                                 $cmd->setTemplate('mobile', 'tile');
                                 $cmd->save();
                             }
+                            if ($item['usedDate'] == date('Y-m-d')) {
+                                $dateReal = date('Y-m-d H:i:s');
+                            }
                             $cmdHistory = history::byCmdIdDatetime($cmd->getId(), $dateReal);
                             if (is_object($cmdHistory) && $cmdHistory->getValue() == $detail['waterAmount']) {
                                 log::add(__CLASS__, 'debug', $this->getHumanName() . ' Mesure déjà en historique : Cmd = [' . $cmd->getName() . '] Date = ' . $dateReal . ' => Mesure = ' . $detail['waterAmount']);
@@ -1791,6 +1794,9 @@ class lgthinq2 extends eqLogic
             foreach ($_energy['item'] as $item) {
                 $dateReal = $item['usedDate'] . ' 23:59:59';
                 //nombre de programmes : count
+                if ($item['usedDate'] == date('Y-m-d')) {
+                    $dateReal = date('Y-m-d H:i:s');
+                }
                 if (isset($item['count'])) {
                     $cmdHistory = history::byCmdIdDatetime($cmdP->getId(), $dateReal);
                     if (is_object($cmdHistory) && $cmdHistory->getValue() == $item['count']) {
@@ -1866,10 +1872,10 @@ class lgthinq2 extends eqLogic
      * @param string $_type Le type de données de configuration à charger.
      * @return array|null Les données de configuration chargées si elles sont réussies ; sinon, retourne null.
      */
-    public static function loadConfigFile($_type)
+    public static function loadConfigFile($_type, $_dir = '/../../data/')
     {
         //log::add(__CLASS__, 'debug', __FUNCTION__ .' début' . $_type);
-        $filename = __DIR__ . '/../../data/' . $_type . '.json';
+        $filename = __DIR__ . $_dir . $_type . '.json';
         if (!file_exists($filename)) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Impossible de trouver le fichier de configuration pour l\'équipement ', __FILE__));
             return;
@@ -2352,7 +2358,7 @@ class lgthinq2 extends eqLogic
     public function checkAndCreateCmdFromConfigFile($_configData, $_key)
     {
         foreach ($_configData['commands'] as $command) {
-            if ($command['logicalId'] == $_key) {
+            if ($command['logicalId'] == $_key || $command['configuration']['ctrlKey'] == $_key) {
                 $this->createCommand($command);
             }
         }
@@ -3080,6 +3086,10 @@ class lgthinq2 extends eqLogic
                                     );
                                 }
                             }
+                        } else if ($controlKey == 'vtCtrl') {
+                            $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getConfiguration('deviceType'), '/../../core/config/devices/');
+                            $this->checkAndCreateCmdFromConfigFile($deviceTypeConfigFile, $controlKey);
+
                         } else {
                             if ($controlValue['command'] == 'Get') {
                                 $nameCKey = str_replace(array('Get', 'get'), '', $controlKey, $iCKey);
@@ -3102,7 +3112,7 @@ class lgthinq2 extends eqLogic
                                 'configuration' => array(
                                     'ctrlKey' => $controlKey,
                                     'cmd' => $controlValue['command'],
-                                    'dataSetList' => (in_array($controlKey, array('WMStart', 'WMDownload', 'WMOff', 'WMStop', 'WMWakeup'))?$controlValue['data']:null)
+                                    'dataSetList' => (in_array($controlKey, array('WMStart', 'WMDownload', 'WMOff', 'WMStop', 'WMWakeup', 'vtCtrl', 'ospWakeup', 'courseSetting'))?$controlValue['data']:null)
                                 )
                             );
                         }
@@ -3529,6 +3539,7 @@ class lgthinq2Cmd extends cmd
             return;
         }
         $resValue = '';
+        $replace = array();
         $configurationValue = $this->getConfiguration('value', '');
 
         switch ($this->getSubType()) {
@@ -3685,7 +3696,7 @@ class lgthinq2Cmd extends cmd
                 'ctrlKey' => $this->getConfiguration('ctrlKey'),
                 //'dataSetList' => array(),
                 'dataKey' => $this->getConfiguration('dataKey', null),
-                'dataValue' => $this->getConfiguration('dataValue', $value)
+                'dataValue' => $value != '' ? $this->getConfiguration('dataValue', $value) : null
             );
 
             if ($this->getConfiguration('dataSetList', '') == '') {

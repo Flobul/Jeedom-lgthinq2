@@ -1,0 +1,122 @@
+{
+    "commands": [
+        {
+            "name": "Allumer",
+            "type": "action",
+            "subtype": "other",
+            "isVisible": 1,
+            "logicalId": "vtCtrl::poweron",
+            "configuration": {
+                "ctrlKey": "vtCtrl",
+                "cmd": "Set",
+                "dataSetList": {
+                    "ctrlTarget": [
+                        "UNDEFINE"
+                    ],
+                    "reqDevType": "APP",
+                    "productType": "NORMAL",
+                    "vtData": {
+                        "UNDEFINE": [
+                            {
+                                "cmd": "power",
+                                "type": "ABSOLUTE",
+                                "value": "POWER_ON"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "name": "Éteindre",
+            "type": "action",
+            "subtype": "other",
+            "isVisible": 1,
+            "logicalId": "vtCtrl::poweroff",
+            "configuration": {
+                "ctrlKey": "vtCtrl",
+                "cmd": "Set",
+                "dataSetList": {
+                    "ctrlTarget": [
+                        "UNDEFINE"
+                    ],
+                    "reqDevType": "APP",
+                    "productType": "NORMAL",
+                    "vtData": {
+                        "UNDEFINE": [
+                            {
+                                "cmd": "power",
+                                "type": "ABSOLUTE",
+                                "value": "POWER_OFF"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "name": "Reprendre",
+            "type": "action",
+            "subtype": "other",
+            "isVisible": 1,
+            "logicalId": "vtCtrl::start",
+            "configuration": {
+                "ctrlKey": "vtCtrl",
+                "cmd": "Set",
+                "dataSetList": {
+                    "ctrlKey": "vtCtrl",
+                    "command": "Set",
+                    "dataKey": null,
+                    "dataValue": null,
+                    "dataSetList": {
+                        "vtData": {
+                            "UNDEFINE": [
+                                {
+                                    "cmd": "wmControl",
+                                    "value": "START",
+                                    "type": "ABSOLUTE"
+                                }
+                            ]
+                        },
+                        "ctrlTarget": [
+                            "UNDEFINE"
+                        ],
+                        "reqDevType": "APP",
+                        "productType": "NORMAL"
+                    },
+                    "dataGetList": null
+                }
+            }
+        },
+        {
+            "name": "Mettre en pause",
+            "type": "action",
+            "subtype": "other",
+            "isVisible": 1,
+            "logicalId": "vtCtrl::pause",
+            "configuration": {
+                "ctrlKey": "vtCtrl",
+                "command": "Set",
+                "dataKey": null,
+                "dataValue": null,
+                "dataSetList": {
+                    "vtData": {
+                        "UNDEFINE": [
+                            {
+                                "cmd": "wmControl",
+                                "value": "PAUSE",
+                                "type": "ABSOLUTE"
+                            }
+                        ]
+                    },
+                    "ctrlTarget": [
+                        "UNDEFINE"
+                    ],
+                    "reqDevType": "APP",
+                    "productType": "NORMAL"
+                },
+                "dataGetList": null
+            }
+        }
+    ]
+}
