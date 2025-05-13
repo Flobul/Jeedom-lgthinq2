@@ -55,7 +55,6 @@ document.getElementById('bt_getCredentialsPlugin').addEventListener('click', fun
 });
 
 document.getElementById('bt_validTermsPlugin').addEventListener('click', function() {
-
     domUtils.ajax({
         type: "POST",
         url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
@@ -82,8 +81,8 @@ document.getElementById('bt_validTermsPlugin').addEventListener('click', functio
         }
     });
 });
-
-document.getElementById('div_plugin_configuration').addEventListener('change', function () {
+var divPluginConfiguration = document.getElementById('div_plugin_configuration');
+divPluginConfiguration?.addEventListener('change', function () {
     var expiresInput = document.querySelector('.configKey[data-l1key="expires_in"]');
     var currentTime = Math.floor(Date.now() / 1000);
 
@@ -102,3 +101,102 @@ document.getElementById('div_plugin_configuration').addEventListener('change', f
         expiresInput.classList.add('configKeyUnsaved');
     }
 });
+
+function printPluginConfiguration() {
+    var divPluginLGConfiguration = document.getElementById('configuration_plugin_lgthinq2');
+    var btnSavePluginConfig = document.getElementById('bt_savePluginConfig');
+    var configInputs = divPluginLGConfiguration?.querySelectorAll('.configKey');
+    var modificationCount = 0;
+    var initialValues = new Map();
+    var modificationMessage = document.createElement('i');
+    modificationMessage.classList.add('modificationWithoutSave', 'label', 'label-warning', 'pull-right');
+    modificationMessage.innerHTML = '{{Modification en cours...}}';
+    modificationMessage.unseen();
+    btnSavePluginConfig.parentNode.insertBefore(modificationMessage, btnSavePluginConfig.nextSibling);
+
+    function resetStyle(element) {
+        element.style.setProperty('background-color', '', 'important');
+        element.style.setProperty('color', '', 'important');
+    }
+
+    function setModifiedStyle(element) {
+        element.style.setProperty('background-color', 'var(--al-warning-color)', 'important');
+        element.style.setProperty('color', 'var(--sc-lightTxt-color)', 'important');
+    }
+
+    function updateModificationStatus() {
+        if (modificationCount > 0) {
+            modificationMessage.seen();
+        } else {
+            modificationMessage.unseen();
+        }
+    }
+
+    configInputs?.forEach(function (input) {
+        resetStyle(input); // Reset du style au démarrage
+        if (input.type === 'checkbox') {
+            initialValues.set(input, input.checked);
+        } else {
+            initialValues.set(input, input.value);
+        }
+    });
+
+    configInputs?.forEach(function (input) {
+        if (input.type === 'checkbox') {
+            input.addEventListener('change', function() {
+                const initialValue = initialValues.get(this);
+                const isModified = this.checked !== initialValue;
+
+                if (isModified && !this.hasAttribute('data-modified')) {
+                    setModifiedStyle(this);
+                    this.setAttribute('data-modified', '');
+                    modificationCount++;
+                } else if (!isModified && this.hasAttribute('data-modified')) {
+                    resetStyle(this);
+                    this.removeAttribute('data-modified');
+                    modificationCount--;
+                }
+                updateModificationStatus();
+            });
+        } else {
+            const eventType = input.nodeName === 'SELECT' ? 'change' : 'input';
+            input.addEventListener(eventType, function() {
+                const initialValue = initialValues.get(this);
+                const isModified = this.value !== initialValue;
+
+                if (isModified && !this.hasAttribute('data-modified')) {
+                    setModifiedStyle(this);
+                    this.setAttribute('data-modified', '');
+                    modificationCount++;
+                } else if (!isModified && this.hasAttribute('data-modified')) {
+                    resetStyle(this);
+                    this.removeAttribute('data-modified');
+                    modificationCount--;
+                }
+                updateModificationStatus();
+            });
+        }
+    });
+
+    btnSavePluginConfig.addEventListener('click', function() {
+        configInputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                initialValues.set(input, input.checked);
+            } else {
+                initialValues.set(input, input.value);
+            }
+            resetStyle(input);
+            input.removeAttribute('data-modified');
+        });
+        modificationCount = 0;
+        modificationMessage.unseen();
+    });
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", printPluginConfiguration);
+} else {
+    setTimeout(function() {
+        printPluginConfiguration();
+    }, 100)
+}

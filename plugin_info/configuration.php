@@ -32,7 +32,7 @@
         color: var(--al-danger-color) !important;
     }
 </style>
-<form class="form-horizontal">
+<form class="form-horizontal" id="configuration_plugin_lgthinq2">
    <fieldset>
       <div class="form-group">
           <legend>
