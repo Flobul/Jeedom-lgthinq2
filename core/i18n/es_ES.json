@@ -310,6 +310,7 @@
         "Conditions validées avec succès.": "Condiciones validadas con éxito.",
         "Connexion réalisée avec succès.": "Conexión completada con éxito.",
         "Expiré": "Caducado",
+        "Modification en cours...": "Modificación en curso...",
         "Veuillez entrer un identifiant et un mot de passe de connexion.": "Introduzca un nombre de usuario y una contraseña."
     },
     "plugins\/lgthinq2\/desktop\/js\/lgthinq2.js": {

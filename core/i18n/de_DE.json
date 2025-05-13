@@ -310,6 +310,7 @@
         "Conditions validées avec succès.": "Bedingungen erfolgreich validiert.",
         "Connexion réalisée avec succès.": "Verbindung erfolgreich hergestellt.",
         "Expiré": "Abgelaufen",
+        "Modification en cours...": "Änderung wird durchgeführt...",
         "Veuillez entrer un identifiant et un mot de passe de connexion.": "Bitte geben Sie einen Benutzernamen und ein Passwort für die Anmeldung ein."
     },
     "plugins\/lgthinq2\/desktop\/js\/lgthinq2.js": {
