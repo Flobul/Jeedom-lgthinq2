@@ -3696,7 +3696,7 @@ class lgthinq2Cmd extends cmd
                 'ctrlKey' => $this->getConfiguration('ctrlKey'),
                 //'dataSetList' => array(),
                 'dataKey' => $this->getConfiguration('dataKey', null),
-                'dataValue' => $value != '' ? $this->getConfiguration('dataValue', $value) : null
+                'dataValue' => $value != '' ? $value : $this->getConfiguration('dataValue', $value)
             );
 
             if ($this->getConfiguration('dataSetList', '') == '') {
