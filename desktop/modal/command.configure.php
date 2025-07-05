@@ -132,16 +132,24 @@ sendVarToJS('cmdInfo', $cmdInfo);
                               <input type="checkbox" class="cmdAttr" data-l1key="configuration" data-l2key="listValueSelected" />
                             </div>
                           </div>
-                      <?php } else { ?>
-                          <div class="form-group">
-                            <label class="col-xs-3 control-label">{{dataValue}}</label>
-                            <div class="col-xs-9">
-                                <input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="dataValue" placeholder="{{dataValue}}" title="{{dataValue}}" style="display:inline-block"></input>
+                          <?php } else { ?>
+                            <div class="form-group">
+                              <label class="col-xs-3 control-label">{{dataValue}}</label>
+                              <div class="col-xs-9">
+                                  <input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="dataValue" placeholder="{{dataValue}}" title="{{dataValue}}" style="display:inline-block"></input>
+                              </div>
                             </div>
-                          </div>
-                      <?php } ?>
-                  <?php } ?>
-              <?php } ?>
+                            <?php if ($cmd->getSubType() == 'other' && $cmd->getConfiguration('updateLGCmdToValue', '') != '') { ?>
+                                <div class="form-group">
+                                  <label class="col-xs-3 control-label">{{Veuillez vider ce champ avant sauvegarde}}</label>
+                                  <div class="col-xs-9">
+                                      <input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="updateLGCmdToValue" placeholder="{{updateLGCmdToValue}}" title="{{updateLGCmdToValue}}" style="display:inline-block;background-color:var(--al-danger-color) !important;"></input>
+                                  </div>
+                                </div>
+                            <?php } ?>
+                        <?php } ?>
+                    <?php } ?>
+                <?php } ?>
             </fieldset>
           </form>
         </div>
