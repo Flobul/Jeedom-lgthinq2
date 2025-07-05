@@ -26,7 +26,7 @@ sendVarToJS('eqType', $plugin->getId());
 $eqLogics = eqLogic::byType($plugin->getId());
 
 ?>
-<link rel="stylesheet" href="/plugins/lgthinq2/desktop/css/lgthinq2.css">
+<link rel="stylesheet" href="core/php/getResource.php?file=/plugins/lgthinq2/desktop/css/lgthinq2.css">
 
 <div class="row row-overflow" id="div_lgthinq2">
   <div class="eqLogicThumbnailDisplay" style="border-left: solid 1px #EEE; padding-left: 25px;">
