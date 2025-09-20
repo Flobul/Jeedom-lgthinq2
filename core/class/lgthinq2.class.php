@@ -2047,7 +2047,6 @@ class lgthinq2 extends eqLogic
         //$devices = json_decode(file_get_contents(dirname(__FILE__) . '/../../data/MAG_'.$this->getLogicalId().'.json'),true); // developper only
 
         if (isset($devices['result']['snapshot'])) {
-            $deviceTypeConfigFile = lgthinq2::loadConfigFile($this->getLogicalId() . '_modelJson');
             $onlineCmd = $this->getCmd('info', 'online');
             /*if (!is_object($onlineCmd)) {
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('AAAAAAAA Commande existe pas ', __FILE__) . json_encode($devices));
@@ -2357,9 +2356,11 @@ class lgthinq2 extends eqLogic
      */
     public function checkAndCreateCmdFromConfigFile($_configData, $_key)
     {
-        foreach ($_configData['commands'] as $command) {
-            if ($command['logicalId'] == $_key || $command['configuration']['ctrlKey'] == $_key) {
-                $this->createCommand($command);
+        if (isset($_configData['commands'])) {
+            foreach ($_configData['commands'] as $command) {
+                if ($command['logicalId'] == $_key || $command['configuration']['ctrlKey'] == $_key) {
+                    $this->createCommand($command);
+                }
             }
         }
         return false;
