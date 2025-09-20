@@ -364,11 +364,13 @@
         "Sélection par index de valeur": "Auswahl nach Wertindex",
         "Valeur par défaut": "Standardwert",
         "Valeurs possibles": "Mögliche Werte",
+        "Veuillez vider ce champ avant sauvegarde": "Bitte leeren Sie dieses Feld vor dem Speichern",
         "cmd": "cmd",
         "ctrlKey": "ctrlKey",
         "dataKey": "dataKey",
         "dataSetList": "dataSetList",
-        "dataValue": "dataValue"
+        "dataValue": "dataValue",
+        "updateLGCmdToValue": "updateLGCmdToValue"
     },
     "plugins\/lgthinq2\/desktop\/modal\/health.php": {
         "Appareil": "Gerät",
