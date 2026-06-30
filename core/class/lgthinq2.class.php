@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 class lgthinq2 extends eqLogic
 {
     /*     * *************************Attributs****************************** */
-    public static $_pluginVersion = '1.04';
+    public static $_pluginVersion = '1.04.00';
     public static $_widgetPossibility   = array('custom' => true, 'custom::layout' => true);
 
     const LGTHINQ_GATEWAY       = 'https://route.lgthinq.com:46030/v1/service/application/gateway-uri';
@@ -1197,8 +1197,9 @@ class lgthinq2 extends eqLogic
         $return = array();
         $return['log'] = __CLASS__;
         $return['state'] = 'nok';
-        $pid = trim(shell_exec('ps ax | grep "/lgthinq2d.php" | grep -v "grep" | wc -l'));
-        if ($pid != '' && $pid != '0') {
+        $pids = array();
+        exec('pgrep -f "[/]lgthinq2d.php"', $pids);
+        if (!empty($pids)) {
             $return['state'] = 'ok';
         }
         $return['launchable'] = 'ok';
@@ -1265,24 +1266,17 @@ class lgthinq2 extends eqLogic
     public static function deamon_stop()
     {
         log::add(__CLASS__, 'info', __('Arrêt du service lgthinq2', __FILE__));
-        $cmd = '/lgthinq2d.php';
-        exec('sudo kill -9 $(ps aux | grep "'.$cmd.'" | awk \'{print $2}\')');
-        sleep(1);
-        exec('sudo kill -9 $(ps aux | grep "'.$cmd.'" | awk \'{print $2}\')');
-        sleep(1);
-        $deamon_info = self::deamon_info();
-        if ($deamon_info['state'] == 'ok') {
-            exec('sudo kill -9 $(ps aux | grep "'.$cmd.'" | awk \'{print $2}\')');
+        for ($i = 0; $i < 4; $i++) {
+            $pids = array();
+            exec('pgrep -f "[/]lgthinq2d.php"', $pids);
+            $pids = array_filter(array_map('intval', $pids));
+            if (empty($pids)) {
+                return true;
+            }
+            exec('sudo kill -9 ' . implode(' ', $pids) . ' 2>/dev/null');
             sleep(1);
-        } else {
-            return true;
         }
-        $deamon_info = self::deamon_info();
-        if ($deamon_info['state'] == 'ok') {
-            exec('sudo kill -9 $(ps aux | grep "'.$cmd.'" | awk \'{print $2}\')');
-            sleep(1);
-            return true;
-        }
+        return self::deamon_info()['state'] != 'ok';
     }
 
     /**
@@ -2036,8 +2030,12 @@ class lgthinq2 extends eqLogic
             log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Erreur de la requête ', __FILE__) . json_encode($devices));
             return;
         }
-        if ($devices['resultCode'] != '0000' && $_tokenRefreshed == false) {
-            lgthinq2::getDevices($_deviceId, true);
+        if ($devices['resultCode'] != '0000') {
+            log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('Code retour erroné ', __FILE__) . json_encode($devices));
+            if ($_repeat === false) {
+                lgthinq2::getDevices($this->getLogicalId(), true);
+            }
+            return;
         }
 
         $modelJson = false;
@@ -2374,7 +2372,7 @@ class lgthinq2 extends eqLogic
      * @param string $_langFileVer Version du fichier JSON de langue.
      * @return array|false Les données JSON de langue ou false en cas d'erreur.
      */
-    public function getLangJson($_type, $_langFileUri = '', $_langFileVer)
+    public function getLangJson($_type, $_langFileUri = '', $_langFileVer = '0.0')
     {
         $curVersion = $this->getConfiguration($_type . 'Ver', '');
         $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '_' . $_type . '.json';
@@ -2565,6 +2563,7 @@ class lgthinq2 extends eqLogic
                 }
                // return true;
             }
+
             if (isset($data['MonitoringValue'])) {
 
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('DEBUGGGG MonitoringValue ', __FILE__) . json_encode($data['MonitoringValue']));
@@ -2812,6 +2811,7 @@ class lgthinq2 extends eqLogic
                                     ),
                                     'value' => $updateCmdId
                                 );
+
                             }
 
                         } elseif (preg_match('/{(.*?)}/', $actionConfig['value'], $matches)) {
@@ -3241,17 +3241,15 @@ class lgthinq2 extends eqLogic
         $cmd = array();
         $cmdInfo = $this->getCmd('info', $refStateId);
         if (is_object($cmdInfo)) {
-            if ($cmdInfo->getUnite() == '°C') {
-                $tkv = $cmdInfo->getConfiguration('targetKey')['tempUnit']['CELSIUS'];
-                if (isset($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray])) {
-                    //return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
-                    $cmdInfo->event($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
-                }
-            } elseif ($cmdInfo->getUnite() == '°F') {
-                $tkv = $cmdInfo->getConfiguration('targetKey')['tempUnit']['FAHRENHEIT'];
-                if (isset($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray])) {
-                    //return $this->checkAndUpdateCmd($refStateId, $cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
-                    $cmdInfo->event($cmdInfo->getConfiguration('targetKeyValues')[$tkv][$refStateValueArray]['label'], $timestamp);
+            if (in_array($cmdInfo->getUnite(), array('°C', '°F'))) {
+                $targetKey = $cmdInfo->getConfiguration('targetKey');
+                $targetKeyValues = $cmdInfo->getConfiguration('targetKeyValues');
+                $tempUnit = ($cmdInfo->getUnite() == '°C') ? 'CELSIUS' : 'FAHRENHEIT';
+                if (is_array($targetKey)
+                    && is_array($targetKeyValues)
+                    && isset($targetKey['tempUnit'][$tempUnit])
+                    && isset($targetKeyValues[$targetKey['tempUnit'][$tempUnit]][$refStateValueArray]['label'])) {
+                    $refStateValueArray = $targetKeyValues[$targetKey['tempUnit'][$tempUnit]][$refStateValueArray]['label'];
                 }
             }
             if ($cmdInfo->getSubType() == 'binary') {
