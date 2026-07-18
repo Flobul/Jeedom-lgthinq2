@@ -19,7 +19,7 @@
    require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
    require_once dirname(__FILE__) . '/../core/class/lgthinq2.class.php';
    include_file('core', 'authentification', 'php');
-   if (!isConnect()) {
+   if (!isConnect('admin')) {
        include_file('desktop', '404', 'php');
        die();
    }
@@ -203,7 +203,7 @@
               <sup><i class="fas fa-question-circle" title="{{Entrez le mot de passe.}}"></i></sup>
           </label>
           <div class="input-group col-sm-2">
-              <input type="text" class="inputPassword configKey form-control" data-l1key="password" placeholder="password">
+              <input type="password" class="inputPassword configKey form-control" data-l1key="password" placeholder="password">
               <span class="input-group-btn">
                   <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
               </span>
@@ -224,7 +224,7 @@
               <sup><i class="fas fa-question-circle" title="{{Jeton servant à accéder à l'API.}}"></i></sup>
           </label>
           <div class="input-group col-sm-8">
-              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="access_token">
+              <input type="password" disabled class="inputPassword configKey form-control" data-l1key="access_token">
               <span class="input-group-btn">
                   <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
               </span>
@@ -245,7 +245,7 @@
               <sup><i class="fas fa-question-circle" title="{{Jeton servant à demander le renouvellement du jeton d'accès sans avoir besoin de refaire toute la séquence d'authentification.}}"></i></sup>
           </label>
           <div class="input-group col-sm-8">
-              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="refresh_token"></input>
+              <input type="password" disabled class="inputPassword configKey form-control" data-l1key="refresh_token"></input>
               <span class="input-group-btn">
                   <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
               </span>
@@ -257,7 +257,7 @@
               <sup><i class="fas fa-question-circle" title="{{Identifiant de session servant pour passer en moniteur les appareils en thinq1.}}"></i></sup>
           </label>
           <div class="input-group col-sm-6">
-              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="jsessionId"></input>
+              <input type="password" disabled class="inputPassword configKey form-control" data-l1key="jsessionId"></input>
               <span class="input-group-btn">
                   <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
               </span>
@@ -269,7 +269,7 @@
               <sup><i class="fas fa-question-circle" title="{{Identifiant client généré par le plugin. Une identifiant = 1 appareil mobile.}}"></i></sup>
           </label>
           <div class="input-group col-sm-6">
-              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="cliend_id"></input>
+              <input type="password" disabled class="inputPassword configKey form-control" data-l1key="cliend_id"></input>
               <span class="input-group-btn">
                   <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
               </span>
@@ -281,7 +281,7 @@
               <sup><i class="fas fa-question-circle"></i></sup>
           </label>
           <div class="input-group col-sm-6">
-              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="loginSessionID"></input>
+              <input type="password" disabled class="inputPassword configKey form-control" data-l1key="loginSessionID"></input>
               <span class="input-group-btn">
                   <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
               </span>
@@ -293,7 +293,7 @@
               <sup><i class="fas fa-question-circle"></i></sup>
           </label>
           <div class="input-group col-sm-6">
-              <input type="text" disabled class="inputPassword configKey form-control" data-l1key="user_number"></input>
+              <input type="password" disabled class="inputPassword configKey form-control" data-l1key="user_number"></input>
               <span class="input-group-btn">
                   <a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
               </span>
