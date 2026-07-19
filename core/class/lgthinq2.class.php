@@ -1348,7 +1348,6 @@ class lgthinq2 extends eqLogic
             $urlToken = '/oauth/1.0/oauth2/token?' . http_build_query($data);
             $headers[] = 'x-lge-oauth-signature: ' . base64_encode(hash_hmac('sha1', $urlToken."\n".$time, lgthinq2::OAUTHSECRETKEY, true));
             $rep = lgthinq2::postData('https://gb.lgeapi.com' . $urlToken, '', $headers);
-            log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('refresh_token résultat : ', __FILE__) . $rep);
             $token = json_decode($rep, true);
             if (!$token || !isset($token['access_token'])) {
                 log::add(__CLASS__, 'debug', __FUNCTION__ . ' : Impossible de récupérer le token d\'accès.');
@@ -2443,7 +2442,6 @@ class lgthinq2 extends eqLogic
             //file_put_contents(__DIR__ . '/../../data/' . $this->getLogicalId() . '.json', json_encode($data));
 
             if (isset($data['Value'])) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('DEBUGGGG Value ', __FILE__) . json_encode($data['Value']));
                 $commands = array();
                 foreach ($data['Value'] as $key => $value) {
                     if (isset($data['Monitoring']['type']) && $data['Monitoring']['type'] == "THINQ2") {
@@ -2566,7 +2564,6 @@ class lgthinq2 extends eqLogic
 
             if (isset($data['MonitoringValue'])) {
 
-                log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('DEBUGGGG MonitoringValue ', __FILE__) . json_encode($data['MonitoringValue']));
                 $commands = array();
                 $commandsToRemove = array();
                 foreach ($data['MonitoringValue'] as $key => $value) {
@@ -3258,7 +3255,6 @@ class lgthinq2 extends eqLogic
                 log::add(__CLASS__, 'info', __FUNCTION__ . ' ' . __('commande mise à jour after : ', __FILE__) . $refStateId . __(' à la valeur : ', __FILE__) . $refStateValueArray);
             }
             if ($cmdInfo->getConfiguration('originalType') == 'Array') {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('DEBUGGGG cmd info Array ', __FILE__) . json_encode($refStateValueArray));
                 $langPack = $this->getLangJson('langPackProductType', '', '0.0');
                 if (is_array($refStateValueArray)) {
                     $monitoring = $this->getConfiguration('Monitoring', '');
@@ -3332,7 +3328,6 @@ class lgthinq2 extends eqLogic
                 }
             }
             if (!is_object($cmd)) {
-                log::add(__CLASS__, 'debug', __FUNCTION__ . ' ' . __('DEBUGGGG $_properties ', __FILE__) . is_object($cmd) . ' => ' . $_properties['logicalId']);
                 $cmd = new lgthinq2Cmd();
                 $cmd->setType($type);
                 $cmd->setEqLogic_id($this->getId());

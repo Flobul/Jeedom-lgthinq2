@@ -209,8 +209,8 @@ document.getElementById('div_lgthinq2').addEventListener('click', function(event
             if (result) {
                 domUtils.ajax({
                     type: "POST",
+					url: "plugins/lgthinq2/core/ajax/lgthinq2.ajax.php",
                     dataType: 'json',
-                    async: false,
                     data: {
                         action: "deleteEquipments",
                         what: what
@@ -298,7 +298,6 @@ function printEqLogic(_eqLogic) {
       handleAjaxError(request, status, error);
     },
     success: function(data) {
-      console.log(data)
       if (data.state != 'ok') {
         jeedomUtils.showAlert({
           message: data.result,

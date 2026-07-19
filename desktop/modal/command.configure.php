@@ -160,7 +160,6 @@ sendVarToJS('cmdInfo', $cmdInfo);
 
 <script>
   (function() {
-    console.log(cmdInfo);
     let title = '{{Configuration commande}}';
     title += ' : ' + cmdInfo.eqLogicName;
     title += ' <span class="cmdName">[' + cmdInfo.name + '] <em>(' + cmdInfo.type + ')</em></span>';
